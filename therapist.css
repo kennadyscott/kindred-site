@@ -205,3 +205,20 @@
   .kt-stripe-row { grid-template-columns: 1fr; }
   .kt-portal-actions .kt-portal-backlink { display: none; }
 }
+
+/* ---------- founding pricing (2026-07-14 pricing update) ---------- */
+.kt-founding-banner {
+  display: flex; align-items: center; gap: .9rem; text-align: left;
+  max-width: 560px; margin: 1.4rem auto 0;
+  background: var(--aubergine); color: #EBE2E6; border-radius: 16px; padding: 1rem 1.3rem;
+}
+.kt-founding-star { color: var(--gold); font-size: 1.3rem; flex: none; }
+.kt-founding-banner p { font-size: .88rem; line-height: 1.55; }
+.kt-founding-banner strong { color: var(--cream); }
+.kt-price-trial { font-size: .95rem; font-weight: 600; color: var(--moss); margin-top: .6rem; }
+.kt-price-standard { font-size: .78rem; color: var(--ink-soft); margin-top: .8rem; text-align: center; }
+.kt-plan-after { font-size: .8rem; color: var(--ink-soft); margin-top: 1rem; }
+.kt-summary p { display: flex; justify-content: space-between; gap: 1rem; font-size: .92rem; color: var(--ink); }
+.kt-summary p + p { margin-top: .45rem; }
+.kt-summary strong small { font-weight: 500; color: var(--ink-soft); font-size: .74rem; }
+.kt-summary .kt-summary-fine { display: block; margin-top: .7rem; }

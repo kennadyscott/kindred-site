@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=16">
-<link rel="stylesheet" href="therapist.css?v=1">
+<link rel="stylesheet" href="therapist.css?v=2">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -136,18 +136,24 @@
 <!-- ======================= PRICING ======================= -->
 <section class="kt-pricing" id="kt-pricing">
   <div class="kt-pricing-inner">
-    <h2>One plan. Every feature.</h2>
-    <p class="section-sub">The only choice is how you'd like to pay.</p>
+    <h2>Founding member pricing.</h2>
+    <p class="section-sub">Kindred is opening to its first 200 therapists — the ones who help build the matching pool get the best deal we'll ever offer.</p>
+
+    <div class="kt-founding-banner">
+      <span class="kt-founding-star" aria-hidden="true">★</span>
+      <p><strong>First 200 therapists:</strong> your first 3 months are free, then the founding rate holds for your entire first year. After that, the standard rate.</p>
+    </div>
 
     <div class="kt-billing-toggle" role="group" aria-label="Billing period">
-      <button class="kt-bill active" data-bill="monthly">Monthly</button>
-      <button class="kt-bill" data-bill="annual">Annual <span class="kt-savetag">2 months free</span></button>
+      <button class="kt-bill active" data-bill="annual">Annual <span class="kt-savetag">Best value</span></button>
+      <button class="kt-bill" data-bill="monthly">Monthly</button>
     </div>
 
     <div class="kt-pricecard">
-      <p class="kt-plan-name">Kindred Membership</p>
-      <p class="kt-price"><span id="kt-price-num">$39</span><span class="kt-price-per" id="kt-price-per">/month</span></p>
-      <p class="kt-price-note" id="kt-price-note">Billed monthly. Cancel anytime.</p>
+      <p class="kt-plan-name">Founding Membership</p>
+      <p class="kt-price"><span id="kt-price-num">$99</span><span class="kt-price-per" id="kt-price-per">/year</span></p>
+      <p class="kt-price-trial" id="kt-price-trial">First 3 months free — you don't pay until Kindred is already working for you.</p>
+      <p class="kt-price-note" id="kt-price-note">Founding rate for your first year — that's less than $8.50/month. Then the standard $199/year.</p>
       <ul class="kt-features">
         <li>Matchable to every compatible client — by fit alone</li>
         <li>Full profile: style prompts, specialties, photo &amp; voice</li>
@@ -157,7 +163,8 @@
         <li>Practice insights: profile views, matches, conversations</li>
         <li>No per-client fees. No commission on sessions. Ever.</li>
       </ul>
-      <a class="btn btn-dark kt-price-cta" href="therapist-portal.html" id="kt-price-cta">Start with monthly</a>
+      <a class="btn btn-dark kt-price-cta" href="therapist-portal.html#plan=annual" id="kt-price-cta">Claim a founding spot — 3 months free</a>
+      <p class="kt-price-standard" id="kt-price-standard">Standard rate after your founding year: $199/year or $29/month.</p>
       <p class="kt-price-fine">Membership makes you matchable — it never changes how you rank. Nothing does.</p>
     </div>
   </div>
@@ -206,9 +213,9 @@
 <section class="kt-closing">
   <div class="kt-closing-inner">
     <h2>Your next client is already looking<br>for someone like you.</h2>
-    <p>Build your profile in about ten minutes. Become matchable today.</p>
-    <a class="btn btn-dark" href="therapist-portal.html">Join Kindred</a>
-    <p class="mkt-fine">Flat membership · Cancel anytime · Matched by fit, never by fee</p>
+    <p>Build your profile in about ten minutes. Become matchable today — free for your first 3 months.</p>
+    <a class="btn btn-dark" href="therapist-portal.html#plan=annual">Claim a founding spot</a>
+    <p class="mkt-fine">First 200 therapists · 3 months free · Founding rate for year one · Matched by fit, never by fee</p>
   </div>
 </section>
 
@@ -260,8 +267,18 @@ navToggle.addEventListener('click', () => {
 });
 
 const PRICING = {
-  monthly: { num: '$39', per: '/month', note: 'Billed monthly. Cancel anytime.', cta: 'Start with monthly' },
-  annual:  { num: '$390', per: '/year', note: 'Billed annually — two months free vs. monthly.', cta: 'Start with annual' }
+  annual: {
+    num: '$99', per: '/year',
+    note: "Founding rate for your first year — that's less than $8.50/month. Then the standard $199/year.",
+    standard: 'Standard rate after your founding year: $199/year or $29/month.',
+    cta: 'Claim a founding spot — 3 months free'
+  },
+  monthly: {
+    num: '$19', per: '/month',
+    note: 'Founding rate for your first 12 months, then the standard $29/month. Annual saves you another $129 a year.',
+    standard: 'Standard rate after your founding year: $29/month or $199/year.',
+    cta: 'Claim founding monthly — 3 months free'
+  }
 };
 document.querySelectorAll('.kt-bill').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.kt-bill').forEach(x => x.classList.toggle('active', x === b));
@@ -269,6 +286,7 @@ document.querySelectorAll('.kt-bill').forEach(b => b.addEventListener('click', (
   document.getElementById('kt-price-num').textContent = p.num;
   document.getElementById('kt-price-per').textContent = p.per;
   document.getElementById('kt-price-note').textContent = p.note;
+  document.getElementById('kt-price-standard').textContent = p.standard;
   const cta = document.getElementById('kt-price-cta');
   cta.textContent = p.cta;
   cta.href = 'therapist-portal.html#plan=' + b.dataset.bill;
