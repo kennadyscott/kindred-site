@@ -457,6 +457,105 @@
 </footer>
 
 </main>
+<!-- ======================= AUDIENCE ROUTER (first visit) ======================= -->
+<style>
+  /* self-contained pop-up styles (kaud-) — kept inline to avoid touching shared stylesheets */
+  .kaud-overlay {
+    position: fixed; inset: 0; z-index: 200; background: rgba(48, 26, 53, .55);
+    backdrop-filter: blur(4px); display: grid; place-items: center; padding: 1.2rem;
+    opacity: 0; transition: opacity .3s ease;
+  }
+  .kaud-overlay.kaud-show { opacity: 1; }
+  .kaud-overlay[hidden] { display: none; }
+  .kaud-modal {
+    position: relative; width: min(560px, 100%); background: #FFFDF8; border-radius: 26px;
+    padding: clamp(1.8rem, 4vw, 2.6rem); text-align: center;
+    box-shadow: 0 30px 80px rgba(20, 10, 24, .45);
+    transform: translateY(14px); transition: transform .3s ease;
+  }
+  .kaud-overlay.kaud-show .kaud-modal { transform: none; }
+  .kaud-close { position: absolute; top: 1rem; right: 1.1rem; font-size: 1rem; color: #6E6172; background: none; border: none; cursor: pointer; }
+  .kaud-close:hover { color: #422448; }
+  .kaud-mark { width: 44px; height: 44px; margin: 0 auto .8rem; }
+  .kaud-kicker { font-size: .68rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #BE765F; }
+  .kaud-title { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.5rem, 3vw, 1.9rem); color: #422448; margin-top: .4rem; line-height: 1.15; }
+  .kaud-cards { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-top: 1.6rem; }
+  .kaud-card {
+    display: grid; justify-items: center; gap: .45rem; padding: 1.4rem 1.1rem;
+    border-radius: 18px; border: 2px solid transparent; cursor: pointer; text-align: center;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    font: inherit;
+  }
+  .kaud-card:hover { transform: translateY(-3px); border-color: #422448; box-shadow: 0 10px 26px rgba(66, 36, 72, .16); }
+  .kaud-card-client { background: #F4E3DB; }
+  .kaud-card-therapist { background: #E6EAE2; }
+  .kaud-icon { width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 253, 248, .75); display: grid; place-items: center; color: #422448; }
+  .kaud-icon svg { width: 26px; height: 26px; }
+  .kaud-card strong { font-size: 1rem; color: #35263B; }
+  .kaud-card span { font-size: .78rem; color: #6E6172; line-height: 1.4; }
+  .kaud-skip { margin-top: 1.2rem; font-size: .82rem; font-weight: 600; color: #6E6172; text-decoration: underline; background: none; border: none; cursor: pointer; }
+  .kaud-skip:hover { color: #422448; }
+  @media (max-width: 560px) { .kaud-cards { grid-template-columns: 1fr; } }
+</style>
+
+<div class="kaud-overlay" id="kaud" hidden>
+  <div class="kaud-modal" role="dialog" aria-modal="true" aria-labelledby="kaud-title">
+    <button class="kaud-close" id="kaud-close" aria-label="Close">✕</button>
+    <svg class="kaud-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <p class="kaud-kicker">Welcome to Kindred</p>
+    <h2 class="kaud-title" id="kaud-title">Which brings you here today?</h2>
+    <div class="kaud-cards">
+      <button class="kaud-card kaud-card-client" id="kaud-client">
+        <span class="kaud-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+        </span>
+        <strong>I'm looking for therapy</strong>
+        <span>Support, tools, and a therapist who actually fits.</span>
+      </button>
+      <button class="kaud-card kaud-card-therapist" id="kaud-therapist">
+        <span class="kaud-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.2"/><circle cx="16.5" cy="10.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>
+        </span>
+        <strong>I'm a therapist</strong>
+        <span>Meet clients who already fit — founding spots open.</span>
+      </button>
+    </div>
+    <button class="kaud-skip" id="kaud-skip">Just browsing for now</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const KEY = 'kindred-audience';
+  if (localStorage.getItem(KEY)) return; /* answered or dismissed before — never nag */
+  const overlay = document.getElementById('kaud');
+  const open = () => {
+    overlay.hidden = false;
+    setTimeout(() => overlay.classList.add('kaud-show'), 30); /* not rAF — throttled tabs never fire it */
+    document.getElementById('kaud-client').focus();
+  };
+  const close = (choice) => {
+    localStorage.setItem(KEY, choice);
+    overlay.classList.remove('kaud-show');
+    setTimeout(() => overlay.hidden = true, 300);
+  };
+  document.getElementById('kaud-client').addEventListener('click', () => close('client'));
+  document.getElementById('kaud-therapist').addEventListener('click', () => {
+    localStorage.setItem(KEY, 'therapist');
+    window.location.href = 'therapists.html';
+  });
+  document.getElementById('kaud-close').addEventListener('click', () => close('dismissed'));
+  document.getElementById('kaud-skip').addEventListener('click', () => close('dismissed'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) close('dismissed'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !overlay.hidden) close('dismissed'); });
+  setTimeout(open, 400);
+})();
+</script>
+
 <script src="app.js"></script>
 </body>
 </html>
