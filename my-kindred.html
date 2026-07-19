@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Kindred</title>
+<meta name="description" content="A quiet place to come back to yourself. Your saved articles, tools, check-ins, therapists, and plans — all in one private space.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=14">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+</head>
+<body class="mk-body">
+
+<!-- ======================= SIGNED-IN HEADER ======================= -->
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="Kindred home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">Kindred</span>
+      <span class="brand-tag">Therapy, matched to you</span>
+    </span>
+  </a>
+
+  <nav class="main-nav" aria-label="Primary">
+    <a href="start-here.html">Start Here</a>
+    <a href="understand-yourself.html">Understand Yourself</a>
+    <a href="feel-better.html">Feel Better</a>
+    <a href="index.html#life-relationships">Life &amp; Relationships</a>
+    <a href="index.html#therapy">Therapy</a>
+    <a href="index.html#find-therapist">Find Your Therapist</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="icon-btn" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </button>
+    <button class="icon-btn mk-bell" aria-label="Notifications, 2 unread">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 0 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 15 18 9"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>
+      <span class="mk-badge">2</span>
+    </button>
+    <button class="mk-avatar" aria-label="Account — Kennady">K</button>
+  </div>
+
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="mk-layout">
+
+  <!-- ======================= SIDEBAR ======================= -->
+  <aside class="mk-sidebar">
+    <nav class="mk-nav" aria-label="My Kindred">
+      <a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 11 8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>My Kindred</a>
+      <a href="#mk-checkin-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>Check-Ins</a>
+      <a href="#mk-saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg>Saved</a>
+      <a href="#mk-plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M8 12h8M8 16h5"/></svg>My Plan</a>
+      <a href="#mk-topics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Topics I'm Exploring</a>
+      <a href="index.html#find-therapist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.2"/><circle cx="16.5" cy="10.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>Therapists</a>
+      <a href="feel-better.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c-4 0-7-2.4-7-6 1.8.2 3 .8 4 1.8C9 12 10 8 12 5c2 3 3 7 3 10.8 1-1 2.2-1.6 4-1.8 0 3.6-3 6-7 6z"/></svg>Tools &amp; Exercises</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Browse History</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>Settings</a>
+    </nav>
+
+    <div class="mk-need">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+      <h3>What do you need right now?</h3>
+      <p>Get support for whatever you're feeling in this moment.</p>
+      <button class="btn btn-dark btn-sm" id="mk-need-btn">Let's go</button>
+    </div>
+
+    <p class="mk-privacy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      Private. Secure. Judgement-free.
+    </p>
+  </aside>
+
+  <!-- ======================= MAIN ======================= -->
+  <main class="mk-main">
+
+    <div class="mk-greeting">
+      <div>
+        <h1>Good morning, Kennady.
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D99B54" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M21 12h-2M5 12H3M18.4 5.6l-1.4 1.4M7 17l-1.4 1.4M18.4 18.4 17 17M7 7 5.6 5.6"/></svg>
+        </h1>
+        <p>You've been exploring overthinking and burnout lately. Here's where you left off.</p>
+      </div>
+      <a class="btn btn-outline btn-sm" href="#">View all activity <span aria-hidden="true">→</span></a>
+    </div>
+
+    <!-- Snapshot -->
+    <section class="mk-section">
+      <h2>Your Kindred Snapshot</h2>
+      <div class="mk-snapshot">
+        <div class="mk-snapcard" style="--chip:#EFE8F3">
+          <h3>What's been showing up lately</h3>
+          <div class="mk-chiprow"><span>Overwhelmed</span><span>Exhausted</span><span>Work stress</span></div>
+          <svg class="mk-snapleaf" viewBox="0 0 60 60" fill="none" stroke="#8E77A0" stroke-width="1.4" opacity=".5" aria-hidden="true"><path d="M30 52V24M30 30c0-10-7-14-16-14 0 10 7 14 16 14zM30 24c0-8 6-11 14-11 0 8-6 11-14 11z"/></svg>
+        </div>
+        <div class="mk-snapcard" style="--chip:#F6E8DE">
+          <h3>What you've been exploring</h3>
+          <div class="mk-chiprow"><span>Burnout</span><span>Boundaries</span><span>Therapy styles</span></div>
+          <svg class="mk-snapleaf" viewBox="0 0 60 60" fill="none" stroke="#BE765F" stroke-width="1.4" opacity=".5" aria-hidden="true"><path d="M14 50q22-4 32-24M22 40q-8-2-9-11 9 0 11 8M32 28q-9-1-11-11 10-1 13 8M42 16q-8 0-10-8 9-2 12 5"/></svg>
+        </div>
+        <div class="mk-snapcard mk-snapstep" style="--chip:#FBF0DC">
+          <h3>A gentle next step</h3>
+          <p>You saved two articles about burnout this week. You might like this 5-minute reset for when your brain still feels "on" after work.</p>
+          <button class="btn btn-dark btn-sm">Try the reset</button>
+          <svg class="mk-snapleaf" viewBox="0 0 60 60" fill="none" stroke="#D99B54" stroke-width="1.4" opacity=".6" aria-hidden="true"><path d="M10 46h40M18 46a12 12 0 0 1 24 0M30 22v6M40 26l-3 4M20 26l3 4"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Continue -->
+    <section class="mk-section">
+      <h2>Pick up where you left off</h2>
+      <div class="mk-row">
+        <article class="mk-card">
+          <p class="mk-kind">Article <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <h3>Why do I feel irritated by everyone lately?</h3>
+          <div class="mk-art" style="--chip:#E9E1EE">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#E9E1EE"/><ellipse cx="60" cy="70" rx="30" ry="8" fill="#CBBAD4"/><path d="M48 62q-8-16 2-26 10 6 8 22M60 60q-2-20 12-26 6 12-4 26" fill="#8E77A0"/><rect x="120" y="40" width="46" height="30" rx="4" fill="#FFF8EF"/><line x1="128" y1="50" x2="158" y2="50" stroke="#CBBAD4" stroke-width="2"/><line x1="128" y1="58" x2="152" y2="58" stroke="#CBBAD4" stroke-width="2"/></svg>
+          </div>
+          <div class="mk-progress"><span style="width:42%"></span></div>
+          <p class="mk-meta">42% complete</p>
+        </article>
+        <article class="mk-card">
+          <p class="mk-kind mk-kind-moment">Kindred Moment <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <h3>Reset After a Hard Day</h3>
+          <p class="mk-meta">5 min</p>
+          <div class="mk-art mk-art-play" style="--chip:#E3E8EF">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#E3E8EF"/><path d="M0 60q50-24 100-10t100-4v44H0z" fill="#AEBED2"/><path d="M0 74q60-18 200-6v22H0z" fill="#8DA2BC"/><circle cx="150" cy="26" r="14" fill="#F6DCAE"/></svg>
+            <span class="mk-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+          </div>
+        </article>
+        <article class="mk-card">
+          <p class="mk-kind">Topic</p>
+          <h3>Understanding Burnout</h3>
+          <p class="mk-meta">3 of 8 resources explored</p>
+          <div class="mk-art" style="--chip:#F6E8DE">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#F6E8DE"/><path d="M40 78q20-4 30-22M56 66q-8-2-9-10 9 0 11 8M68 50q-8-1-10-10 9-1 12 8" stroke="#BE765F" stroke-width="1.6" fill="none" opacity=".7"/><circle cx="150" cy="45" r="20" fill="none" stroke="#BE765F" stroke-width="2" opacity=".5"/><path d="M150 33v12l8 5" stroke="#BE765F" stroke-width="2" fill="none" opacity=".7"/></svg>
+          </div>
+          <div class="mk-progress"><span style="width:37%"></span></div>
+        </article>
+        <article class="mk-card">
+          <p class="mk-kind">Therapy</p>
+          <h3>What type of therapist might fit me?</h3>
+          <p class="mk-meta">Find your match</p>
+          <div class="mk-art" style="--chip:#E6EAE2">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#E6EAE2"/><circle cx="80" cy="40" r="13" fill="none" stroke="#687A65" stroke-width="2.4"/><path d="M58 76c2-14 10-20 22-20" fill="none" stroke="#687A65" stroke-width="2.4"/><circle cx="122" cy="44" r="10" fill="none" stroke="#8E77A0" stroke-width="2.4"/><path d="M106 76c2-11 8-16 16-16" fill="none" stroke="#8E77A0" stroke-width="2.4"/><path d="M138 58c4-3 9-1 10 3s-2 7-10 11c-8-4-11-7-10-11s6-6 10-3z" fill="#BE765F"/></svg>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Saved -->
+    <section class="mk-section" id="mk-saved">
+      <div class="mk-sechead">
+        <h2>Saved to My Kindred</h2>
+        <a class="pillar-link" href="#">See all saved <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="mk-tabs" role="tablist" aria-label="Saved filters">
+        <button class="mk-tab active" data-filter="all">All</button>
+        <button class="mk-tab" data-filter="article">Articles</button>
+        <button class="mk-tab" data-filter="tool">Tools</button>
+        <button class="mk-tab" data-filter="therapist">Therapists</button>
+        <button class="mk-tab" data-filter="topic">Topics</button>
+        <button class="mk-tab" data-filter="plan">Plans</button>
+      </div>
+      <div class="mk-row" id="mk-saved-row">
+        <article class="mk-card" data-type="article">
+          <p class="mk-kind">Article <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <h3>Why do I shut down during conflict?</h3>
+          <div class="mk-chiprow mk-chiprow-sm"><span>Attachment</span><span>Relationships</span></div>
+          <p class="mk-meta">8 min read</p>
+          <div class="mk-cardctas"><a class="pillar-link" href="#">Continue reading <span aria-hidden="true">→</span></a><button class="mk-remove">Remove</button></div>
+        </article>
+        <article class="mk-card" data-type="tool">
+          <p class="mk-kind">Tool <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <h3>Before You Send That Text</h3>
+          <p class="mk-meta">3 min exercise</p>
+          <p class="mk-desc">Pause. Breathe. Decide what you actually want to communicate.</p>
+          <div class="mk-cardctas"><a class="pillar-link" href="#">Start <span aria-hidden="true">→</span></a><button class="mk-remove">Remove</button></div>
+        </article>
+        <article class="mk-card mk-card-therapist" data-type="therapist">
+          <p class="mk-kind">Therapist <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <div class="mk-tphoto">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="60" fill="#EFE2D3"/><circle cx="60" cy="48" r="22" fill="#C68B62"/><path d="M38 50q-3-28 22-28 25 0 22 28-2 13-8 17 4-18-14-18-18 0-14 18-6-4-8-17z" fill="#3B2531"/><path d="M28 108q6-30 32-30t32 30z" fill="#B8A3C4"/></svg>
+          </div>
+          <h3>Dr. Maya Chen, LMFT</h3>
+          <p class="mk-meta">94% Kindred Match</p>
+          <div class="mk-chiprow mk-chiprow-sm"><span>Warm</span><span>Direct</span><span>Collaborative</span></div>
+          <div class="mk-cardctas"><a class="pillar-link" href="index.html#find-therapist">View profile <span aria-hidden="true">→</span></a><button class="mk-remove">Compare</button></div>
+        </article>
+        <article class="mk-card" data-type="topic">
+          <p class="mk-kind">Topic <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <h3>Burnout</h3>
+          <p class="mk-desc">Understand what burnout can look like and how it differs from stress.</p>
+          <p class="mk-meta">3 of 8 resources explored</p>
+          <div class="mk-progress"><span style="width:37%"></span></div>
+          <div class="mk-cardctas"><a class="pillar-link" href="understand-yourself.html">Keep exploring <span aria-hidden="true">→</span></a></div>
+        </article>
+        <article class="mk-card" data-type="plan">
+          <p class="mk-kind">Plan <svg viewBox="0 0 24 24" fill="currentColor" class="mk-savedflag"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg></p>
+          <h3>A little support for this week</h3>
+          <p class="mk-desc">Understand · Try · Notice · Connect — built from what you've been exploring.</p>
+          <div class="mk-cardctas"><a class="pillar-link" href="#mk-plan">Open plan <span aria-hidden="true">→</span></a></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Plan -->
+    <section class="mk-section" id="mk-plan">
+      <div class="mk-plan">
+        <div class="mk-planhead">
+          <h2>Your Kindred Plan</h2>
+          <p>A little support for this week.</p>
+        </div>
+        <div class="mk-plangrid">
+          <div class="mk-planstep">
+            <span class="mk-planicon" style="--chip:#E6EAE2; --pstroke:#687A65"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1.6-3.7-2-6-2v14c2.3 0 4.5.4 6 2 1.5-1.6 3.7-2 6-2V4c-2.3 0-4.5.4-6 2z"/><path d="M12 6v14"/></svg></span>
+            <h3>Understand</h3>
+            <p class="mk-planmode">Read</p>
+            <p>Burnout or depression? How to tell when exhaustion is something more.</p>
+            <a class="pillar-link" href="understand-yourself.html">10 min read <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="mk-planstep">
+            <span class="mk-planicon" style="--chip:#F4E3DB; --pstroke:#BE765F"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c-4 0-7-2.4-7-6 1.8.2 3 .8 4 1.8C9 12 10 8 12 5c2 3 3 7 3 10.8 1-1 2.2-1.6 4-1.8 0 3.6-3 6-7 6z"/></svg></span>
+            <h3>Try</h3>
+            <p class="mk-planmode">Do</p>
+            <p>3-minute nervous system reset.</p>
+            <a class="pillar-link" href="feel-better.html">3 min <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="mk-planstep">
+            <span class="mk-planicon" style="--chip:#E9E1EE; --pstroke:#8E77A0"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></svg></span>
+            <h3>Notice</h3>
+            <p class="mk-planmode">Reflect</p>
+            <p>What feels hardest at the end of your workday?</p>
+            <a class="pillar-link" href="#"><span aria-hidden="true">→</span></a>
+          </div>
+          <div class="mk-planstep">
+            <span class="mk-planicon" style="--chip:#FBF0DC; --pstroke:#B98A3C"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.2"/><circle cx="16.5" cy="10.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg></span>
+            <h3>Connect</h3>
+            <p class="mk-planmode">Optional</p>
+            <p>Explore therapists who specialize in burnout and anxiety.</p>
+            <a class="pillar-link" href="index.html#find-therapist"><span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Topics -->
+    <section class="mk-section" id="mk-topics">
+      <div class="mk-topicspanel">
+        <div class="mk-sechead">
+          <h2>Topics you're exploring</h2>
+          <a class="pillar-link" href="#">Manage topics</a>
+        </div>
+        <ul class="mk-topiclist">
+          <li><span class="mk-topicname">🌀 Overthinking</span><span class="mk-meta">4 saved resources</span></li>
+          <li><span class="mk-topicname">🍂 Burnout</span><span class="mk-meta">2 articles · 1 tool</span></li>
+          <li><span class="mk-topicname">🛡️ Boundaries</span><span class="mk-meta">1 saved resource</span></li>
+          <li><span class="mk-topicname">🤝 Therapy fit</span><span class="mk-meta">3 therapist profiles</span></li>
+        </ul>
+        <button class="btn btn-outline btn-sm">+ Add a topic</button>
+      </div>
+    </section>
+
+    <!-- Recommendations -->
+    <section class="mk-section">
+      <h2>Because you've been exploring…</h2>
+      <p class="mk-reason">Burnout + overthinking — recommendations that explain themselves.</p>
+      <div class="mk-row">
+        <article class="mk-card">
+          <p class="mk-kind">Article</p>
+          <h3>Why rest doesn't always feel restful</h3>
+          <p class="mk-meta">7 min read</p>
+          <div class="mk-art" style="--chip:#F6E8DE">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#F6E8DE"/><rect x="40" y="30" width="70" height="44" rx="4" fill="#FFF8EF" transform="rotate(-3 75 52)"/><line x1="52" y1="42" x2="96" y2="40" stroke="#D9C6AE" stroke-width="2.4"/><line x1="53" y1="52" x2="92" y2="50" stroke="#D9C6AE" stroke-width="2.4"/><rect x="130" y="42" width="34" height="6" rx="3" fill="#3B2531" transform="rotate(14 147 45)"/></svg>
+          </div>
+        </article>
+        <article class="mk-card">
+          <p class="mk-kind mk-kind-moment">Kindred Moment</p>
+          <h3>Evening Wind-Down for an Overactive Mind</h3>
+          <p class="mk-meta">4 min</p>
+          <div class="mk-art mk-art-play" style="--chip:#E9E1EE">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#E9E1EE"/><path d="M140 60a26 26 0 0 1-33-33 26 26 0 1 0 33 33z" fill="#8E77A0" opacity=".7"/><circle cx="60" cy="30" r="3" fill="#FFF8EF"/><circle cx="90" cy="50" r="2" fill="#FFF8EF"/><circle cx="45" cy="60" r="2.5" fill="#FFF8EF"/></svg>
+            <span class="mk-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+          </div>
+        </article>
+        <article class="mk-card">
+          <p class="mk-kind">Article</p>
+          <p class="mk-because">Because you saved "Why do I shut down during conflict?"</p>
+          <h3>What happens in your body when conflict feels unsafe</h3>
+          <p class="mk-meta">8 min read</p>
+        </article>
+        <article class="mk-card">
+          <p class="mk-kind">Tool</p>
+          <h3>Worry Time (5-Minute Practice)</h3>
+          <p class="mk-meta">5 min exercise</p>
+          <div class="mk-art mk-art-play" style="--chip:#E3E8E1">
+            <svg viewBox="0 0 200 90" aria-hidden="true"><rect width="200" height="90" fill="#E3E8E1"/><circle cx="100" cy="45" r="26" fill="none" stroke="#687A65" stroke-width="2.4"/><path d="M100 28v17l11 7" stroke="#687A65" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+            <span class="mk-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- App bridge -->
+    <section class="mk-section">
+      <div class="mk-appbridge">
+        <div class="mk-appleft">
+          <svg class="mk-appleaf" viewBox="0 0 60 100" fill="none" stroke="#687A65" stroke-width="1.4" opacity=".6" aria-hidden="true"><path d="M30 96V30M30 44q0-16-14-20 0 14 14 20zM30 32q2-14 16-16-2 14-16 16zM30 60q-2-12-14-14 2 12 14 14z"/></svg>
+          <h2>Take your Kindred with you.</h2>
+          <p>Your saved articles. Your check-ins. Your favorite therapists. Your plan. Everything you've built here comes with you.</p>
+          <div class="store-badges">
+            <a class="store-badge" href="#" aria-label="Download on the App Store">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 12.54c-.03-2.9 2.37-4.3 2.48-4.37-1.35-1.98-3.46-2.25-4.21-2.28-1.79-.18-3.5 1.05-4.4 1.05-.91 0-2.31-1.03-3.8-1-1.95.03-3.75 1.13-4.76 2.88-2.03 3.52-.52 8.72 1.46 11.58.97 1.4 2.12 2.97 3.63 2.91 1.46-.06 2.01-.94 3.77-.94s2.26.94 3.8.91c1.57-.03 2.57-1.42 3.53-2.83 1.11-1.62 1.57-3.19 1.6-3.27-.04-.02-3.07-1.18-3.1-4.64zM14.14 4c.8-.97 1.34-2.32 1.19-3.66-1.15.05-2.55.77-3.38 1.74-.74.86-1.39 2.23-1.22 3.55 1.29.1 2.6-.65 3.41-1.63z"/></svg>
+              <span><small>Download on the</small>App Store</span>
+            </a>
+            <a class="store-badge" href="#" aria-label="Get it on Google Play">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 1.8 13.7 12 3.6 22.2c-.37-.2-.6-.6-.6-1.1V2.9c0-.5.23-.9.6-1.1zm11.5 8.8 2.6-2.6-11.5-6.6 8.9 9.2zm3.9-1.3 2.5 1.4c.8.5.8 1.6 0 2.1l-2.5 1.4-2.9-2.4 2.9-2.5zm-1.3 6.3-2.6-2.6-8.9 9.2 11.5-6.6z"/></svg>
+              <span><small>Get it on</small>Google Play</span>
+            </a>
+          </div>
+          <p class="mk-appfine">Sign in with the same account. Your Kindred will be waiting.</p>
+        </div>
+        <div class="mk-appphone" aria-hidden="true">
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <p class="phone-greet">Good morning, Kennady.</p>
+              <div class="phone-card phone-card-dark">
+                <p class="phone-label">Your next step</p>
+                <p class="phone-msg">3-minute nervous system reset</p>
+                <p class="phone-link">Start →</p>
+              </div>
+              <div class="phone-card">
+                <p class="phone-label">Your latest check-in <span>Today</span></p>
+                <p class="phone-msg-sm"><strong>Overwhelmed</strong> · 🙂</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ul class="mk-applist">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg><span><strong>Daily check-ins &amp; insights</strong></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c-4 0-7-2.4-7-6 1.8.2 3 .8 4 1.8C9 12 10 8 12 5c2 3 3 7 3 10.8 1-1 2.2-1.6 4-1.8 0 3.6-3 6-7 6z"/></svg><span><strong>On-the-go tools &amp; moments</strong></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 0 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 15 18 9"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg><span><strong>Reminders that support you</strong></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg><span><strong>Your Kindred, always with you</strong></span></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================= RIGHT RAIL ======================= -->
+  <aside class="mk-rail">
+    <div class="mk-railcard" id="mk-checkin-card">
+      <div class="mk-sechead">
+        <h2>Your latest check-in</h2>
+        <a class="mk-minilink" href="#">View history</a>
+      </div>
+      <p class="mk-meta">Today, July 9</p>
+      <div class="mk-face" aria-hidden="true">
+        <svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="#DCE4EE"/><circle cx="30" cy="34" r="3.5" fill="#42537A"/><circle cx="50" cy="34" r="3.5" fill="#42537A"/><path d="M30 52q10 6 20 0" stroke="#42537A" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="mk-checkin-word">Overwhelmed</h3>
+      <p class="mk-meta mk-center">That's okay. You're not alone.</p>
+      <ul class="mk-meters">
+        <li><span class="mk-mdot" style="--chip:#F0DBD9">🙁</span> Mood <em>2 / 5</em></li>
+        <li><span class="mk-mdot" style="--chip:#F3E4C9">😴</span> Energy <em>2 / 5</em></li>
+        <li><span class="mk-mdot" style="--chip:#E3E8E1">🙂</span> Connection <em>3 / 5</em></li>
+        <li><span class="mk-mdot" style="--chip:#E9E1EE">😵‍💫</span> Mental load <em>1 / 5</em></li>
+      </ul>
+      <p class="mk-observe">Compared with your last few check-ins, mental load has been showing up more often.</p>
+      <button class="btn btn-outline btn-sm mk-wide">See patterns</button>
+    </div>
+
+    <div class="mk-railcard mk-noticing">
+      <svg class="hero-card-heart" viewBox="0 0 24 24" fill="none" stroke="#8E77A0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+      <h2>What you've been noticing</h2>
+      <p class="mk-meta">Over the last 30 days</p>
+      <ul class="mk-noticelist">
+        <li>Overwhelm showed up 6 times</li>
+        <li>Sleep felt harder on 4 days</li>
+        <li>You felt most grounded after short resets</li>
+        <li>Relationship stress appeared in 3 check-ins</li>
+      </ul>
+      <div class="mk-explore-connection">
+        <p><strong>Something worth exploring:</strong> how stress, sleep, and irritability can affect one another.</p>
+        <a class="pillar-link" href="understand-yourself.html">Explore this connection <span aria-hidden="true">→</span></a>
+      </div>
+      <button class="btn btn-outline btn-sm mk-wide">View full insights</button>
+    </div>
+  </aside>
+</div>
+
+<!-- ======================= NEED-NOW OVERLAY ======================= -->
+<div class="mk-overlay" id="mk-need-overlay" hidden>
+  <div class="mk-modal" role="dialog" aria-modal="true" aria-label="What do you need right now?">
+    <button class="mk-modal-close" id="mk-need-close" aria-label="Close">✕</button>
+    <div id="mk-need-screen"></div>
+  </div>
+</div>
+
+<!-- ======================= ONBOARDING OVERLAY ======================= -->
+<div class="mk-overlay" id="mk-onboard" hidden>
+  <div class="mk-modal" role="dialog" aria-modal="true" aria-label="Set up My Kindred">
+    <div id="mk-onboard-screen"></div>
+  </div>
+</div>
+
+<script src="my-kindred.js?v=1"></script>
+</body>
+</html>

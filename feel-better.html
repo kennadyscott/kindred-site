@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feel Better — Kindred</title>
+<meta name="description" content="Kindred Moments are quick, evidence-informed tools for the moments that matter — most under five minutes. No streaks. No scores. Just a bit of relief, when you need it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=14">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+</head>
+<body>
+
+<!-- ======================= HEADER ======================= -->
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="Kindred home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">Kindred</span>
+      <span class="brand-tag">Therapy, matched to you</span>
+    </span>
+  </a>
+
+  <nav class="main-nav" aria-label="Primary">
+    <a href="start-here.html">Start Here</a>
+    <a href="understand-yourself.html">Understand Yourself</a>
+    <a href="feel-better.html" class="active">Feel Better</a>
+    <a href="index.html#life-relationships">Life &amp; Relationships</a>
+    <a href="index.html#therapy">Therapy</a>
+    <a href="index.html#find-therapist">Find Your Therapist</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="icon-btn" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </button>
+    <a class="btn btn-outline btn-sm" href="my-kindred.html">My Kindred</a>
+    <a class="btn btn-dark btn-sm" href="index.html#app">Open the App</a>
+  </div>
+
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main>
+
+<!-- ======================= HERO ======================= -->
+<section class="fb-hero">
+  <div class="fb-hero-inner">
+    <div class="fb-hero-copy">
+      <p class="eyebrow">Feel better</p>
+      <h1>Feel a little better,<br>starting now.</h1>
+      <p class="fb-sub">Kindred Moments are quick, evidence-informed tools for the moments that matter — most take less than five minutes.</p>
+      <p class="fb-sub fb-sub-em">No streaks. No scores. Just a bit of relief, when you need it.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-dark" href="#fb-picker">Meet me in this moment</a>
+        <a class="btn btn-outline" href="#fb-library">Browse all tools</a>
+      </div>
+      <p class="hero-trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Private. Secure. Judgement-free.
+      </p>
+    </div>
+
+    <!-- Live breathing Moment — try one right now -->
+    <div class="fb-breathe-card">
+      <p class="fb-breathe-flag">Try one right now</p>
+      <h2>One breath, at your pace.</h2>
+      <p class="fb-breathe-sub">A one-minute breathing moment. In for four. Hold for four. Out for six — a longer exhale tells your body the emergency is over.</p>
+      <div class="fb-breathe-stage">
+        <div class="fb-breathe-ring" id="fb-ring">
+          <div class="fb-breathe-circle" id="fb-circle"></div>
+          <p class="fb-breathe-phase" id="fb-phase">Ready?</p>
+        </div>
+      </div>
+      <div class="fb-breathe-dots" id="fb-dots" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <button class="btn btn-dark" id="fb-breathe-btn">Begin</button>
+      <p class="fb-breathe-fine">No account. No app. Just a minute that's yours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= MOMENT PICKER ======================= -->
+<section class="fb-picker" id="fb-picker">
+  <h2>What's the moment you're in?</h2>
+  <p class="section-sub">There's no wrong door. Choose what's closest, and we'll bring the right tools to you.</p>
+  <div class="fb-picker-row" id="fb-picker-row"></div>
+</section>
+
+<!-- ======================= LIBRARY ======================= -->
+<section class="fb-library" id="fb-library">
+  <div class="fb-library-head">
+    <h2>The Kindred Moments library</h2>
+    <p class="section-sub" id="fb-context">Every tool, in one quiet place. Filter by what you need.</p>
+  </div>
+  <div class="fb-cats" id="fb-cats" role="group" aria-label="Filter tools by category"></div>
+  <div class="fb-toolgrid" id="fb-toolgrid"></div>
+  <p class="fb-count" id="fb-count"></p>
+</section>
+
+<!-- ======================= HOW MOMENTS WORK ======================= -->
+<section class="fb-how">
+  <div class="fb-how-inner">
+    <div class="fb-how-item">
+      <span class="next-icon" style="--nic:#E6EAE2; --nstroke:#687A65">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
+      </span>
+      <h3>Grounded in evidence</h3>
+      <p>Built on approaches like CBT, ACT, and body-based regulation — and reviewed for clinical accuracy by mental health professionals.</p>
+    </div>
+    <div class="fb-how-item">
+      <span class="next-icon" style="--nic:#F4E3DB; --nstroke:#BE765F">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      </span>
+      <h3>Made for real life</h3>
+      <p>Most Moments take under five minutes, and none of them judge you for missing a day. Tools should fit your life — not the other way around.</p>
+    </div>
+    <div class="fb-how-item">
+      <span class="next-icon" style="--nic:#E9E1EE; --nstroke:#8E77A0">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg>
+      </span>
+      <h3>Yours to keep</h3>
+      <p>Save the ones that help to My Kindred, and they'll be waiting — on the site today, in the app wherever you go.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= COLLECTIONS ======================= -->
+<section class="fb-collections">
+  <h2>Feel better over time</h2>
+  <p class="section-sub">Small stacks of Moments that build on each other — a week at your pace, not a program with a scoreboard.</p>
+  <div class="fb-collgrid">
+    <a class="fb-coll" href="#fb-library" data-coll="sleep" style="--chip:#E3E8EF">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M34 30a13 13 0 0 1-16.5-16.5A13 13 0 1 0 34 30z"/><path d="M31 9h6l-6 6h6" opacity=".7"/></svg>
+      <h3>Sleep, restored</h3>
+      <p>For nights when rest won't come — and the days that follow them.</p>
+      <span class="path-cta">4 Moments <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="fb-coll" href="#fb-library" data-coll="steady" style="--chip:#E6EAE2">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 40V22"/><path d="M24 26c0-8-6-12-14-12 0 8 6 12 14 12zM24 20c0-7 5-10 12-10 0 7-5 10-12 10z"/></svg>
+      <h3>Quiet the inner critic</h3>
+      <p>Practice a kinder voice — the one you'd use with someone you love.</p>
+      <span class="path-cta">4 Moments <span aria-hidden="true">→</span></span>
+    </a>
+    <a class="fb-coll" href="#fb-library" data-coll="calm" style="--chip:#F3E4C9">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 24c5-6 11-6 16 0s11 6 16 0" opacity=".9"/><path d="M8 33c5-6 11-6 16 0s11 6 16 0" opacity=".6"/><path d="M8 15c5-6 11-6 16 0s11 6 16 0" opacity=".6"/></svg>
+      <h3>Steadier under stress</h3>
+      <p>Build a small kit your nervous system can reach for on hard days.</p>
+      <span class="path-cta">5 Moments <span aria-hidden="true">→</span></span>
+    </a>
+  </div>
+</section>
+
+<!-- ======================= THERAPY BRIDGE ======================= -->
+<section class="fb-bridge">
+  <div class="fb-bridge-inner">
+    <div>
+      <h2>Tools help. People help more.</h2>
+      <p>Kindred Moments are for the moment — they're not a substitute for real support. If what you're carrying keeps coming back, feels heavy most days, or is getting in the way of your life, talking with someone is a strong next step.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-dark" href="index.html#find-therapist">Find a therapist who fits</a>
+        <a class="btn btn-outline" href="index.html#therapy">Learn about therapy</a>
+      </div>
+    </div>
+    <p class="flow-safety-note">In crisis, or supporting someone who is? Free, confidential help is available 24/7 — call or text <a href="tel:988"><strong>988</strong></a>. You don't have to be suicidal to reach out.</p>
+  </div>
+</section>
+
+<!-- ======================= SAVE BAND ======================= -->
+<section class="mws-save">
+  <div class="mws-save-inner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg>
+    <div>
+      <h2>Build your own toolkit.</h2>
+      <p>Save the Moments that help to My Kindred — they'll be ready the next time you need them, no searching required.</p>
+    </div>
+    <div class="mws-save-cta">
+      <a class="btn btn-dark" href="my-kindred.html">Create My Kindred</a>
+      <p class="mkt-fine">Free. Private. No app required.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#FFF8EF"/>
+        <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+        <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+      </svg>
+      <div>
+        <p class="brand-name">Kindred</p>
+        <p class="brand-tag">Therapy, matched to you</p>
+      </div>
+    </div>
+
+    <nav class="footer-col" aria-label="About">
+      <h4>About</h4>
+      <a href="#">About Us</a><a href="#">Our Values</a><a href="#">Careers</a><a href="#">Press</a>
+    </nav>
+    <nav class="footer-col" aria-label="Support">
+      <h4>Support</h4>
+      <a href="#">Help Center</a><a href="#">Contact Us</a><a href="#">Accessibility</a><a href="#">Privacy</a>
+    </nav>
+    <nav class="footer-col" aria-label="Connect">
+      <h4>Connect</h4>
+      <a href="#">Instagram</a><a href="#">YouTube</a><a href="#">TikTok</a><a href="#">Newsletter</a>
+    </nav>
+
+    <div class="footer-crisis">
+      <h4>Need help now?</h4>
+      <p>If you or someone you know is in crisis, help is available 24/7. Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).</p>
+      <a class="btn btn-clay" href="tel:988">Get immediate help</a>
+    </div>
+  </div>
+  <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
+</footer>
+
+</main>
+
+<!-- ======================= TOOL PLAYER ======================= -->
+<div class="mk-overlay fb-player-overlay" id="fb-player" hidden>
+  <div class="mk-modal fb-player-modal" role="dialog" aria-modal="true" aria-label="Kindred Moment">
+    <button class="mk-modal-close" id="fb-player-close" aria-label="Close">✕</button>
+    <div id="fb-player-screen"></div>
+  </div>
+</div>
+
+<script src="feel-better.js?v=3"></script>
+</body>
+</html>

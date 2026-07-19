@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kindred — Therapy, matched to you.</title>
+<meta name="description" content="Kindred makes finding a therapist feel less like searching a database and more like recognizing a person you can actually talk to. Articles, tools, and real support for your mind, your daily life, and your relationships.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=14">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+</head>
+<body>
+
+<!-- ======================= HEADER ======================= -->
+<header class="site-header">
+  <a class="brand" href="#top" aria-label="Kindred home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">Kindred</span>
+      <span class="brand-tag">Therapy, matched to you</span>
+    </span>
+  </a>
+
+  <nav class="main-nav" aria-label="Primary">
+    <a href="start-here.html">Start Here</a>
+    <a href="understand-yourself.html">Understand Yourself</a>
+    <a href="feel-better.html">Feel Better</a>
+    <a href="#life-relationships">Life &amp; Relationships</a>
+    <a href="#therapy">Therapy</a>
+    <a href="#find-therapist">Find Your Therapist</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="icon-btn" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </button>
+    <a class="btn btn-outline btn-sm" href="my-kindred.html">Create My Kindred</a>
+    <a class="btn btn-dark btn-sm" href="#app">Open the App</a>
+  </div>
+
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main id="top">
+
+<!-- ======================= HERO ======================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <h1>
+        <em class="hl-moss">Understand yourself.</em><br>
+        <em class="hl-clay">Feel a little better.</em><br>
+        <em class="hl-lilac">Find support you need.</em>
+      </h1>
+      <p class="hero-sub">Articles, tools, and real support for your mind, your daily life, and your relationships.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-dark" href="start-here.html">Start where you are</a>
+        <a class="btn btn-outline" href="#checkin">Take the Check-In</a>
+      </div>
+      <p class="hero-trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Private. Secure. Judgement-free.
+      </p>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-photo">
+        <img class="hero-illust" src="assets/hero.jpg" alt="A woman relaxing on a sofa with a warm mug, looking out a bright window">
+        <span class="blob blob-clay" aria-hidden="true"></span>
+        <span class="blob blob-lilac" aria-hidden="true"></span>
+      </div>
+
+      <aside class="hero-card">
+        <svg class="hero-card-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+        <p class="hero-card-lead">You don't have to have it all figured out.</p>
+        <p class="hero-card-body">We'll help you take the next right step.</p>
+        <svg class="hero-card-underline" viewBox="0 0 120 12" aria-hidden="true"><path d="M4 8 Q40 2 70 7 T116 5" fill="none" stroke="#E8C687" stroke-width="3" stroke-linecap="round"/></svg>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= CHECK-IN ======================= -->
+<section class="checkin" id="checkin">
+  <h2 class="section-title">How are you, really?</h2>
+  <p class="section-sub">There's no right answer. We're here for wherever you are today.</p>
+
+  <div class="mood-grid" role="group" aria-label="How are you feeling today?">
+    <button class="mood" data-mood="Overwhelmed" style="--chip:#F2DFD6">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 26c3-9 8-14 14-13s9 6 7 11-8 7-12 4 0-10 6-10 10 4 9 9-6 8-11 7"/></svg>
+      <span>Overwhelmed</span>
+    </button>
+    <button class="mood" data-mood="Anxious" style="--chip:#E9E1EE">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 18c4-4 8-4 12 0s8 4 12 0 6-3 8-1M8 26c4-4 8-4 12 0s8 4 12 0 6-3 8-1M8 34c4-4 8-4 12 0s8 4 12 0 6-3 8-1"/></svg>
+      <span>Anxious</span>
+    </button>
+    <button class="mood" data-mood="Low" style="--chip:#E6E4EC">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30a8 8 0 1 1 2-15.8A10 10 0 0 1 35 17a7 7 0 0 1-1 13.9z"/></svg>
+      <span>Low</span>
+    </button>
+    <button class="mood" data-mood="Stuck" style="--chip:#E3E8E1">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="24" cy="24" r="4"/><circle cx="24" cy="24" r="10"/><circle cx="24" cy="24" r="16"/></svg>
+      <span>Stuck</span>
+    </button>
+    <button class="mood" data-mood="Disconnected" style="--chip:#F6EBD8">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="15" r="6"/><path d="M12 38c1-8 6-12 12-12s11 4 12 12"/></svg>
+      <span>Disconnected</span>
+    </button>
+    <button class="mood" data-mood="Exhausted" style="--chip:#F3E4C9">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="16" width="28" height="16" rx="4"/><path d="M36 21h4v6h-4"/><rect x="13" y="21" width="7" height="6" rx="1.5" fill="currentColor" stroke="none" opacity=".8"/></svg>
+      <span>Exhausted</span>
+    </button>
+    <button class="mood" data-mood="Hurting" style="--chip:#F0DBD9">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 39C15 32 9 26.5 9 20.4 9 16 12.4 13 16.5 13c3 0 5.7 1.5 7.5 3.9 1.8-2.4 4.5-3.9 7.5-3.9 4.1 0 7.5 3 7.5 7.4C39 26.5 33 32 24 39z"/></svg>
+      <span>Hurting</span>
+    </button>
+    <button class="mood" data-mood="Not sure" style="--chip:#ECE5EF">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="16"/><path d="M19 19a5 5 0 0 1 9.6 2c0 3-4.6 3.4-4.6 6.5"/><circle cx="24" cy="32.5" r=".5" fill="currentColor"/></svg>
+      <span>Not sure</span>
+    </button>
+  </div>
+
+  <button class="btn btn-dark checkin-cta" id="checkin-cta">Take the Kindred Check-In</button>
+</section>
+
+<!-- ======================= PILLARS ======================= -->
+<section class="pillars">
+  <article class="pillar" id="understand-yourself">
+    <div class="pillar-photo" role="img" aria-label="An open journal, pen, and mug on a soft blanket">
+      <svg viewBox="0 0 400 220" aria-hidden="true">
+        <rect width="400" height="220" fill="#EDE0D4"/>
+        <path d="M0 0 q120 40 90 120 q-20 70 -90 60z" fill="#8C9C87" opacity=".7"/>
+        <path d="M30 -10 q80 30 60 90 q-15 50 -70 45z" fill="#687A65" opacity=".6"/>
+        <rect x="120" y="70" width="180" height="110" rx="6" fill="#FFF8EF" transform="rotate(-4 210 125)"/>
+        <line x1="210" y1="62" x2="202" y2="176" stroke="#E3D4C0" stroke-width="3"/>
+        <g stroke="#CFBEA6" stroke-width="2.4" stroke-linecap="round">
+          <line x1="138" y1="94" x2="192" y2="90"/><line x1="140" y1="108" x2="194" y2="104"/><line x1="142" y1="122" x2="188" y2="118"/>
+          <line x1="222" y1="88" x2="278" y2="84"/><line x1="224" y1="102" x2="280" y2="98"/>
+        </g>
+        <rect x="245" y="130" width="90" height="8" rx="4" fill="#422448" transform="rotate(18 290 134)"/>
+        <ellipse cx="340" cy="80" rx="34" ry="30" fill="#687A65"/>
+        <ellipse cx="340" cy="74" rx="26" ry="10" fill="#8C9C87"/>
+      </svg>
+    </div>
+    <span class="pillar-icon" style="--pic:#687A65">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#FFF8EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1.6-3.7-2-6-2v14c2.3 0 4.5.4 6 2 1.5-1.6 3.7-2 6-2V4c-2.3 0-4.5.4-6 2z"/><path d="M12 6v14"/></svg>
+    </span>
+    <h3 class="pillar-title t-moss">Understand Yourself</h3>
+    <p class="pillar-desc">Explore what you're feeling and why. Learn with articles, guides, and expert answers.</p>
+    <ul class="pillar-list">
+      <li>Anxiety</li><li>Burnout</li><li>Self-esteem</li><li>Trauma</li><li>And more</li>
+    </ul>
+    <a class="pillar-link" href="understand-yourself.html">Explore topics <span aria-hidden="true">→</span></a>
+  </article>
+
+  <article class="pillar" id="feel-better">
+    <div class="pillar-photo" role="img" aria-label="A lit candle beside a warm cup of tea on linen">
+      <svg viewBox="0 0 400 220" aria-hidden="true">
+        <rect width="400" height="220" fill="#F0E5D8"/>
+        <path d="M0 220 q120 -50 400 -20 v20z" fill="#E2D2C0"/>
+        <ellipse cx="150" cy="168" rx="60" ry="14" fill="#DAC8B0"/>
+        <path d="M105 110 q45 -16 90 0 l-8 58 q-37 12 -74 0z" fill="#FFF8EF"/>
+        <rect x="146" y="86" width="8" height="20" rx="4" fill="#EFDFC7"/>
+        <path d="M150 62 q-10 14 0 24 q10 -10 0 -24z" fill="#D99B54"/>
+        <ellipse cx="285" cy="160" rx="58" ry="16" fill="#CDB99A"/>
+        <path d="M240 118 q45 -14 90 0 l-10 40 q-35 10 -70 0z" fill="#B8A3C4"/>
+        <ellipse cx="285" cy="118" rx="45" ry="10" fill="#CBBAD4"/>
+        <ellipse cx="285" cy="118" rx="34" ry="7" fill="#BA8B66"/>
+        <path d="M262 100 q8 -14 20 -8 M292 98 q10 -10 18 -2" stroke="#F4EADC" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="pillar-icon" style="--pic:#B8A3C4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#422448" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c-4 0-7-2.4-7-6 1.8.2 3 .8 4 1.8C9 12 10 8 12 5c2 3 3 7 3 10.8 1-1 2.2-1.6 4-1.8 0 3.6-3 6-7 6z"/></svg>
+    </span>
+    <h3 class="pillar-title t-lilac">Feel Better</h3>
+    <p class="pillar-desc">Tools and exercises to support your mind in the moments that matter.</p>
+    <ul class="pillar-list">
+      <li>Calm your mind</li><li>Manage stress</li><li>Sleep better</li><li>Build confidence</li><li>And more</li>
+    </ul>
+    <a class="pillar-link" href="feel-better.html">Find what helps <span aria-hidden="true">→</span></a>
+  </article>
+
+  <article class="pillar" id="life-relationships">
+    <div class="pillar-photo" role="img" aria-label="Two people holding hands on a cozy blanket">
+      <svg viewBox="0 0 400 220" aria-hidden="true">
+        <rect width="400" height="220" fill="#EFDFD2"/>
+        <path d="M0 140 q100 -30 200 0 t200 -10 v90 h-400z" fill="#E4CFB9"/>
+        <path d="M0 170 q120 -24 240 0 t160 -6 v56 h-400z" fill="#D7C1A6"/>
+        <path d="M150 120 q14 -26 40 -18 q10 -22 34 -12 q22 8 16 32 l-10 34 q-30 16 -62 2 z" fill="#BE765F"/>
+        <path d="M168 132 q20 -12 44 -2" stroke="#A05F4B" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M120 96 q18 -10 34 6" stroke="#BA8B66" stroke-width="12" fill="none" stroke-linecap="round"/>
+        <path d="M252 92 q22 -6 30 14" stroke="#8C5F41" stroke-width="12" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="pillar-icon" style="--pic:#BE765F">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#FFF8EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.2"/><circle cx="16.5" cy="10.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>
+    </span>
+    <h3 class="pillar-title t-clay">Life &amp; Relationships</h3>
+    <p class="pillar-desc">Support for the relationships and real life you're navigating.</p>
+    <ul class="pillar-list">
+      <li>Relationships</li><li>Family</li><li>Work &amp; life</li><li>Transitions</li><li>And more</li>
+    </ul>
+    <a class="pillar-link" href="#">Get support <span aria-hidden="true">→</span></a>
+  </article>
+
+  <article class="pillar" id="therapy">
+    <div class="pillar-photo" role="img" aria-label="A calm therapy room with an armchair and plants">
+      <svg viewBox="0 0 400 220" aria-hidden="true">
+        <rect width="400" height="220" fill="#F1E7DA"/>
+        <rect x="250" y="20" width="120" height="150" rx="6" fill="#FFF6E6"/>
+        <rect x="250" y="20" width="120" height="150" rx="6" fill="none" stroke="#DECDB2" stroke-width="5"/>
+        <line x1="310" y1="20" x2="310" y2="170" stroke="#DECDB2" stroke-width="4"/>
+        <path d="M70 190 q-16 -70 44 -76 q8 -40 54 -34 q46 6 44 50 q30 20 14 60z" fill="#5B3A63"/>
+        <path d="M96 122 q40 -14 84 0 l-6 52 q-36 12 -72 0z" fill="#6F4B77"/>
+        <rect x="88" y="170" width="110" height="12" rx="6" fill="#422448"/>
+        <path d="M330 150 q-20 -34 -6 -60 q18 14 12 38 q8 -26 22 -32 q6 30 -16 54z" fill="#687A65"/>
+        <ellipse cx="335" cy="158" rx="22" ry="8" fill="#BA8B66"/>
+        <ellipse cx="205" cy="204" rx="150" ry="10" fill="#E2D2BC"/>
+      </svg>
+    </div>
+    <span class="pillar-icon" style="--pic:#422448">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#FFF8EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 11a2 2 0 0 1 2 2v1h12v-1a2 2 0 0 1 4 0v3a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-3a2 2 0 0 1 2-2z"/><path d="M6 19v2M18 19v2"/></svg>
+    </span>
+    <h3 class="pillar-title t-aubergine">Therapy</h3>
+    <p class="pillar-desc">Learn about therapy, approaches, and how to find the right fit.</p>
+    <ul class="pillar-list">
+      <li>Do I need therapy?</li><li>How it works</li><li>Types of therapy</li><li>FAQs</li><li>And more</li>
+    </ul>
+    <a class="pillar-link" href="#">Learn more <span aria-hidden="true">→</span></a>
+  </article>
+</section>
+
+<!-- ======================= FIND YOUR THERAPIST ======================= -->
+<section class="match-band" id="find-therapist">
+  <div class="match-inner">
+    <div class="match-copy">
+      <p class="eyebrow">Find your therapist</p>
+      <h2>Therapy is personal.<br>Finding it should be too.</h2>
+      <p>Kindred matches beyond specialties and credentials. Discover therapists based on what you need, how you communicate, and what helps you feel understood.</p>
+      <p class="match-trustline">Credentials matter. Connection does too.</p>
+      <a class="btn btn-dark" href="#">Find my Kindred Matches</a>
+    </div>
+
+    <div class="match-card" id="match-card">
+      <div class="match-photo">
+        <span class="match-badge" id="match-badge">94% Kindred Match</span>
+        <svg viewBox="0 0 300 300" aria-hidden="true" id="match-portrait">
+          <rect width="300" height="300" fill="#EFE2D3"/>
+          <circle cx="150" cy="122" r="56" fill="#C68B62"/>
+          <path d="M96 128 q-8 -70 54 -72 q62 -2 56 70 q-4 34 -20 44 q10 -44 -36 -46 q-46 -2 -36 44 q-14 -10 -18 -40z" fill="#3B2531"/>
+          <path d="M70 268 q14 -74 80 -76 q66 2 80 76z" fill="#B8A3C4"/>
+          <path d="M118 208 q32 -20 64 0 l-6 30 h-52z" fill="#FFF8EF"/>
+          <path d="M128 168 q22 18 44 0 q-4 26 -22 26 q-18 0 -22 -26z" fill="#B87A54"/>
+        </svg>
+        <button class="match-fav" aria-label="Save to shortlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+        </button>
+      </div>
+      <div class="match-info">
+        <h3 class="match-name" id="match-name">Maya Chen, LMFT</h3>
+        <p class="match-meta" id="match-meta">She/Her&ensp;•&ensp;Licensed in CA</p>
+        <div class="match-pills" id="match-pills">
+          <span>Warm</span><span>Direct</span><span>Collaborative</span>
+        </div>
+        <p class="match-prompt-label" id="match-prompt-label">You may be a fit if…</p>
+        <blockquote class="match-quote" id="match-quote">"You look fine on paper but feel exhausted from being the strong one."</blockquote>
+      </div>
+      <div class="match-side">
+        <p class="match-spec-label">Specialties</p>
+        <ul id="match-specs">
+          <li>Anxiety</li><li>Life Transitions</li><li>Relationship issues</li><li>Burnout</li><li>Self-Esteem</li>
+        </ul>
+        <a class="pillar-link" href="#">View profile <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="match-dots" role="tablist" aria-label="Featured therapists">
+        <button class="dot active" data-idx="0" aria-label="Therapist 1"></button>
+        <button class="dot" data-idx="1" aria-label="Therapist 2"></button>
+        <button class="dot" data-idx="2" aria-label="Therapist 3"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= KINDRED MOMENTS ======================= -->
+<section class="moments">
+  <div class="moments-head">
+    <h2>Support for<br>the moment you're in.</h2>
+    <p>Kindred Moments are quick, evidence-informed tools to help you feel more like yourself.</p>
+    <a class="pillar-link" href="feel-better.html">Browse all tools <span aria-hidden="true">→</span></a>
+  </div>
+
+  <div class="moments-row" id="moments-row">
+    <article class="moment" style="--chip:#F2DFD6">
+      <span class="moment-time">1 min</span>
+      <span class="moment-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 26c3-9 8-14 14-13s9 6 7 11-8 7-12 4 0-10 6-10 10 4 9 9-6 8-11 7"/></svg>
+      </span>
+      <h3>Stop a Spiral</h3>
+      <p>Ground yourself fast when your mind races.</p>
+    </article>
+    <article class="moment" style="--chip:#E9E1EE">
+      <span class="moment-time">3 min</span>
+      <span class="moment-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h22a4 4 0 0 1 4 4v9a4 4 0 0 1-4 4H20l-8 7v-7h-2a4 4 0 0 1-4-4v-9a4 4 0 0 1 4-4z"/><path d="M14 19h16M14 25h10"/></svg>
+      </span>
+      <h3>Before You Send That Text</h3>
+      <p>Pause. Breathe. Choose what aligns with you.</p>
+    </article>
+    <article class="moment" style="--chip:#F3E4C9">
+      <span class="moment-time">5 min</span>
+      <span class="moment-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="24" cy="26" r="8"/><path d="M24 10v4M35.3 14.7l-2.8 2.8M40 26h-4M12.7 14.7l2.8 2.8M8 26h4M6 36h36" /></svg>
+      </span>
+      <h3>Reset After a Hard Day</h3>
+      <p>Release the heaviness and reset your mind.</p>
+    </article>
+    <article class="moment" style="--chip:#E6E4EC">
+      <span class="moment-time">3 min</span>
+      <span class="moment-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M36 30a14 14 0 0 1-17.8-17.8A14 14 0 1 0 36 30z"/></svg>
+      </span>
+      <h3>Fall Asleep Easier</h3>
+      <p>Quiet your thoughts and rest deeper.</p>
+    </article>
+    <article class="moment" style="--chip:#E3E8E1">
+      <span class="moment-time">2 min</span>
+      <span class="moment-icon">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 40V22"/><path d="M24 26c0-8-6-12-14-12 0 8 6 12 14 12zM24 20c0-7 5-10 12-10 0 7-5 10-12 10z"/></svg>
+      </span>
+      <h3>You're Not Alone</h3>
+      <p>A reminder for when it all feels too much.</p>
+    </article>
+  </div>
+
+  <button class="moments-arrow" id="moments-arrow" aria-label="See more tools">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>
+  </button>
+</section>
+
+<!-- ======================= MY KINDRED TEASER ======================= -->
+<section class="mkt-band">
+  <div class="mkt-inner">
+    <div>
+      <h2>Make Kindred yours.</h2>
+      <p>Save what helps. Come back when you need it. My Kindred is a quiet place to keep what matters.</p>
+      <a class="btn btn-dark" href="my-kindred.html">Create My Kindred</a>
+      <p class="mkt-fine">Free. Private. No app required.</p>
+    </div>
+    <ul class="mkt-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg>Articles you want to come back to</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20c-4 0-7-2.4-7-6 1.8.2 3 .8 4 1.8C9 12 10 8 12 5c2 3 3 7 3 10.8 1-1 2.2-1.6 4-1.8 0 3.6-3 6-7 6z"/></svg>Tools for hard moments</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>Check-ins and reflections</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.2"/><circle cx="16.5" cy="10.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>Therapists you're considering</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ======================= APP ======================= -->
+<section class="app-band" id="app">
+  <div class="app-inner">
+    <div class="app-phone" aria-hidden="true">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <p class="phone-greet">Good morning, Jamie.</p>
+          <div class="phone-card phone-card-dark">
+            <p class="phone-label">Your Kindred Snapshot <span>Updated today</span></p>
+            <p class="phone-msg">You seem to be carrying a lot right now.</p>
+            <p class="phone-link">See full results →</p>
+          </div>
+          <div class="phone-card">
+            <p class="phone-label">Continue where you left off</p>
+            <p class="phone-msg-sm"><strong>Overthinking</strong> · 5 min tool</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-copy">
+      <h2>Take Kindred<br>with you.</h2>
+      <p>Your check-ins. Your saved tools. Your matches. Your support.</p>
+      <div class="store-badges">
+        <a class="store-badge" href="#" aria-label="Download on the App Store">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.05 12.54c-.03-2.9 2.37-4.3 2.48-4.37-1.35-1.98-3.46-2.25-4.21-2.28-1.79-.18-3.5 1.05-4.4 1.05-.91 0-2.31-1.03-3.8-1-1.95.03-3.75 1.13-4.76 2.88-2.03 3.52-.52 8.72 1.46 11.58.97 1.4 2.12 2.97 3.63 2.91 1.46-.06 2.01-.94 3.77-.94s2.26.94 3.8.91c1.57-.03 2.57-1.42 3.53-2.83 1.11-1.62 1.57-3.19 1.6-3.27-.04-.02-3.07-1.18-3.1-4.64zM14.14 4c.8-.97 1.34-2.32 1.19-3.66-1.15.05-2.55.77-3.38 1.74-.74.86-1.39 2.23-1.22 3.55 1.29.1 2.6-.65 3.41-1.63z"/></svg>
+          <span><small>Download on the</small>App Store</span>
+        </a>
+        <a class="store-badge" href="#" aria-label="Get it on Google Play">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 1.8 13.7 12 3.6 22.2c-.37-.2-.6-.6-.6-1.1V2.9c0-.5.23-.9.6-1.1zm11.5 8.8 2.6-2.6-11.5-6.6 8.9 9.2zm3.9-1.3 2.5 1.4c.8.5.8 1.6 0 2.1l-2.5 1.4-2.9-2.4 2.9-2.5zm-1.3 6.3-2.6-2.6-8.9 9.2 11.5-6.6z"/></svg>
+          <span><small>Get it on</small>Google Play</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="app-values">
+      <div class="app-value">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
+        <h3>Private &amp; Secure</h3>
+        <p>Your privacy is our priority. Always.</p>
+      </div>
+      <div class="app-value">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>
+        <h3>Made for Real Life</h3>
+        <p>Tools that fit in your life, not the other way around.</p>
+      </div>
+      <div class="app-value">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+        <h3>You Belong Here</h3>
+        <p>Judgement-free support for every part of you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#FFF8EF"/>
+        <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+        <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+      </svg>
+      <div>
+        <p class="brand-name">Kindred</p>
+        <p class="brand-tag">Therapy, matched to you</p>
+      </div>
+    </div>
+
+    <nav class="footer-col" aria-label="About">
+      <h4>About</h4>
+      <a href="#">About Us</a><a href="#">Our Values</a><a href="#">Careers</a><a href="#">Press</a>
+    </nav>
+    <nav class="footer-col" aria-label="Support">
+      <h4>Support</h4>
+      <a href="#">Help Center</a><a href="#">Contact Us</a><a href="#">Accessibility</a><a href="#">Privacy</a>
+    </nav>
+    <nav class="footer-col" aria-label="Connect">
+      <h4>Connect</h4>
+      <a href="#">Instagram</a><a href="#">YouTube</a><a href="#">TikTok</a><a href="#">Newsletter</a>
+    </nav>
+
+    <div class="footer-crisis">
+      <h4>Need help now?</h4>
+      <p>If you or someone you know is in crisis, help is available 24/7. Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).</p>
+      <a class="btn btn-clay" href="tel:988">Get immediate help</a>
+    </div>
+  </div>
+  <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
+</footer>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>
