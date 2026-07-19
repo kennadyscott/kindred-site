@@ -193,12 +193,12 @@ const SCREENS = {
       ],
       some: [
         step('feel-better.html', 'Build a small toolkit', 'Tools for the moments it gets in the way — and for steadying the baseline.'),
-        step('index.html#therapy', 'Learn how support works', "No pressure — just a clear picture of what talking to someone is actually like."),
+        step('therapy.html', 'Learn how support works', "No pressure — just a clear picture of what talking to someone is actually like."),
         step('understand-yourself.html', 'Understand the pattern', "Short reads on what you're noticing and why it happens.")
       ],
       lot: [
         step('index.html#find-therapist', 'Meet your Kindred Matches', "When it's heavy most days, you deserve more than self-help. We'll match you with therapists suited to you."),
-        step('index.html#therapy', 'What therapy is really like', 'How it works, what it costs, and how to know if someone is a fit.'),
+        step('therapy.html', 'What therapy is really like', 'How it works, what it costs, and how to know if someone is a fit.'),
         step('feel-better.html', 'Tools for right now', 'Small ways to steady yourself while you line up support.')
       ]
     }[im];
@@ -268,7 +268,7 @@ const SCREENS = {
         <li><strong>The relationship matters most.</strong> Research consistently finds the fit between you and your therapist is one of the strongest predictors that therapy works.</li>
       </ul>
       <div class="flow-nextsteps">
-        ${step('index.html#therapy', 'How therapy works', 'Types of therapy, what sessions are like, what it costs, and FAQs.')}
+        ${step('therapy.html', 'How therapy works', 'Types of therapy, what sessions are like, what it costs, and FAQs.')}
         ${step('index.html#find-therapist', 'See who you might click with', 'Kindred matches on style, communication, and what helps you feel understood — not just credentials.')}
       </div>
       <p class="flow-fine">Still unsure? The <button class="linklike" id="therapy-checkin">Kindred Check-In</button> can help you see whether now is the right time.</p>`;
@@ -287,7 +287,7 @@ const SCREENS = {
       </ul>
       <div class="flow-nextsteps">
         ${step('index.html#life-relationships', 'Guides for supporters', 'How to start the conversation, what to say, and what to avoid.')}
-        ${step('index.html#therapy', 'Help them explore therapy', 'Share what therapy is actually like — it lowers the barrier.')}
+        ${step('therapy.html', 'Help them explore therapy', 'Share what therapy is actually like — it lowers the barrier.')}
       </div>
       <p class="flow-safety-note">If you're worried they might be in crisis, you can call or text <a href="tel:988"><strong>988</strong></a> yourself — counselors also guide people who are supporting someone else.</p>`;
   }
