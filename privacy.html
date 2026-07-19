@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy &amp; Accessibility — Kindred</title>
+<meta name="description" content="No personal data, by design. How Kindred handles what you share — and our commitment to a site everyone can use.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=16">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+<style>
+  .pv-wrap { max-width: 760px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem); }
+  .pv-wrap section { margin-bottom: clamp(2.5rem, 5vw, 3.5rem); scroll-margin-top: 90px; }
+  .pv-wrap h1 { font-size: clamp(2rem, 4vw, 2.8rem); }
+  .pv-wrap h2 { font-size: clamp(1.3rem, 2.4vw, 1.7rem); margin-bottom: .8rem; }
+  .pv-wrap h3 { font-size: 1.05rem; margin-top: 1.4rem; }
+  .pv-wrap p, .pv-wrap li { color: var(--ink-soft); font-size: .95rem; line-height: 1.7; }
+  .pv-wrap p { margin-top: .8rem; }
+  .pv-lede { font-family: 'Fraunces', serif; font-size: 1.2rem !important; font-style: italic; color: var(--clay) !important; }
+  .pv-list { margin-top: .8rem; display: grid; gap: .6rem; }
+  .pv-list li { padding-left: 1.6rem; position: relative; }
+  .pv-list li::before {
+    content: "✓"; position: absolute; left: 0; top: .3rem; width: 17px; height: 17px; border-radius: 5px;
+    background: #E6EAE2; color: var(--moss); font-size: .66rem; font-weight: 700; display: grid; place-items: center;
+  }
+  .pv-list.pv-never li::before { content: "✕"; background: #F0DBD9; color: #A05F4B; }
+  .pv-banner { display: flex; gap: .9rem; align-items: flex-start; background: var(--aubergine); color: #EBE2E6; border-radius: 18px; padding: 1.3rem 1.5rem; margin-top: 1.2rem; }
+  .pv-banner svg { width: 26px; height: 26px; color: var(--gold); flex: none; margin-top: .15rem; }
+  .pv-banner p { color: #DCC9E0; font-size: .92rem; margin: 0; }
+  .pv-banner strong { color: var(--cream); }
+  .pv-note { background: #F1E8F3; border: 1px solid #E0D3E5; border-radius: 14px; padding: 1rem 1.3rem; font-size: .85rem; color: var(--ink); margin-top: 1.2rem; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="Kindred home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">Kindred</span>
+      <span class="brand-tag">Therapy, matched to you</span>
+    </span>
+  </a>
+  <nav class="main-nav" aria-label="Primary">
+    <a href="start-here.html">Start Here</a>
+    <a href="understand-yourself.html">Understand Yourself</a>
+    <a href="feel-better.html">Feel Better</a>
+    <a href="life-relationships.html">Life &amp; Relationships</a>
+    <a href="therapy.html">Therapy</a>
+    <a href="index.html#find-therapist">Find Your Therapist</a>
+  </nav>
+  <div class="header-actions">
+    <a class="btn btn-outline btn-sm" href="my-kindred.html">My Kindred</a>
+    <a class="btn btn-dark btn-sm" href="index.html#app">Open the App</a>
+  </div>
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main class="pv-wrap">
+  <section>
+    <p class="eyebrow">Privacy at Kindred</p>
+    <h1>No personal data, by design.</h1>
+    <p class="pv-lede">You came here with things that are hard to say out loud. Protecting them isn't a policy for us — it's the product.</p>
+    <div class="pv-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
+      <p><strong>The short version:</strong> your check-ins, saved tools, explorations, and reflections stay on your device. Our analytics counts button presses, never people. And no one at Kindred — including administrators — can see your personal data, because our systems are built so it is never collected in the first place.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What stays on your device</h2>
+    <ul class="pv-list">
+      <li>Your check-in answers and how you said you're feeling</li>
+      <li>Tools and articles you save to My Kindred</li>
+      <li>What you type into exercises like Brain Dump — written, sorted, and gone</li>
+      <li>Which feelings, topics, and life situations you explore</li>
+    </ul>
+    <p>None of this is transmitted to Kindred. Close the page and it's still yours alone.</p>
+
+    <h3>What we count — anonymously</h3>
+    <p>To make Kindred better, we count how often buttons are pressed: how many people chose "I'm looking for therapy," how many started a breathing tool, how many therapists reached checkout. These are plain totals with a strict allow-list of non-personal details (like which membership plan). </p>
+    <ul class="pv-list pv-never">
+      <li>No names, emails, or profile text in analytics — ever</li>
+      <li>No user IDs, session IDs, or IP addresses stored</li>
+      <li>No tracking you across the web, no ad pixels, no data sales</li>
+      <li>No check-in answers or exercise content, in any form</li>
+    </ul>
+
+    <h3>Therapist accounts</h3>
+    <p>Therapists who join Kindred provide professional profile information (name, credentials, license) that is, by its nature, public-facing — it's shown to clients. Billing runs on the web through our payment processor; Kindred staff dashboards show aggregate totals (signups, plan mix), not personal records.</p>
+
+    <div class="pv-note">This site is an early prototype. Before Kindred handles real accounts at scale, this page will grow into a full legal privacy policy — but the principle above is the constraint the product is being built around, not a promise added after.</div>
+  </section>
+
+  <section id="accessibility">
+    <h2>Accessibility</h2>
+    <p>Feeling understood includes being able to use the site. Kindred is built with:</p>
+    <ul class="pv-list">
+      <li>Semantic headings, labeled controls, and ARIA roles for screen readers</li>
+      <li>Keyboard access for interactive flows, with visible focus states</li>
+      <li>Color contrast tuned against our cream backgrounds, and meaning never carried by color alone</li>
+      <li>Readable type at comfortable sizes, and layouts that reflow to any screen</li>
+    </ul>
+    <p>We won't always get it right. If anything on Kindred is hard for you to use — a control you can't reach, text you can't read, motion that bothers you — tell us at <a href="mailto:hello@kindred.care" style="text-decoration:underline;">hello@kindred.care</a> and we'll fix it with care and priority.</p>
+  </section>
+
+  <section>
+    <h2>One more thing</h2>
+    <p>If you're in crisis, privacy shouldn't be the thing you're weighing. Call or text <a href="tel:988" style="text-decoration:underline;"><strong>988</strong></a> — free, confidential, 24/7. You don't have to be suicidal to reach out.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#FFF8EF"/>
+        <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+        <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+      </svg>
+      <div>
+        <p class="brand-name">Kindred</p>
+        <p class="brand-tag">Therapy, matched to you</p>
+      </div>
+    </div>
+    <nav class="footer-col" aria-label="About">
+      <h4>About</h4>
+      <a href="about.html">About Us</a><a href="about.html#values">Our Values</a><a href="therapists.html">For Therapists</a><a href="about.html#careers">Careers</a>
+    </nav>
+    <nav class="footer-col" aria-label="Support">
+      <h4>Support</h4>
+      <a href="start-here.html">Help Center</a><a href="about.html#contact">Contact Us</a><a href="privacy.html#accessibility">Accessibility</a><a href="privacy.html">Privacy</a>
+    </nav>
+    <nav class="footer-col" aria-label="Connect">
+      <h4>Connect</h4>
+      <a href="about.html#connect">Instagram</a><a href="about.html#connect">YouTube</a><a href="about.html#connect">TikTok</a><a href="about.html#connect">Newsletter</a>
+    </nav>
+    <div class="footer-crisis">
+      <h4>Need help now?</h4>
+      <p>If you or someone you know is in crisis, help is available 24/7. Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).</p>
+      <a class="btn btn-clay" href="tel:988">Get immediate help</a>
+    </div>
+  </div>
+  <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
+</footer>
+
+<script>
+const navToggle = document.querySelector('.nav-toggle');
+const mainNav = document.querySelector('.main-nav');
+navToggle.addEventListener('click', () => {
+  const open = mainNav.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', open);
+});
+</script>
+<script src="analytics.js?v=1"></script>
+</body>
+</html>

@@ -16,6 +16,11 @@ const moods = document.querySelectorAll('.mood');
 const checkinCta = document.getElementById('checkin-cta');
 let selectedMood = null;
 
+/* the CTA is a real door — it opens the Check-In flow on Start Here */
+checkinCta.addEventListener('click', () => {
+  window.location.href = 'start-here.html#path=checkin';
+});
+
 moods.forEach(btn => {
   btn.addEventListener('click', () => {
     const wasSelected = btn.classList.contains('selected');

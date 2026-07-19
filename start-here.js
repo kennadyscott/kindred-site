@@ -338,3 +338,9 @@ document.getElementById('flow-exit').addEventListener('click', exitFlow);
 
 document.querySelectorAll('[data-path]').forEach(card =>
   card.addEventListener('click', () => enterFlow(card.dataset.path)));
+
+/* deep link: start-here.html#path=unsure|off|now|therapy|loved|checkin */
+(() => {
+  const m = location.hash.match(/path=(unsure|off|now|therapy|loved|checkin)/);
+  if (m) enterFlow(m[1]);
+})();

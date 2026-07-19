@@ -519,7 +519,13 @@ grid.addEventListener('click', e => {
 });
 function openFromHash() {
   const m = location.hash.match(/play=([a-z0-9]+)/);
-  if (m && PLAYERS[m[1]]) openPlayer(m[1]);
+  if (m && PLAYERS[m[1]]) { openPlayer(m[1]); return; }
+  /* deep link: feel-better.html#cat=calm|spiral|sleep|reset|talk|steady */
+  const c = location.hash.match(/cat=([a-z]+)/);
+  if (c && CATS[c[1]]) {
+    setFilter(c[1]);
+    document.getElementById('fb-library').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 window.addEventListener('hashchange', openFromHash);
 openFromHash();
