@@ -1481,3 +1481,48 @@ ul { list-style: none; }
   .tp-steps, .tp-typegrid { grid-template-columns: 1fr; }
   .tp-hero-visual .uy-hero-card { position: static; width: 100%; margin-top: 1rem; border-radius: 20px; }
 }
+
+/* ===================== Life & Relationships page ===================== */
+.lr-hero { padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem); }
+.lr-hero-inner { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(1.5rem, 4vw, 4rem); max-width: 1200px; margin: 0 auto; align-items: center; }
+.lr-hero h1 { font-size: clamp(1.9rem, 3.9vw, 3rem); margin-top: .6rem; }
+.lr-sub { margin-top: 1rem; max-width: 46ch; color: var(--ink-soft); font-size: 1rem; line-height: 1.6; }
+.lr-sub-em { font-family: 'Fraunces', serif; font-style: italic; color: var(--clay); font-size: 1.05rem; }
+.lr-hero-visual { position: relative; }
+.lr-hero-art { position: relative; border-radius: 120px 30px 30px 30px; overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 520/400; }
+.lr-hero-art svg { width: 100%; height: 100%; }
+.lr-hero-art .blob-lilac { right: -35px; bottom: -30px; left: auto; }
+.lr-hero-visual .uy-hero-card { left: -.6rem; right: auto; border-radius: 20px 90px 20px 20px; }
+
+.lr-contexts { max-width: 1200px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem); }
+.lr-centersub { text-align: center; margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+.lr-grid .path-card h3 { font-size: 1.15rem; }
+
+.lr-patterns { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
+.lr-patterns-inner {
+  max-width: 1100px; margin: 0 auto; background: var(--paper); border: 1px solid var(--line);
+  border-radius: 26px; box-shadow: var(--shadow); padding: clamp(1.6rem, 3.5vw, 2.6rem); text-align: center;
+}
+.lr-patterns-inner h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
+.lr-patternchips { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; margin-top: 1.5rem; text-align: left; }
+
+.lr-guides { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
+.lr-guides-inner { max-width: 860px; margin: 0 auto; }
+.lr-guides-head { text-align: center; }
+.lr-guides-head h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
+.lr-guidelist { display: grid; gap: .8rem; margin-top: 1.6rem; }
+.lr-guidelist .tp-faq-body .pillar-link { margin: 1rem 0 0; padding: 0; }
+
+.lr-closer { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
+.lr-closer-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+.lr-closer h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
+.lr-closer .uy-begin-grid { margin-top: 1.8rem; }
+
+@media (max-width: 1080px) {
+  .lr-hero-inner { grid-template-columns: 1fr; }
+  .lr-patternchips { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .lr-patternchips { grid-template-columns: 1fr; }
+  .lr-hero-visual .uy-hero-card { position: static; width: 100%; margin-top: 1rem; border-radius: 20px; }
+}
