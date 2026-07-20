@@ -22,14 +22,16 @@ checkinCta.addEventListener('click', () => {
 });
 
 moods.forEach(btn => {
+  btn.setAttribute('aria-pressed', 'false');
   btn.addEventListener('click', () => {
     const wasSelected = btn.classList.contains('selected');
-    moods.forEach(b => b.classList.remove('selected'));
+    moods.forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false'); });
     if (wasSelected) {
       selectedMood = null;
       checkinCta.textContent = 'Take the Kindred Check-In';
     } else {
       btn.classList.add('selected');
+      btn.setAttribute('aria-pressed', 'true');
       selectedMood = btn.dataset.mood;
       checkinCta.textContent = selectedMood === 'Not sure'
         ? "That's okay — start the Check-In"
@@ -105,7 +107,11 @@ function showTherapist(i) {
   matchQuote.textContent = t.quote;
   matchSpecs.innerHTML = t.specs.map(s => `<li>${s}</li>`).join('');
   matchPortrait.innerHTML = portraitSvg(t);
-  dots.forEach((d, j) => d.classList.toggle('active', i === j));
+  dots.forEach((d, j) => {
+    d.classList.toggle('active', i === j);
+    if (i === j) d.setAttribute('aria-current', 'true');
+    else d.removeAttribute('aria-current');
+  });
   matchFav.classList.remove('faved');
 }
 

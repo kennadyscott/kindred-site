@@ -222,3 +222,6 @@
 .kt-summary p + p { margin-top: .45rem; }
 .kt-summary strong small { font-weight: 500; color: var(--ink-soft); font-size: .74rem; }
 .kt-summary .kt-summary-fine { display: block; margin-top: .7rem; }
+
+/* portal has no main-nav; never show a dead hamburger */
+.kt-portal-body .nav-toggle { display: none !important; }
