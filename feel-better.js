@@ -87,7 +87,7 @@ grid.innerHTML = TOOLS.map((t, i) => {
   const c = CATS[t.cat];
   const start = t.play
     ? `<button class="pillar-link fb-start" data-play="${t.play}">Start <span aria-hidden="true">→</span></button>`
-    : `<a class="pillar-link fb-soon" href="#" title="Coming soon">Start <span aria-hidden="true">→</span></a>`;
+    : `<span class="fb-soon" aria-disabled="true">Coming soon</span>`;
   return `
   <article class="fb-tool ${t.play ? 'fb-tool-playable' : ''}" data-cat="${t.cat}">
     <span class="moment-time">${t.time}</span>
