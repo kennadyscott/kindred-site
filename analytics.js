@@ -64,6 +64,7 @@
     ['.mood', 'home_mood_tap'], /* counts the tap only — never which mood */
     ['#checkin-cta', 'home_checkin'],
     ['.flow-match-cta .btn', 'checkin_match_cta'],
+    ['.sh-close-ctas a[target="_blank"]', 'starthere_close_match'],
     ['.header-actions a[href$="#find-therapist"]', 'header_find_therapist'],
     ['.main-nav .nav-cta-dark[href$="#find-therapist"]', 'header_find_therapist'], /* same CTA, drawer position */
     ['.match-onramp .btn', 'content_match_cta'],

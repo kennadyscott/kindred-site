@@ -220,9 +220,9 @@ const SCREENS = {
       <h2 class="flow-title">${lead}</h2>
       ${recap.length ? `<div class="flow-recap">${recap.map(r => `<span>${r}</span>`).join('')}</div>` : ''}
       <p class="flow-hint">Based on what you shared, here's a gentle place to start.</p>
-      ${im === 'lot' ? matchBlock(matchLead) : ''}
+      ${im === 'lot' ? matchBlock(matchLead, { prefilled: true }) : ''}
       <div class="flow-nextsteps">${steps.join('')}</div>
-      ${im !== 'lot' ? matchBlock(matchLead) : ''}
+      ${im !== 'lot' ? matchBlock(matchLead, { prefilled: true }) : ''}
       ${im === 'lot' ? `<p class="flow-safety-note">If it ever feels unbearable or unsafe, free confidential support is available 24/7 — call or text <a href="tel:988"><strong>988</strong></a>. You don't have to be in crisis to reach out.</p>` : ''}
       <p class="flow-fine">Kindred check-ins help you notice patterns. They're not a diagnosis — and you don't need one to deserve support.</p>
       <button class="flow-restart" id="flow-restart">Start over</button>`;
@@ -306,11 +306,27 @@ const SCREENS = {
   }
 };
 
-function matchBlock(lead) {
+/* the handoff carries what they just shared to the matching app — via the URL
+   hash, so it stays client-side and never touches a server (same privacy
+   pattern as the mood→check-in link). Forward-compatible: the app can read
+   these to pre-filter matches. */
+function matchHref() {
+  const parts = [];
+  if (state.feeling && state.feeling !== 'none') parts.push('feeling=' + encodeURIComponent(state.feeling));
+  if (state.mood) parts.push('mood=' + encodeURIComponent(state.mood));
+  if (state.impact) parts.push('impact=' + encodeURIComponent(state.impact));
+  const base = 'https://raw.githack.com/kennadyscott/kindred/main/index.html';
+  return parts.length ? `${base}#match&${parts.join('&')}` : base;
+}
+
+function matchBlock(lead, opts = {}) {
+  const href = opts.prefilled ? matchHref() : 'https://raw.githack.com/kennadyscott/kindred/main/index.html';
+  const tag = opts.prefilled ? `<p class="flow-match-tag">Based on what you just shared</p>` : '';
   return `
     <div class="flow-match-cta">
+      ${tag}
       <p>${lead}</p>
-      <a class="btn" href="https://raw.githack.com/kennadyscott/kindred/main/index.html" target="_blank" rel="noopener">Match with a Therapist</a>
+      <a class="btn" href="${href}" target="_blank" rel="noopener">${opts.prefilled ? 'See therapists who fit' : 'Match with a Therapist'}</a>
       <p class="flow-match-fine">Matched by fit — never by fee. Free for you, always.</p>
     </div>`;
 }

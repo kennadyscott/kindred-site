@@ -1573,3 +1573,9 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .match-onramp-inner .btn { background: var(--cream); color: var(--aubergine); border: none; }
 .match-onramp-inner .btn:hover { background: #F3E7D8; }
 .match-onramp-fine { color: #B8A3C4 !important; font-size: .78rem !important; margin-top: 1rem !important; }
+
+/* personalized handoff tag on the check-in result match block */
+.flow-match-tag {
+  color: var(--gold); font-size: .72rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; margin: 0 0 .5rem;
+}
