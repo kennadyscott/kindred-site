@@ -51,6 +51,7 @@ const THERAPISTS = [
     promptLabel: 'You may be a fit if…',
     quote: '“You look fine on paper but feel exhausted from being the strong one.”',
     specs: ['Anxiety', 'Life Transitions', 'Relationship issues', 'Burnout', 'Self-Esteem'],
+    photo: 'assets/therapist-maya.jpg',
     skin: '#C68B62', hair: '#3B2531', top: '#B8A3C4', bg: '#EFE2D3'
   },
   {
@@ -61,6 +62,7 @@ const THERAPISTS = [
     promptLabel: 'My therapy style is…',
     quote: '“A real conversation — warm, honest, and with somewhere to go.”',
     specs: ['Depression', 'Men’s Mental Health', 'Stress', 'Career', 'Grief'],
+    photo: 'assets/therapist-devon.jpg',
     skin: '#8C5F41', hair: '#1E1712', top: '#687A65', bg: '#EDE4D6'
   },
   {
@@ -71,6 +73,7 @@ const THERAPISTS = [
     promptLabel: 'First sessions feel like…',
     quote: '“A gentle map-making process. We move at your pace, but we do move.”',
     specs: ['Trauma', 'Family Dynamics', 'Identity', 'Anxiety', 'First-Gen Experiences'],
+    photo: 'assets/therapist-sofia.jpg',
     skin: '#B87A54', hair: '#2A1B14', top: '#BE765F', bg: '#F1E4D8'
   }
 ];
@@ -105,7 +108,15 @@ function showTherapist(i) {
   matchPromptLabel.textContent = t.promptLabel;
   matchQuote.textContent = t.quote;
   matchSpecs.innerHTML = t.specs.map(s => `<li>${s}</li>`).join('');
-  matchPortrait.innerHTML = portraitSvg(t);
+  if (t.photo) {
+    matchPortrait.innerHTML = `<img src="${t.photo}" alt="${t.name}">`;
+    /* if a photo ever fails to load, fall back to the illustrated portrait */
+    matchPortrait.querySelector('img').addEventListener('error', () => {
+      matchPortrait.innerHTML = `<svg viewBox="0 0 300 300" aria-hidden="true">${portraitSvg(t)}</svg>`;
+    });
+  } else {
+    matchPortrait.innerHTML = `<svg viewBox="0 0 300 300" aria-hidden="true">${portraitSvg(t)}</svg>`;
+  }
   dots.forEach((d, j) => {
     d.classList.toggle('active', i === j);
     if (i === j) d.setAttribute('aria-current', 'true');

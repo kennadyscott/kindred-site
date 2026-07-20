@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -102,14 +102,9 @@
     <div class="match-card" id="match-card">
       <div class="match-photo">
         <span class="match-badge" id="match-badge">94% Kindred Match</span>
-        <svg viewBox="0 0 300 300" aria-hidden="true" id="match-portrait">
-          <rect width="300" height="300" fill="#EFE2D3"/>
-          <circle cx="150" cy="122" r="56" fill="#C68B62"/>
-          <path d="M96 128 q-8 -70 54 -72 q62 -2 56 70 q-4 34 -20 44 q10 -44 -36 -46 q-46 -2 -36 44 q-14 -10 -18 -40z" fill="#3B2531"/>
-          <path d="M70 268 q14 -74 80 -76 q66 2 80 76z" fill="#B8A3C4"/>
-          <path d="M118 208 q32 -20 64 0 l-6 30 h-52z" fill="#FFF8EF"/>
-          <path d="M128 168 q22 18 44 0 q-4 26 -22 26 q-18 0 -22 -26z" fill="#B87A54"/>
-        </svg>
+        <div class="match-portrait" id="match-portrait">
+          <img src="assets/therapist-maya.jpg" alt="Maya Chen, LMFT">
+        </div>
         <button class="match-fav" aria-label="Save to shortlist">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
         </button>
@@ -557,7 +552,7 @@
 })();
 </script>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 <!-- ======================= SITE SEARCH ======================= -->
 <style>
   .ksearch-overlay {

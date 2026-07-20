@@ -205,6 +205,8 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 }
 .match-photo { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 1/1; align-self: start; }
 .match-photo svg { width: 100%; height: 100%; }
+.match-portrait { width: 100%; height: 100%; }
+.match-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; display: block; }
 .match-badge {
   position: absolute; top: .7rem; left: .7rem; z-index: 2;
   background: var(--aubergine); color: var(--cream); font-size: .66rem; font-weight: 700;
