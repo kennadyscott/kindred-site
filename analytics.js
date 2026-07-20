@@ -68,6 +68,7 @@
     ['.header-actions a[href$="#find-therapist"]', 'header_find_therapist'],
     ['.main-nav .nav-cta-dark[href$="#find-therapist"]', 'header_find_therapist'], /* same CTA, drawer position */
     ['.match-onramp .btn', 'content_match_cta'],
+    ['.uy-nudge-link', 'uy_midpage_match'],
     ['.match-copy .btn-dark', 'home_find_matches'],
     ['.match-side .pillar-link', 'home_view_profile'],
     ['.match-fav', 'home_save_therapist'],

@@ -526,6 +526,19 @@ document.getElementById('uy-qarrow').addEventListener('click', () => {
   row.scrollTo({ left: nearEnd ? 0 : row.scrollLeft + 360, behavior: 'smooth' });
 });
 
+/* the horizontal question row must not trap vertical page scroll: on a trackpad,
+   a mostly-vertical gesture over it gets axis-locked to horizontal and the page
+   stops. Keep horizontal intent in the row; send vertical intent to the page. */
+(() => {
+  const row = document.getElementById('uy-qrow');
+  if (!row) return;
+  row.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // genuine horizontal scroll — leave it
+    window.scrollBy(0, e.deltaY);
+    e.preventDefault();
+  }, { passive: false });
+})();
+
 /* ---------- deep links: #topic=KEY / #compare=KEY (used by exploration result pages) ---------- */
 (() => {
   const t = location.hash.match(/topic=([a-z]+)/);
