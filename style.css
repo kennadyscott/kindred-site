@@ -844,6 +844,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .mk-card-therapist { text-align: center; align-items: center; }
 .mk-card-therapist .mk-kind { align-self: stretch; }
 .mk-tphoto { width: 74px; height: 74px; }
+.mk-tphoto img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 22%; display: block; }
 .mk-card-therapist .mk-chiprow { justify-content: center; margin-top: .2rem; }
 .mk-card-therapist .mk-cardctas { align-self: stretch; }
 
@@ -1478,6 +1479,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 }
 .tp-mini-badge { background: var(--gold); color: var(--aubergine-deep); font-weight: 700; font-size: .66rem; padding: .18rem .55rem; border-radius: 999px; }
 .tp-mini-pills { color: #C9B3CE; font-size: .72rem; }
+.tp-mini-ava { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: center 22%; flex: none; }
 .tp-match-ctas { display: flex; justify-content: center; gap: .9rem; flex-wrap: wrap; margin-top: 1.8rem; }
 .tp-match-ctas .btn-dark { background: var(--cream); color: var(--aubergine); box-shadow: 0 6px 18px rgba(20,10,24,.35); }
 .tp-match-ctas .btn-dark:hover { background: #fff; }
