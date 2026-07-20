@@ -59,8 +59,11 @@
     ['#kaud-skip', 'frontdoor_dismissed'],
     ['#kaud-close', 'frontdoor_dismissed'],
     /* homepage */
+    ['.hero-ctas a[href="#find-therapist"]', 'home_hero_find_therapist'],
     ['.hero-ctas a[href="start-here.html"]', 'home_start_where_you_are'],
     ['#checkin-cta', 'home_checkin'],
+    ['.match-copy .btn-dark', 'home_find_matches'],
+    ['.match-side .pillar-link', 'home_view_profile'],
     ['.match-fav', 'home_save_therapist'],
     ['.mkt-inner .btn-dark', 'home_create_my_kindred'],
     /* therapists landing */
