@@ -64,6 +64,9 @@
     ['.mood', 'home_mood_tap'], /* counts the tap only — never which mood */
     ['#checkin-cta', 'home_checkin'],
     ['.flow-match-cta .btn', 'checkin_match_cta'],
+    ['.header-actions a[href$="#find-therapist"]', 'header_find_therapist'],
+    ['.main-nav .nav-cta-dark[href$="#find-therapist"]', 'header_find_therapist'], /* same CTA, drawer position */
+    ['.match-onramp .btn', 'content_match_cta'],
     ['.match-copy .btn-dark', 'home_find_matches'],
     ['.match-side .pillar-link', 'home_view_profile'],
     ['.match-fav', 'home_save_therapist'],
