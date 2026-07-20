@@ -1546,3 +1546,13 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
   .lr-patternchips { grid-template-columns: 1fr; }
   .lr-hero-visual .uy-hero-card { position: static; width: 100%; margin-top: 1rem; border-radius: 20px; }
 }
+
+/* ---------- check-in ending: the match door (every result branch ends here) ---------- */
+.flow-match-cta {
+  background: var(--aubergine); border-radius: 18px;
+  padding: 1.6rem 1.8rem; margin: 1.4rem 0;
+}
+.flow-match-cta > p:first-child { color: #DCC9E0; font-size: .97rem; line-height: 1.6; margin: 0 0 1.1rem; }
+.flow-match-cta .btn { background: var(--cream); color: var(--aubergine); border: none; }
+.flow-match-cta .btn:hover { background: #F3E7D8; }
+.flow-match-fine { color: #B8A3C4; font-size: .78rem; margin: .9rem 0 0; }

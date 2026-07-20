@@ -21,22 +21,21 @@ checkinCta.addEventListener('click', () => {
   window.location.href = 'start-here.html#path=checkin';
 });
 
+/* a mood tap is the moment of highest intent — it opens the Check-In directly,
+   carrying the mood along (in the hash, so it never touches a server) */
 moods.forEach(btn => {
   btn.setAttribute('aria-pressed', 'false');
   btn.addEventListener('click', () => {
-    const wasSelected = btn.classList.contains('selected');
     moods.forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-pressed', 'false'); });
-    if (wasSelected) {
-      selectedMood = null;
-      checkinCta.textContent = 'Take the Kindred Check-In';
-    } else {
-      btn.classList.add('selected');
-      btn.setAttribute('aria-pressed', 'true');
-      selectedMood = btn.dataset.mood;
-      checkinCta.textContent = selectedMood === 'Not sure'
-        ? "That's okay — start the Check-In"
-        : `Feeling ${selectedMood.toLowerCase()} — start the Check-In`;
-    }
+    btn.classList.add('selected');
+    btn.setAttribute('aria-pressed', 'true');
+    selectedMood = btn.dataset.mood;
+    checkinCta.textContent = selectedMood === 'Not sure'
+      ? "That's okay — start the Check-In"
+      : `Feeling ${selectedMood.toLowerCase()} — start the Check-In`;
+    setTimeout(() => {
+      window.location.href = 'start-here.html#path=checkin&mood=' + encodeURIComponent(selectedMood);
+    }, 260);
   });
 });
 

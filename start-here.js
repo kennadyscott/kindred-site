@@ -63,7 +63,7 @@ const IMPACTS = [
 
 /* ---------- flow state ---------- */
 
-const state = { path: null, feeling: null, chips: [], impact: null, history: [] };
+const state = { path: null, feeling: null, chips: [], impact: null, history: [], mood: null };
 
 const flowSection = document.getElementById('sh-flow');
 const flowScreen = document.getElementById('flow-screen');
@@ -197,10 +197,16 @@ const SCREENS = {
         step('understand-yourself.html', 'Understand the pattern', "Short reads on what you're noticing and why it happens.")
       ],
       lot: [
-        step('index.html#find-therapist', 'Meet your Kindred Matches', "When it's heavy most days, you deserve more than self-help. We'll match you with therapists suited to you."),
         step('therapy.html', 'What therapy is really like', 'How it works, what it costs, and how to know if someone is a fit.'),
         step('feel-better.html', 'Tools for right now', 'Small ways to steady yourself while you line up support.')
       ]
+    }[im];
+
+    /* every check-in ends at the same door — matching — with the warmth tuned to how heavy things are */
+    const matchLead = {
+      little: "And whenever you want a person in your corner — not just tools — we'll introduce you to therapists who fit how you communicate.",
+      some: "If you'd like real support with this, meeting the right therapist is easier than you might think. We match on fit, not just credentials.",
+      lot: "When it's heavy most days, you deserve more than self-help. We'll match you with therapists suited to you — how you communicate, what you need, what helps you feel understood."
     }[im];
 
     const lead = {
@@ -214,16 +220,23 @@ const SCREENS = {
       <h2 class="flow-title">${lead}</h2>
       ${recap.length ? `<div class="flow-recap">${recap.map(r => `<span>${r}</span>`).join('')}</div>` : ''}
       <p class="flow-hint">Based on what you shared, here's a gentle place to start.</p>
+      ${im === 'lot' ? matchBlock(matchLead) : ''}
       <div class="flow-nextsteps">${steps.join('')}</div>
+      ${im !== 'lot' ? matchBlock(matchLead) : ''}
       ${im === 'lot' ? `<p class="flow-safety-note">If it ever feels unbearable or unsafe, free confidential support is available 24/7 — call or text <a href="tel:988"><strong>988</strong></a>. You don't have to be in crisis to reach out.</p>` : ''}
       <p class="flow-fine">Kindred check-ins help you notice patterns. They're not a diagnosis — and you don't need one to deserve support.</p>
       <button class="flow-restart" id="flow-restart">Start over</button>`;
   },
 
   checkinIntro() {
+    const moodLine = state.mood
+      ? (state.mood === 'Not sure'
+        ? "Not sure how you're feeling? That's a completely fine place to start."
+        : `You said you're feeling ${state.mood.toLowerCase()}. Let's take a gentle, closer look.`)
+      : 'A few minutes of honest noticing.';
     return `
       <p class="flow-kicker">The Kindred Check-In</p>
-      <h2 class="flow-title">A few minutes of honest noticing.</h2>
+      <h2 class="flow-title">${moodLine}</h2>
       <p class="flow-hint">We'll ask how you've been feeling, what's been weighing on you, and how much it's affecting your days. Private. Thoughtful. No judgment.</p>
       <button class="btn btn-dark flow-continue" id="checkin-begin">Begin <span aria-hidden="true">→</span></button>
       <p class="flow-fine">This check-in helps you notice patterns and find next steps. It isn't a diagnostic tool.</p>`;
@@ -293,6 +306,15 @@ const SCREENS = {
   }
 };
 
+function matchBlock(lead) {
+  return `
+    <div class="flow-match-cta">
+      <p>${lead}</p>
+      <a class="btn" href="https://raw.githack.com/kennadyscott/kindred/main/index.html" target="_blank" rel="noopener">Match with a Therapist</a>
+      <p class="flow-match-fine">Matched by fit — never by fee. Free for you, always.</p>
+    </div>`;
+}
+
 function step(href, title, desc) {
   return `
     <a class="next-step" href="${href}">
@@ -339,8 +361,11 @@ document.getElementById('flow-exit').addEventListener('click', exitFlow);
 document.querySelectorAll('[data-path]').forEach(card =>
   card.addEventListener('click', () => enterFlow(card.dataset.path)));
 
-/* deep link: start-here.html#path=unsure|off|now|therapy|loved|checkin */
+/* deep link: start-here.html#path=unsure|off|now|therapy|loved|checkin[&mood=…]
+   the mood rides in the hash — it never reaches a server */
 (() => {
   const m = location.hash.match(/path=(unsure|off|now|therapy|loved|checkin)/);
+  const mm = location.hash.match(/mood=([^&]+)/);
+  if (mm) state.mood = decodeURIComponent(mm[1]);
   if (m) enterFlow(m[1]);
 })();
