@@ -315,7 +315,7 @@ function matchHref() {
   if (state.feeling && state.feeling !== 'none') parts.push('feeling=' + encodeURIComponent(state.feeling));
   if (state.mood) parts.push('mood=' + encodeURIComponent(state.mood));
   if (state.impact) parts.push('impact=' + encodeURIComponent(state.impact));
-  const base = 'https://raw.githack.com/kennadyscott/kindred/main/index.html';
+  const base = window.KINDRED_APP_URL || 'https://raw.githack.com/kennadyscott/kindred/main/index.html';
   return parts.length ? `${base}#match&${parts.join('&')}` : base;
 }
 
