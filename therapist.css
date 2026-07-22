@@ -225,3 +225,38 @@
 
 /* portal has no main-nav; never show a dead hamburger */
 .kt-portal-body .nav-toggle { display: none !important; }
+
+/* ---------- founding-therapist lead capture ---------- */
+.kt-claim { padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1rem, 4vw, 3rem); }
+.kt-claim-inner {
+  max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 4vw, 3rem); align-items: center;
+  background: var(--kt-aubergine, #422448); border-radius: 26px;
+  padding: clamp(1.8rem, 4vw, 3rem);
+}
+.kt-claim-copy .kt-founding-star { color: #E8C687; font-size: 1.4rem; }
+.kt-claim-copy h2 { font-family: 'Fraunces', serif; font-weight: 500; color: #FFF8EF; font-size: clamp(1.6rem, 3vw, 2.3rem); margin: .3rem 0 .8rem; }
+.kt-claim-copy p { color: #DCC9E0; font-size: .97rem; line-height: 1.6; }
+.kt-claim-count { color: #E8C687 !important; font-size: .82rem !important; font-weight: 600; margin-top: 1rem !important; }
+
+.kt-claim-form { background: #FFFDF8; border-radius: 18px; padding: clamp(1.3rem, 3vw, 1.8rem); display: grid; gap: .9rem; }
+.kt-field { display: grid; gap: .3rem; }
+.kt-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.kt-field label { font-size: .78rem; font-weight: 600; color: #6E6172; }
+.kt-field input, .kt-field select {
+  font-family: 'Inter', sans-serif; font-size: .92rem; color: #2A2230;
+  padding: .6rem .7rem; border: 1px solid #E0D3E5; border-radius: 10px; background: #fff; width: 100%;
+}
+.kt-field input:focus, .kt-field select:focus { outline: 2px solid #B8A3C4; outline-offset: 1px; border-color: #B8A3C4; }
+.kt-claim-submit { width: 100%; margin-top: .3rem; }
+.kt-claim-fine { font-size: .74rem; color: #8A7D8F; line-height: 1.5; margin: 0; }
+.kt-claim-err { font-size: .82rem; color: #A0492F; font-weight: 600; margin: 0; }
+
+.kt-claim-done { background: #FFFDF8; border-radius: 18px; padding: clamp(1.6rem, 4vw, 2.4rem); text-align: center; }
+.kt-claim-check { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #E6EAE2; color: #687A65; font-size: 1.3rem; font-weight: 700; margin-bottom: .6rem; }
+.kt-claim-done h3 { font-family: 'Fraunces', serif; font-weight: 500; color: #422448; font-size: 1.3rem; margin-bottom: .5rem; }
+.kt-claim-done p { color: #6E6172; font-size: .92rem; line-height: 1.6; margin-bottom: 1.1rem; }
+
+@media (max-width: 720px) {
+  .kt-claim-inner { grid-template-columns: 1fr; }
+}

@@ -69,6 +69,17 @@
   .adm-gate .btn { width: 100%; margin-top: .8rem; }
   .adm-gate-fine { font-size: .7rem !important; font-style: italic; margin-top: .8rem !important; }
   @media (max-width: 900px) { .adm-grid, .adm-funnel { grid-template-columns: repeat(2, 1fr); } .adm-bar { grid-template-columns: 140px 1fr 44px; } .adm-cfg { grid-template-columns: 1fr; } }
+  /* leads */
+  .adm-leads-card { border-color: #E0D3E5; }
+  .adm-leads-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .adm-leads-note { font-size: .8rem; color: var(--ink-soft); line-height: 1.55; margin: .5rem 0 1rem; background: #F1E8F3; border: 1px solid #E0D3E5; border-radius: 12px; padding: .7rem .9rem; }
+  .adm-leads-note strong { color: var(--aubergine); }
+  .adm-leads { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .adm-leads th { text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); font-weight: 700; padding: .4rem .6rem; border-bottom: 1.5px solid var(--line); }
+  .adm-leads td { padding: .55rem .6rem; border-bottom: 1px solid var(--line); color: var(--ink); vertical-align: top; }
+  .adm-leads tr:last-child td { border-bottom: none; }
+  .adm-leads a { color: var(--aubergine); text-decoration: underline; }
+  .adm-leads-wrap { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -102,8 +113,8 @@
 
   <div class="adm-grid">
     <div class="adm-tile"><h3>Front door answered</h3><strong id="t-frontdoor">0</strong><span>audience pop-up choices</span></div>
-    <div class="adm-tile"><h3>Therapist signups</h3><strong id="t-subs">0</strong><span>subscribed via portal</span></div>
-    <div class="adm-tile"><h3>Founding spots</h3><strong id="t-spots">200</strong><span>of 200 remaining</span></div>
+    <div class="adm-tile"><h3>Founding signups</h3><strong id="t-subs">0</strong><span>therapists who claimed a spot</span></div>
+    <div class="adm-tile"><h3>Founding spots left</h3><strong id="t-spots">200</strong><span>of 200 remaining</span></div>
     <div class="adm-tile"><h3>Cancellations</h3><strong id="t-cancels">0</strong><span>memberships canceled</span></div>
   </div>
 
@@ -123,6 +134,15 @@
     <div id="c-plans" style="margin-top:1rem;"></div>
   </div>
 
+  <div class="adm-card adm-leads-card">
+    <div class="adm-leads-head">
+      <h2>Founding therapist leads</h2>
+      <button class="adm-link" id="leads-copy" hidden>Copy all emails</button>
+    </div>
+    <p class="adm-leads-note">Therapists who asked to join — business contacts who <strong>opted in</strong> to be recruited, so their details are here for you to act on. This is the one place personal data appears, and only for people signing up to be your members. Client data is still never collected (see the note above).</p>
+    <div id="c-leads"></div>
+  </div>
+
   <div class="adm-card">
     <h2>Every button, counted</h2>
     <div id="c-all"></div>
@@ -139,7 +159,17 @@
 );
 alter table events enable row level security;
 -- visitors may add a count; nobody anonymous may read them back
-create policy "insert only" on events for insert to anon with check (true);</pre>
+create policy "insert only" on events for insert to anon with check (true);
+
+-- Founding-therapist leads (business contacts who opt in on the For Therapists page).
+-- Insert-only for anon; read them back with your service-role key in a real admin backend.
+create table therapist_leads (
+  id bigint generated always as identity primary key,
+  name text, email text, cred text, state text, plan text,
+  ts timestamptz default now()
+);
+alter table therapist_leads enable row level security;
+create policy "insert only" on therapist_leads for insert to anon with check (true);</pre>
     <p>Then paste your project URL and anon key here (stored only in this browser):</p>
     <div class="adm-cfg">
       <input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co">
@@ -188,6 +218,7 @@ create policy "insert only" on events for insert to anon with check (true);</pre
     home_save_therapist: 'Home — save therapist ♥',
     home_create_my_kindred: 'Home — Create My Kindred',
     therapists_claim_spot: 'Therapists — Claim a founding spot',
+    therapists_lead_captured: 'Therapists — FOUNDING SIGNUP ✦',
     therapists_toggle: 'Therapists — billing toggle',
     therapists_create_profile: 'Therapists — Create your profile',
     portal_profile_step: 'Portal — profile started',
@@ -209,6 +240,38 @@ create policy "insert only" on events for insert to anon with check (true);</pre
     catch (e) { return { counts: {}, plans: {}, since: null }; }
   }
 
+  function leadsData() {
+    try { return JSON.parse(localStorage.getItem('kindred-leads')) || []; } catch (e) { return []; }
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+
+  function renderLeads() {
+    const rows = leadsData().slice().reverse(); /* newest first */
+    const el = document.getElementById('c-leads');
+    const copyBtn = document.getElementById('leads-copy');
+    if (!rows.length) {
+      el.innerHTML = '<p class="adm-empty">No founding-therapist signups in this browser yet. When a therapist completes the “Claim your founding spot” form on the For Therapists page, they appear here.</p>';
+      copyBtn.hidden = true;
+      return;
+    }
+    copyBtn.hidden = false;
+    el.innerHTML = `
+      <div class="adm-leads-wrap"><table class="adm-leads">
+        <thead><tr><th>Name</th><th>Email</th><th>Credential</th><th>State</th><th>Plan</th><th>When</th></tr></thead>
+        <tbody>
+          ${rows.map(l => `<tr>
+            <td>${esc(l.name)}</td>
+            <td><a href="mailto:${esc(l.email)}">${esc(l.email)}</a></td>
+            <td>${esc(l.cred)}</td>
+            <td>${esc(l.state) || '—'}</td>
+            <td>${esc(l.plan)}</td>
+            <td>${esc((l.ts || '').slice(0, 10))}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  }
+
   function bars(el, rows, colorClass) {
     if (!rows.length) { el.innerHTML = '<p class="adm-empty">No clicks recorded yet in this browser. Visit the site, press some buttons, and refresh.</p>'; return; }
     const max = Math.max(...rows.map(r => r[1]));
@@ -225,11 +288,13 @@ create policy "insert only" on events for insert to anon with check (true);</pre
     const c = m.counts;
     const g = k => c[k] || 0;
 
+    const leadCount = leadsData().length;
     const fd = ['frontdoor_looking_for_therapy', 'frontdoor_im_a_therapist', 'frontdoor_dismissed'];
     document.getElementById('t-frontdoor').textContent = fd.reduce((s, k) => s + g(k), 0);
-    document.getElementById('t-subs').textContent = g('portal_subscribed');
-    document.getElementById('t-spots').textContent = Math.max(0, 200 - g('portal_subscribed'));
+    document.getElementById('t-subs').textContent = leadCount;
+    document.getElementById('t-spots').textContent = Math.max(0, 200 - leadCount);
     document.getElementById('t-cancels').textContent = g('portal_cancel');
+    renderLeads();
 
     bars(document.getElementById('c-frontdoor'),
       fd.filter(k => g(k) > 0 || true).map(k => [FRIENDLY[k], g(k)]).filter(r => r[1] > 0),
@@ -264,6 +329,16 @@ create policy "insert only" on events for insert to anon with check (true);</pre
       localStorage.removeItem('kindred-metrics');
       renderAll();
     }
+  });
+
+  document.getElementById('leads-copy').addEventListener('click', () => {
+    const emails = leadsData().map(l => l.email).filter(Boolean).join(', ');
+    if (!emails) return;
+    navigator.clipboard?.writeText(emails).then(() => {
+      const b = document.getElementById('leads-copy');
+      b.textContent = 'Copied!';
+      setTimeout(() => { b.textContent = 'Copy all emails'; }, 1500);
+    });
   });
 
   document.getElementById('cfg-save').addEventListener('click', () => {

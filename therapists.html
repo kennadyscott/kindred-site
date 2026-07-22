@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=24">
-<link rel="stylesheet" href="therapist.css?v=3">
+<link rel="stylesheet" href="therapist.css?v=4">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -163,9 +163,63 @@
         <li>Practice insights: profile views, matches, conversations</li>
         <li>No per-client fees. No commission on sessions. Ever.</li>
       </ul>
-      <a class="btn btn-dark kt-price-cta" href="therapist-portal.html#plan=annual" id="kt-price-cta">Claim a founding spot — 3 months free</a>
+      <a class="btn btn-dark kt-price-cta" href="#kt-claim" id="kt-price-cta">Claim a founding spot — 3 months free</a>
       <p class="kt-price-standard" id="kt-price-standard">Standard rate after your founding year: $199/year or $29/month.</p>
       <p class="kt-price-fine">Membership makes you matchable — it never changes how you rank. Nothing does.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= CLAIM / LEAD CAPTURE ======================= -->
+<section class="kt-claim" id="kt-claim">
+  <div class="kt-claim-inner">
+    <div class="kt-claim-copy">
+      <span class="kt-founding-star" aria-hidden="true">★</span>
+      <h2>Claim your founding spot.</h2>
+      <p>Tell us where to reach you and we'll set up your profile personally — no credit card now, and your first 3 months are free. Founding rate holds for your entire first year.</p>
+      <p class="kt-claim-count" id="kt-claim-count">Founding spots are limited to the first 200 therapists.</p>
+    </div>
+
+    <form class="kt-claim-form" id="kt-claim-form" novalidate>
+      <div class="kt-field">
+        <label for="kl-name">Your name</label>
+        <input type="text" id="kl-name" name="name" autocomplete="name" required placeholder="Jordan Ellis">
+      </div>
+      <div class="kt-field">
+        <label for="kl-email">Email</label>
+        <input type="email" id="kl-email" name="email" autocomplete="email" required placeholder="you@practice.com">
+      </div>
+      <div class="kt-field-row">
+        <div class="kt-field">
+          <label for="kl-cred">Credential</label>
+          <select id="kl-cred" name="cred">
+            <option>LMFT</option><option>LCSW</option><option>LPC</option>
+            <option>LMHC</option><option>PhD / PsyD</option><option>Other licensed</option>
+          </select>
+        </div>
+        <div class="kt-field">
+          <label for="kl-state">Licensed in</label>
+          <input type="text" id="kl-state" name="state" autocomplete="off" placeholder="e.g. CA" maxlength="24">
+        </div>
+      </div>
+      <div class="kt-field">
+        <label for="kl-plan">Founding plan you're leaning toward</label>
+        <select id="kl-plan" name="plan">
+          <option value="annual">Annual — $99/yr (best value)</option>
+          <option value="monthly">Monthly — $19/mo</option>
+          <option value="undecided">Not sure yet</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-dark kt-claim-submit" id="kl-submit">Reserve my founding spot</button>
+      <p class="kt-claim-fine">We'll only use this to set up your Kindred profile. No spam, and you're never charged without setting up billing yourself.</p>
+      <p class="kt-claim-err" id="kl-err" hidden></p>
+    </form>
+
+    <div class="kt-claim-done" id="kt-claim-done" hidden>
+      <span class="kt-claim-check" aria-hidden="true">✓</span>
+      <h3 id="kl-done-title">You're on the founding list.</h3>
+      <p id="kl-done-msg">We'll email you within a couple of days to set up your profile. Welcome to Kindred.</p>
+      <a class="btn btn-outline btn-sm" href="therapist-portal.html#plan=annual">Preview how your profile will look →</a>
     </div>
   </div>
 </section>
@@ -214,7 +268,7 @@
   <div class="kt-closing-inner">
     <h2>Your next client is already looking<br>for someone like you.</h2>
     <p>Build your profile in about ten minutes. Become matchable today — free for your first 3 months.</p>
-    <a class="btn btn-dark" href="therapist-portal.html#plan=annual">Claim a founding spot</a>
+    <a class="btn btn-dark" href="#kt-claim">Claim a founding spot</a>
     <p class="mkt-fine">First 200 therapists · 3 months free · Founding rate for year one · Matched by fit, never by fee</p>
   </div>
 </section>
@@ -289,8 +343,74 @@ document.querySelectorAll('.kt-bill').forEach(b => b.addEventListener('click', (
   document.getElementById('kt-price-standard').textContent = p.standard;
   const cta = document.getElementById('kt-price-cta');
   cta.textContent = p.cta;
-  cta.href = 'therapist-portal.html#plan=' + b.dataset.bill;
+  cta.href = '#kt-claim';                               /* route into real lead capture */
+  const planSel = document.getElementById('kl-plan');   /* prefill the claim form's plan */
+  if (planSel && (b.dataset.bill === 'annual' || b.dataset.bill === 'monthly')) planSel.value = b.dataset.bill;
 }));
+
+/* ---------- founding-therapist lead capture ----------
+   Captures the therapist's OWN details (a business contact opting in to be
+   recruited) to a leads store the admin can read. This is separate from the
+   privacy-first client analytics, which never collects anyone's personal data. */
+(() => {
+  const form = document.getElementById('kt-claim-form');
+  const done = document.getElementById('kt-claim-done');
+  const err = document.getElementById('kl-err');
+  const CAP = 200;
+
+  function leads() {
+    try { return JSON.parse(localStorage.getItem('kindred-leads')) || []; } catch (e) { return []; }
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('kl-name').value.trim();
+    const email = document.getElementById('kl-email').value.trim();
+    const okEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    if (!name || !okEmail) {
+      err.textContent = !name ? 'Please add your name.' : 'Please enter a valid email.';
+      err.hidden = false;
+      return;
+    }
+    err.hidden = true;
+
+    const lead = {
+      name, email,
+      cred: document.getElementById('kl-cred').value,
+      state: document.getElementById('kl-state').value.trim(),
+      plan: document.getElementById('kl-plan').value,
+      ts: new Date().toISOString()
+    };
+
+    const all = leads();
+    all.push(lead);
+    localStorage.setItem('kindred-leads', JSON.stringify(all));
+
+    /* optional live mode: insert into a therapist_leads table if Supabase is
+       configured (same config the analytics live-mode uses) */
+    try {
+      const cfg = JSON.parse(localStorage.getItem('kindred-analytics-config') || 'null');
+      if (cfg && cfg.url && cfg.key) {
+        fetch(cfg.url.replace(/\/$/, '') + '/rest/v1/therapist_leads', {
+          method: 'POST', keepalive: true,
+          headers: { 'Content-Type': 'application/json', 'apikey': cfg.key, 'Authorization': 'Bearer ' + cfg.key, 'Prefer': 'return=minimal' },
+          body: JSON.stringify(lead)
+        }).catch(() => {});
+      }
+    } catch (e) {}
+
+    /* analytics gets a COUNT only — never the name/email */
+    if (window.kTrack) window.kTrack('therapists_lead_captured', { plan: lead.plan });
+
+    const spot = Math.min(all.length, CAP);
+    document.getElementById('kl-done-title').textContent = spot <= CAP
+      ? `You're founding therapist #${spot} of ${CAP}.`
+      : "You're on the founding list.";
+    form.hidden = true;
+    done.hidden = false;
+    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+})();
 </script>
 <script src="site.js?v=2"></script>
 <script src="analytics.js?v=6"></script>
