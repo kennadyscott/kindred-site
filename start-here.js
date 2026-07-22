@@ -315,12 +315,12 @@ function matchHref() {
   if (state.feeling && state.feeling !== 'none') parts.push('feeling=' + encodeURIComponent(state.feeling));
   if (state.mood) parts.push('mood=' + encodeURIComponent(state.mood));
   if (state.impact) parts.push('impact=' + encodeURIComponent(state.impact));
-  const base = window.KINDRED_APP_URL || 'https://raw.githack.com/kennadyscott/kindred/main/index.html';
+  const base = window.KINDRED_APP_URL || 'https://kindredtherapymatch.com';
   return parts.length ? `${base}#match&${parts.join('&')}` : base;
 }
 
 function matchBlock(lead, opts = {}) {
-  const href = opts.prefilled ? matchHref() : 'https://raw.githack.com/kennadyscott/kindred/main/index.html';
+  const href = opts.prefilled ? matchHref() : 'https://kindredtherapymatch.com';
   const tag = opts.prefilled ? `<p class="flow-match-tag">Based on what you just shared</p>` : '';
   return `
     <div class="flow-match-cta">
