@@ -588,7 +588,7 @@
     ['Feel Better', '25 quick tools — most under five minutes.', 'feel-better.html', 'tools moments exercises relief'],
     ['Life & Relationships', 'Partners, family, work, big changes.', 'life-relationships.html', 'relationship partner family friends work change'],
     ['Therapy', 'What it is like, what it costs, when it helps.', 'therapy.html', 'therapist cost insurance types faq'],
-    ['Find Your Therapist', 'Matching by fit — open the Kindred app.', 'https://kindredtherapymatch.com', 'match therapist app find'],
+    ['Find Your Therapist', 'Matching by fit — open the Kindred app.', 'APP', 'match therapist app find'],
     ['My Kindred', 'Your private space — saves, check-ins, plans.', 'my-kindred.html', 'account saved dashboard'],
     ['For Therapists', 'Founding membership — first 200 therapists.', 'therapists.html', 'therapist join pricing founding membership'],
     ['Anxiety', 'When worry starts taking up too much room.', 'understand-yourself.html#topic=anxiety', 'anxious worry panic nervous'],
@@ -634,7 +634,7 @@
       : INDEX.slice(0, 6);
     items = matches;
     results.innerHTML = matches.length
-      ? matches.map(([t, d, h], i) => { const u = (window.KINDRED_APP_URL && /raw\.githack/.test(h)) ? window.KINDRED_APP_URL : h; return `<a class="ksearch-item${i === 0 ? ' active' : ''}" href="${u}"${u.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}><strong>${t}</strong><span>${d}</span></a>`; }).join('')
+      ? matches.map(([t, d, h], i) => { const u = h === 'APP' ? (window.KINDRED_APP_URL || 'https://kindredtherapymatch.com') : h; return `<a class="ksearch-item${i === 0 ? ' active' : ''}" href="${u}"${u.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}><strong>${t}</strong><span>${d}</span></a>`; }).join('')
       : '<p class="ksearch-empty">Nothing matched — try "anxiety", "sleep", or "tools". Or start where you are: <a href="start-here.html" style="text-decoration:underline;">Start Here</a>.</p>';
   }
   function open() {
