@@ -4,7 +4,7 @@
    At launch, change THIS ONE LINE to the production app URL. Every "Match with
    a therapist" / store-badge / search link (marked data-app-link) and the
    dynamic check-in handoff read from it — no site-wide find-replace needed. */
-window.KINDRED_APP_URL = 'https://kindredtherapymatch.com';
+window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
 
 (() => {
   /* point every static app link at the current KINDRED_APP_URL (their hardcoded
