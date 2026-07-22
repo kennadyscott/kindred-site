@@ -70,6 +70,7 @@
     ['.match-onramp .btn', 'content_match_cta'],
     ['.uy-nudge-link', 'uy_midpage_match'],
     ['.match-copy .btn-dark', 'home_find_matches'],
+    ['.home-therapist-cta', 'home_therapist_build_profile'],
     ['.match-side .pillar-link', 'home_view_profile'],
     ['.match-fav', 'home_save_therapist'],
     ['.mkt-inner .btn-dark', 'home_create_my_kindred'],

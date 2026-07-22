@@ -1597,3 +1597,6 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
   border-bottom: 2px solid var(--lilac); padding-bottom: 2px;
 }
 .uy-nudge-link:hover { border-bottom-color: var(--aubergine); }
+
+/* match-band dual CTAs (client match + therapist build-profile) */
+.match-ctas { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
