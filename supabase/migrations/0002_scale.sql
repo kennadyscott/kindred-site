@@ -31,14 +31,21 @@ alter table therapists drop column if exists license_state;
 --    (name, specialties, modalities, credentials, languages, and the
 --    "who I work best with" line). Generated + stored so it can be indexed.
 -- ---------------------------------------------------------------------------
+-- Postgres requires every function in a generated expression to be marked
+-- IMMUTABLE. array_to_string is only STABLE (a certification gap, not a real
+-- mutability), so we wrap it in a function we certify ourselves — safe here
+-- because text[] -> text concatenation is deterministic.
+create or replace function arr_text(text[]) returns text
+language sql immutable as $$ select array_to_string(coalesce($1, '{}'), ' ') $$;
+
 alter table therapists add column if not exists search_doc tsvector
   generated always as (
     to_tsvector('english',
       coalesce(name, '') || ' ' ||
-      coalesce(array_to_string(credentials, ' '), '') || ' ' ||
-      coalesce(array_to_string(specialties, ' '), '') || ' ' ||
-      coalesce(array_to_string(modalities,  ' '), '') || ' ' ||
-      coalesce(array_to_string(languages,   ' '), '') || ' ' ||
+      arr_text(credentials) || ' ' ||
+      arr_text(specialties) || ' ' ||
+      arr_text(modalities)  || ' ' ||
+      arr_text(languages)   || ' ' ||
       coalesce(best_for, '')
     )
   ) stored;
