@@ -20,6 +20,10 @@ update therapists
  where license_state is not null
    and (license_states is null or cardinality(license_states) = 0);
 
+-- the 0001 view references license_state, so it must go first (it's recreated
+-- with the new columns at the end of this migration)
+drop view if exists therapists_public;
+
 alter table therapists drop column if exists license_state;
 
 -- ---------------------------------------------------------------------------
