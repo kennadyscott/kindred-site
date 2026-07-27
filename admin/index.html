@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kindred HQ</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: grid; place-items: center;
+         background: #422448; color: #EFE7EA; -webkit-font-smoothing: antialiased; }
+  .lock { width: min(400px, 92vw); text-align: center; padding: 2rem 0; }
+  .mark { width: 52px; height: 52px; margin: 0 auto 1rem; }
+  h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 1.9rem; color: #FAF9FC; }
+  .tag { font-size: .64rem; letter-spacing: .18em; text-transform: uppercase; color: #BE765F; margin-top: .4rem; font-weight: 700; }
+  form { margin-top: 1.8rem; display: grid; gap: .7rem; }
+  input[type="password"] { font: inherit; font-size: 1rem; padding: .85rem 1.1rem; border-radius: 14px; border: 1.5px solid rgba(250,249,252,.25);
+          background: rgba(250,249,252,.08); color: #FAF9FC; text-align: center; outline: none; transition: border-color .15s; }
+  input[type="password"]::placeholder { color: rgba(239,231,234,.45); }
+  input[type="password"]:focus { border-color: #B8A3C4; }
+  button { font: inherit; font-weight: 600; font-size: .95rem; padding: .85rem; border-radius: 999px; border: none; cursor: pointer;
+           background: #FAF9FC; color: #422448; transition: transform .14s; }
+  button:hover { transform: translateY(-1px); }
+  button:disabled { opacity: .55; cursor: wait; transform: none; }
+  label.rem { display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .8rem; color: rgba(239,231,234,.75); cursor: pointer; }
+  label.rem input { accent-color: #B8A3C4; width: 15px; height: 15px; }
+  .err { font-size: .84rem; font-weight: 600; color: #E8C687; min-height: 1.3em; }
+  .fine { margin-top: 1.6rem; font-size: .72rem; color: rgba(239,231,234,.55); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="lock" id="lock">
+  <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+    <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#FAF9FC"/>
+    <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+    <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+  </svg>
+  <h1>Kindred HQ</h1>
+  <p class="tag">Therapy, matched to you</p>
+  <form id="f">
+    <input type="password" id="pw" placeholder="Workspace password" autocomplete="current-password" autofocus>
+    <p class="err" id="err"></p>
+    <button type="submit" id="go">Unlock</button>
+    <label class="rem"><input type="checkbox" id="rem"> Keep me in on this device</label>
+  </form>
+  <p class="fine">Everything behind this door is encrypted. Ask Kennady or Desi for the password — it isn’t written down here, and that’s the point.</p>
+</div>
+<script>
+(async () => {
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const meta = await fetch('payload.enc').then(r => r.json());
+
+  async function decryptWith(key) {
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(meta.iv) }, key, b64(meta.data));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+  async function deriveKey(pw) {
+    const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: b64(meta.salt), iterations: meta.iter, hash: 'SHA-256' },
+      raw, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
+  }
+  function boot(p) {
+    document.getElementById('lock').remove();
+    document.body.style.cssText = '';
+    const st = document.createElement('style'); st.textContent = p.css; document.head.appendChild(st);
+    document.body.innerHTML = p.html;
+    const sc = document.createElement('script'); sc.textContent = p.js; document.body.appendChild(sc);
+  }
+  async function remember(key, persist) {
+    const raw = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', key))));
+    sessionStorage.setItem('khq-key', raw);
+    if (persist) localStorage.setItem('khq-key', raw);
+  }
+
+  /* silent unlock from a remembered key */
+  const stored = sessionStorage.getItem('khq-key') || localStorage.getItem('khq-key');
+  if (stored) {
+    try {
+      const key = await crypto.subtle.importKey('raw', b64(stored), 'AES-GCM', true, ['decrypt']);
+      boot(await decryptWith(key));
+      return;
+    } catch (e) {
+      sessionStorage.removeItem('khq-key'); localStorage.removeItem('khq-key');
+    }
+  }
+
+  document.getElementById('f').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('go'), err = document.getElementById('err');
+    btn.disabled = true; btn.textContent = 'Unlocking…'; err.textContent = '';
+    try {
+      const key = await deriveKey(document.getElementById('pw').value);
+      const payload = await decryptWith(key);   /* GCM auth fails on a wrong password */
+      await remember(key, document.getElementById('rem').checked);
+      boot(payload);
+    } catch (e2) {
+      err.textContent = 'That’s not it.';
+      btn.disabled = false; btn.textContent = 'Unlock';
+      document.getElementById('pw').select();
+    }
+  });
+})();
+</script>
+</body>
+</html>
