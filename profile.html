@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Therapist Profile — Kindred</title>
+<meta name="description" content="See this therapist's Kindred profile — how they work, who they work best with, and whether you two are a fit.">
+<meta property="og:title" content="My profile on Kindred">
+<meta property="og:description" content="See how I work and whether we'd be a good fit.">
+<meta property="og:type" content="profile">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=25">
+<link rel="stylesheet" href="therapist.css?v=4">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+<style>
+  .kp-wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
+  .kp-card { background:#fff; border:1px solid #EBDAC9; border-radius:22px; overflow:hidden; }
+  .kp-photo { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#EFE2D3; }
+  .kp-photo-fallback { width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',Georgia,serif; font-size:64px; color:#fff; background:linear-gradient(135deg,#8a63a8,#5c3766); }
+  .kp-body { padding: 24px 22px 26px; }
+  .kp-name { font-family:'Fraunces',Georgia,serif; font-size:30px; color:#422448; margin:0; line-height:1.15; }
+  .kp-creds { font-size:15px; color:#6b5a70; margin:6px 0 0; }
+  .kp-pronouns { font-size:13.5px; color:#8a7a8f; margin:2px 0 0; }
+  .kp-verified { display:inline-block; margin-top:10px; font-size:12.5px; font-weight:600; color:#4c6b4c;
+    background:#EAF1E8; border-radius:999px; padding:5px 12px; }
+  .kp-facts { display:flex; flex-wrap:wrap; gap:8px 18px; margin:18px 0 0; font-size:14.5px; color:#3a2c40; }
+  .kp-bestfor { background:#F7E8DB; border-radius:14px; padding:14px 16px; margin:18px 0 0;
+    font-style:italic; font-size:15px; line-height:1.5; color:#422448; }
+  .kp-section-title { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:#8a7a8f; margin:24px 0 10px; }
+  .kp-tags { display:flex; flex-wrap:wrap; gap:8px; }
+  .kp-tag { background:#EFE7F2; color:#5b4470; font-size:13px; font-weight:600; border-radius:999px; padding:6px 13px; }
+  .kp-prompt { border-top:1px solid #F2E7DA; padding-top:16px; margin-top:16px; }
+  .kp-prompt-q { font-size:13px; font-weight:700; color:#8a7a8f; margin:0 0 5px; }
+  .kp-prompt-a { font-size:15.5px; line-height:1.6; color:#3a2c40; margin:0; }
+  .kp-cta { margin-top:26px; text-align:center; }
+  .kp-cta h2 { font-family:'Fraunces',Georgia,serif; font-size:24px; color:#422448; margin:0 0 8px; }
+  .kp-cta p { font-size:15px; color:#6b5a70; line-height:1.6; margin:0 0 16px; }
+  .kp-cta .btn { width:100%; font-size:16px; padding:15px 20px; }
+  .kp-cta-fine { font-size:13px; color:#8a7a8f; margin-top:12px; }
+  .kp-state { text-align:center; padding:60px 20px; color:#6b5a70; }
+  .kp-state h1 { font-family:'Fraunces',Georgia,serif; color:#422448; font-size:26px; margin:0 0 10px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="Kindred home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">Kindred</span>
+      <span class="brand-tag">Therapy, matched to you</span>
+    </span>
+  </a>
+  <nav class="main-nav" aria-label="Primary">
+    <a href="start-here.html">Start Here</a><a href="therapy.html">Therapy</a><a href="therapists.html">For Therapists</a>
+  </nav>
+</header>
+
+<main class="kp-wrap">
+  <div id="kp-loading" class="kp-state"><p>Loading profile…</p></div>
+
+  <div id="kp-missing" class="kp-state" hidden>
+    <h1>We couldn't find that profile.</h1>
+    <p>The link may be out of date, or this therapist isn't currently accepting new clients.</p>
+    <p style="margin-top:18px;"><a class="btn btn-dark" href="start-here.html">Find a therapist who fits</a></p>
+  </div>
+
+  <article id="kp-card" class="kp-card" hidden>
+    <div id="kp-photo-wrap"></div>
+    <div class="kp-body">
+      <h1 class="kp-name" id="kp-name"></h1>
+      <p class="kp-creds" id="kp-creds"></p>
+      <p class="kp-pronouns" id="kp-pronouns" hidden></p>
+      <div id="kp-verified-wrap"></div>
+      <div class="kp-facts" id="kp-facts"></div>
+      <div class="kp-bestfor" id="kp-bestfor" hidden></div>
+
+      <div id="kp-specialties-wrap" hidden>
+        <p class="kp-section-title">Specialties</p>
+        <div class="kp-tags" id="kp-specialties"></div>
+      </div>
+
+      <div id="kp-prompts"></div>
+    </div>
+  </article>
+
+  <section class="kp-cta" id="kp-cta" hidden>
+    <h2>Are you two a fit?</h2>
+    <p>Kindred matches you on how you actually want to feel in the room — style, specialty, and what helps you feel understood. Answer a few questions and we'll tell you.</p>
+    <a class="btn btn-dark" id="kp-cta-btn" href="start-here.html">See if we're a match</a>
+    <p class="kp-cta-fine">Free for clients, always. Takes about three minutes.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#FFF8EF"/>
+        <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+        <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+      </svg>
+      <div><p class="brand-name">Kindred</p><p class="brand-tag">Therapy, matched to you</p></div>
+    </div>
+    <div class="footer-crisis">
+      <h4>Need help now?</h4>
+      <p>If you or someone you know is in crisis, help is available 24/7. Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).</p>
+      <a class="btn btn-clay" href="tel:988">Get immediate help</a>
+    </div>
+  </div>
+  <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
+</footer>
+
+<script src="profile.js?v=1"></script>
+<script src="site.js?v=4"></script>
+</body>
+</html>
