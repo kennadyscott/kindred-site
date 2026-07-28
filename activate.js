@@ -42,7 +42,7 @@
    discount is already applied when checkout opens.
    Stripe Payment Links have no attach-a-coupon option, which is why this is
    done with promo codes rather than five separate links. */
-const PAYMENT_LINK = null;   // e.g. 'https://buy.stripe.com/xxxxxxxx'
+const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
 
 /* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
    at a coupon set to "Multiple months / 12" so the rate is locked for a year
