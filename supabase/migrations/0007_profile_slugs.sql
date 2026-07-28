@@ -92,6 +92,14 @@ create trigger therapists_slug before insert or update of name on therapists
   for each row execute function set_therapist_slug();
 
 -- Expose the slug to the public view so the shared profile page can look it up.
+--
+-- DEPENDENCY ORDER: search_therapists() is declared `returns setof
+-- therapists_public`, so it depends on the view's TYPE and Postgres refuses to
+-- drop the view while it exists (2BP01). Drop the function first, replace the
+-- view, then recreate the function against the new shape. (Definition mirrors
+-- 0003 — keep the two in sync if either changes.)
+drop function if exists search_therapists(text, text, text, text, int);
+
 drop view if exists therapists_public;
 create view therapists_public as
   select user_id, slug, name, credentials, pronouns, show_pronouns,
@@ -107,3 +115,29 @@ create view therapists_public as
   where published = true and accepting = true;
 
 grant select on therapists_public to anon, authenticated;
+
+-- Recreate the keyword search against the new view shape (now including slug).
+create or replace function search_therapists(
+  p_query  text,
+  p_state  text default null,
+  p_gender text default null,
+  p_format text default null,
+  p_limit  int  default 30
+)
+returns setof therapists_public
+language sql
+stable
+set search_path = public
+as $$
+  select p.*
+  from therapists_public p
+  where (p_query is null or p_query = ''
+         or p.search_doc @@ plainto_tsquery('english', p_query))
+    and (p_state  is null or p.license_states @> array[p_state])
+    and (p_gender is null or p.gender = p_gender)
+    and (p_format is null or p.formats @> array[p_format])
+  order by p.name
+  limit greatest(1, least(p_limit, 100));
+$$;
+
+grant execute on function search_therapists to anon, authenticated;
