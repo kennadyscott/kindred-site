@@ -15,16 +15,8 @@
 
 alter table therapists add column if not exists slug text;
 
--- lowercase, strip accents/punctuation, collapse spaces to hyphens
-create or replace function kindred_slugify(txt text) returns text
-language sql immutable as $$
-  select trim(both '-' from
-    regexp_replace(
-      regexp_replace(lower(unaccent_safe(coalesce(txt, ''))), '[^a-z0-9]+', '-', 'g'),
-      '-{2,}', '-', 'g'
-    )
-  )
-$$;
+-- ORDER MATTERS: Postgres validates a SQL function's body at creation time, so
+-- unaccent_safe must exist BEFORE kindred_slugify references it.
 
 -- unaccent isn't guaranteed installed; this keeps the function self-contained
 create or replace function unaccent_safe(txt text) returns text
@@ -33,6 +25,17 @@ language sql immutable as $$
     coalesce(txt, ''),
     'áàâäãåéèêëíìîïóòôöõúùûüñçÁÀÂÄÃÅÉÈÊËÍÌÎÏÓÒÔÖÕÚÙÛÜÑÇ',
     'aaaaaaeeeeiiiiooooouuuuncAAAAAAEEEEIIIIOOOOOUUUUNC'
+  )
+$$;
+
+-- lowercase, strip accents/punctuation, collapse spaces to hyphens
+create or replace function kindred_slugify(txt text) returns text
+language sql immutable as $$
+  select trim(both '-' from
+    regexp_replace(
+      regexp_replace(lower(unaccent_safe(coalesce(txt, ''))), '[^a-z0-9]+', '-', 'g'),
+      '-{2,}', '-', 'g'
+    )
   )
 $$;
 
@@ -62,9 +65,17 @@ begin
   if new.name is null or new.name = '' then
     return new;
   end if;
-  -- only (re)generate when the slug is unset or the name actually changed
-  if new.slug is not null and (tg_op = 'INSERT' or new.name is not distinct from old.name) then
-    return new;
+  -- Only (re)generate when the slug is unset, or the name actually changed.
+  -- OLD is not available on INSERT, so that branch is handled separately
+  -- rather than relying on short-circuit evaluation.
+  if tg_op = 'INSERT' then
+    if new.slug is not null then
+      return new;                      -- caller supplied one; respect it
+    end if;
+  else
+    if new.slug is not null and new.name is not distinct from old.name then
+      return new;                      -- nothing relevant changed
+    end if;
   end if;
   base := kindred_slugify(new.name);
   candidate := base;
