@@ -530,7 +530,21 @@
 <script>
 (() => {
   const KEY = 'kindred-audience';
-  if (localStorage.getItem(KEY)) return; /* answered or dismissed before — never nag */
+  const WINDOW_MS = 4 * 60 * 60 * 1000;   /* ask at most once per 4 hours */
+
+  /* Stored as {choice, at}. Anything else counts as stale — including the old
+     bare-string format, which had no timestamp and so gated a visitor forever
+     once they'd answered. Those visitors get asked once more, then fall into
+     the normal 4-hour cycle.
+     localStorage throws in some privacy modes; an unguarded read there would
+     kill this whole block and the popup would never open at all. */
+  let last = null;
+  try { last = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { last = null; }
+  if (last && typeof last.at === 'number' && Date.now() - last.at < WINDOW_MS) return;
+
+  const remember = choice => {
+    try { localStorage.setItem(KEY, JSON.stringify({ choice, at: Date.now() })); } catch (e) {}
+  };
   const overlay = document.getElementById('kaud');
   const open = () => {
     overlay.hidden = false;
@@ -538,13 +552,13 @@
     document.getElementById('kaud-client').focus();
   };
   const close = (choice) => {
-    localStorage.setItem(KEY, choice);
+    remember(choice);
     overlay.classList.remove('kaud-show');
     setTimeout(() => overlay.hidden = true, 300);
   };
   document.getElementById('kaud-client').addEventListener('click', () => close('client'));
   document.getElementById('kaud-therapist').addEventListener('click', () => {
-    localStorage.setItem(KEY, 'therapist');
+    remember('therapist');
     window.location.href = 'therapists.html';
   });
   document.getElementById('kaud-close').addEventListener('click', () => close('dismissed'));
