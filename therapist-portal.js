@@ -2,16 +2,33 @@
 /* Flat monthly membership. Membership buys ACCESS to matching.
    It never affects ranking — there is no ranking to affect. */
 
-/* Founding pricing is DATE-based: join before Dec 1 and your first 3 months are
-   $19.99/mo, then $29.99/mo. On or after Dec 1 it's $29.99/mo for everyone.
-   Keep in sync with activate.js and the app's FOUNDING_DEADLINE. */
-const FOUNDING_DEADLINE = new Date('2026-12-01T00:00:00');
-const FOUNDING_INTRO_MONTHS = 3;
-function foundingOpen() { return new Date() < FOUNDING_DEADLINE; }
+/* Escalating founding ladder: the rate rises on the 1st of each month, and
+   whatever rate a therapist joins at is locked for 12 months before moving to
+   the standard rate. Keep in sync with activate.js and the app. */
+const PRICING_TIERS = [
+  { until: new Date('2026-09-01T00:00:00'), rate: 9.99 },
+  { until: new Date('2026-10-01T00:00:00'), rate: 14.99 },
+  { until: new Date('2026-11-01T00:00:00'), rate: 16.99 },
+  { until: new Date('2026-12-01T00:00:00'), rate: 19.99 }
+];
+const STANDARD_RATE = 29.99;
+const FOUNDING_LOCK_MONTHS = 12;
+function currentTier() {
+  const now = new Date();
+  const i = PRICING_TIERS.findIndex(t => now < t.until);
+  return i === -1 ? null : PRICING_TIERS[i];
+}
+function foundingOpen() { return currentTier() !== null; }
+function currentRate() { const t = currentTier(); return t ? t.rate : STANDARD_RATE; }
 const PLANS = {
   monthly: {
-    label: 'Monthly', price: '$19.99', per: '/month', standard: '$29.99/month',
-    blurb: `Founding rate for your first ${FOUNDING_INTRO_MONTHS} months, then $29.99/month. Cancel anytime.`,
+    label: 'Monthly', per: '/month', standard: `$${STANDARD_RATE.toFixed(2)}/month`,
+    get price() { return `$${currentRate().toFixed(2)}`; },
+    get blurb() {
+      return foundingOpen()
+        ? `Today's founding rate, locked for ${FOUNDING_LOCK_MONTHS} months. Then $${STANDARD_RATE.toFixed(2)}/month.`
+        : 'Billed monthly. Cancel anytime.';
+    },
     save: null
   }
 };
@@ -92,7 +109,7 @@ const SCREENS = {
       <h1 class="kt-title">${p.name ? `Good to see you, ${p.name.split(' ')[0]}.` : "Let's get you matchable."}</h1>
       <p class="flow-hint">${p.name
         ? 'Pick up where you left off.'
-        : "A profile takes about ten minutes. One flat monthly membership turns matching on — $19.99/month for your first 3 months if you join before December 1. No per-client fees, and nothing here ever buys placement."}</p>
+        : "A profile takes about ten minutes. One flat monthly membership turns matching on — today's founding rate, locked for 12 months (the rate rises on the 1st of each month). No per-client fees, and nothing here ever buys placement."}</p>
       <div class="kt-welcome-ctas">
         ${p.name
           ? `<button class="btn btn-dark" data-go="${state.plan && !state.canceled ? 'dashboard' : 'about'}">${state.plan && !state.canceled ? 'Open my dashboard' : 'Continue setup'}</button>
@@ -203,7 +220,7 @@ const SCREENS = {
     const founding = foundingOpen();
     return `
       <p class="flow-kicker">Kindred membership</p>
-      <h2 class="flow-title">${founding ? `$19.99/month for your first ${FOUNDING_INTRO_MONTHS} months.` : 'One flat membership.'}</h2>
+      <h2 class="flow-title">${founding ? `$${currentRate().toFixed(2)}/month — locked for ${FOUNDING_LOCK_MONTHS} months.` : 'One flat membership.'}</h2>
       <p class="flow-hint">Everything included. Membership makes you matchable — it never changes how you're matched.</p>
       <div class="kt-plangrid">
         ${Object.entries(PLANS).map(([key, pl]) => `
@@ -213,7 +230,7 @@ const SCREENS = {
             <span class="kt-planopt-blurb">${founding ? pl.blurb : 'Billed monthly. Cancel anytime.'}</span>
           </button>`).join('')}
       </div>
-      <p class="kt-plan-after">${founding ? 'The founding rate ends December 1. After your first 3 months, membership is $29.99/month.' : 'Membership is $29.99/month, billed monthly.'}</p>
+      <p class="kt-plan-after">${founding ? `Your rate is locked for ${FOUNDING_LOCK_MONTHS} months, then $${STANDARD_RATE.toFixed(2)}/month. The founding rate rises on the 1st of each month.` : 'Membership is $29.99/month, billed monthly.'}</p>
       <div class="kt-nav">
         <button class="flow-back" data-go="preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>Back</button>
         <button class="btn btn-dark" id="kt-to-checkout">Continue to checkout <span aria-hidden="true">→</span></button>
@@ -230,7 +247,7 @@ const SCREENS = {
       <div class="kt-checkout">
         <div class="kt-summary">
           <p><span>Due today</span><strong>${founding ? pl.price : '$29.99'}</strong></p>
-          ${founding ? `<p><span>For your first ${FOUNDING_INTRO_MONTHS} months</span><strong>${pl.price}${pl.per} <small>founding rate</small></strong></p>
+          ${founding ? `<p><span>Locked for ${FOUNDING_LOCK_MONTHS} months</span><strong>${pl.price}${pl.per} <small>founding rate</small></strong></p>
           <p><span>After that</span><strong>${pl.standard}</strong></p>` : `<p><span>Billed</span><strong>${pl.standard}</strong></p>`}
           <p class="kt-summary-fine">Cancel anytime. Billed by Kindred on the web — never through an app store.</p>
         </div>
@@ -275,7 +292,7 @@ const SCREENS = {
             ${active ? `
               <p class="kt-dash-big">${foundingOpen() ? 'Founding' : 'Membership'} · ${pl.label} — ${foundingOpen() ? pl.price : '$29.99'}${pl.per}</p>
               <p class="kt-dash-meta">${foundingOpen()
-                ? `Founding rate for your first ${FOUNDING_INTRO_MONTHS} months, then ${pl.standard}. Renews ${state.renews}.`
+                ? `Founding rate locked for ${FOUNDING_LOCK_MONTHS} months, then ${pl.standard}. Renews ${state.renews}.`
                 : `Renews ${state.renews}.`}</p>
               <div class="kt-dash-ctas">
                 <button class="kt-linkbtn" id="kt-cancel">Cancel membership</button>
