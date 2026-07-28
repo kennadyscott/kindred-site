@@ -1,19 +1,17 @@
 /* ===================== Kindred — Therapist Portal (simulated) ===================== */
-/* Flat membership model: monthly or annual. Membership buys ACCESS to matching.
+/* Flat monthly membership. Membership buys ACCESS to matching.
    It never affects ranking — there is no ranking to affect. */
 
-/* Founding pricing: first 200 therapists get 3 months free, then the founding
-   rate for their first 12 months, then the standard rate. Annual is the push. */
-const TRIAL_DAYS = 90;
+/* Founding pricing is DATE-based: join before Dec 1 and your first 3 months are
+   $19.99/mo, then $29.99/mo. On or after Dec 1 it's $29.99/mo for everyone.
+   Keep in sync with activate.js and the app's FOUNDING_DEADLINE. */
+const FOUNDING_DEADLINE = new Date('2026-12-01T00:00:00');
+const FOUNDING_INTRO_MONTHS = 3;
+function foundingOpen() { return new Date() < FOUNDING_DEADLINE; }
 const PLANS = {
-  annual: {
-    label: 'Annual', price: '$99', per: '/year', standard: '$199/year',
-    blurb: 'Founding rate for your first year — under $8.50/month. Then $199/year.',
-    save: 'Best value — save $129 vs monthly'
-  },
   monthly: {
-    label: 'Monthly', price: '$19', per: '/month', standard: '$29/month',
-    blurb: 'Founding rate for 12 months, then $29/month. Cancel anytime.',
+    label: 'Monthly', price: '$19.99', per: '/month', standard: '$29.99/month',
+    blurb: `Founding rate for your first ${FOUNDING_INTRO_MONTHS} months, then $29.99/month. Cancel anytime.`,
     save: null
   }
 };
@@ -94,7 +92,7 @@ const SCREENS = {
       <h1 class="kt-title">${p.name ? `Good to see you, ${p.name.split(' ')[0]}.` : "Let's get you matchable."}</h1>
       <p class="flow-hint">${p.name
         ? 'Pick up where you left off.'
-        : "A profile takes about ten minutes, and founding members start with 3 months free. One flat membership — monthly or annual — turns matching on. No per-client fees, and nothing here ever buys placement."}</p>
+        : "A profile takes about ten minutes. One flat monthly membership turns matching on — $19.99/month for your first 3 months if you join before December 1. No per-client fees, and nothing here ever buys placement."}</p>
       <div class="kt-welcome-ctas">
         ${p.name
           ? `<button class="btn btn-dark" data-go="${state.plan && !state.canceled ? 'dashboard' : 'about'}">${state.plan && !state.canceled ? 'Open my dashboard' : 'Continue setup'}</button>
@@ -201,38 +199,40 @@ const SCREENS = {
   },
 
   plan() {
-    const pre = state.pendingPlan || 'annual';
+    const pre = state.pendingPlan || 'monthly';
+    const founding = foundingOpen();
     return `
-      <p class="flow-kicker">Founding membership — first 200 therapists</p>
-      <h2 class="flow-title">3 months free. Then the founding rate for a year.</h2>
-      <p class="flow-hint">Everything included, either way. Membership makes you matchable — it never changes how you're matched.</p>
+      <p class="flow-kicker">Kindred membership</p>
+      <h2 class="flow-title">${founding ? `$19.99/month for your first ${FOUNDING_INTRO_MONTHS} months.` : 'One flat membership.'}</h2>
+      <p class="flow-hint">Everything included. Membership makes you matchable — it never changes how you're matched.</p>
       <div class="kt-plangrid">
         ${Object.entries(PLANS).map(([key, pl]) => `
           <button class="kt-planopt ${pre === key ? 'selected' : ''}" data-plan="${key}">
             <span class="kt-planopt-name">${pl.label}${pl.save ? ` <em class="kt-savetag">${pl.save}</em>` : ''}</span>
-            <span class="kt-planopt-price">${pl.price}<small>${pl.per}</small></span>
-            <span class="kt-planopt-blurb">${pl.blurb}</span>
+            <span class="kt-planopt-price">${founding ? pl.price : '$29.99'}<small>${pl.per}</small></span>
+            <span class="kt-planopt-blurb">${founding ? pl.blurb : 'Billed monthly. Cancel anytime.'}</span>
           </button>`).join('')}
       </div>
-      <p class="kt-plan-after">After your founding year, the standard rate applies: $199/year or $29/month.</p>
+      <p class="kt-plan-after">${founding ? 'The founding rate ends December 1. After your first 3 months, membership is $29.99/month.' : 'Membership is $29.99/month, billed monthly.'}</p>
       <div class="kt-nav">
         <button class="flow-back" data-go="preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>Back</button>
-        <button class="btn btn-dark" id="kt-to-checkout">Continue — 3 months free <span aria-hidden="true">→</span></button>
+        <button class="btn btn-dark" id="kt-to-checkout">Continue to checkout <span aria-hidden="true">→</span></button>
       </div>`;
   },
 
   checkout() {
-    const key = state.pendingPlan || 'annual';
+    const key = state.pendingPlan || 'monthly';
     const pl = PLANS[key];
+    const founding = foundingOpen();
     return `
       <p class="flow-kicker">Checkout</p>
-      <h2 class="flow-title">Founding Membership — ${pl.label}</h2>
+      <h2 class="flow-title">Kindred Membership — ${pl.label}</h2>
       <div class="kt-checkout">
         <div class="kt-summary">
-          <p><span>Due today</span><strong>$0</strong></p>
-          <p><span>After 3 free months</span><strong>${pl.price}${pl.per} <small>founding rate</small></strong></p>
-          <p><span>After your founding year</span><strong>${pl.standard}</strong></p>
-          <p class="kt-summary-fine">Cancel anytime — including during the free months, at no cost. Billed by Kindred on the web — never through an app store.</p>
+          <p><span>Due today</span><strong>${founding ? pl.price : '$29.99'}</strong></p>
+          ${founding ? `<p><span>For your first ${FOUNDING_INTRO_MONTHS} months</span><strong>${pl.price}${pl.per} <small>founding rate</small></strong></p>
+          <p><span>After that</span><strong>${pl.standard}</strong></p>` : `<p><span>Billed</span><strong>${pl.standard}</strong></p>`}
+          <p class="kt-summary-fine">Cancel anytime. Billed by Kindred on the web — never through an app store.</p>
         </div>
         <div class="kt-stripe">
           <p class="kt-stripe-head">Card details <span class="kt-simtag">Simulated</span></p>
@@ -244,7 +244,7 @@ const SCREENS = {
           </div>
           <p class="kt-stripe-fine">This is a prototype. The card is a Stripe test number, the fields aren't editable, and no payment is processed.</p>
         </div>
-        <button class="btn btn-dark kt-wide" id="kt-subscribe">Start free — 3 months on us</button>
+        <button class="btn btn-dark kt-wide" id="kt-subscribe">Activate my listing</button>
       </div>
       <div class="kt-nav kt-nav-center">
         <button class="flow-back" data-go="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>Back</button>
@@ -273,10 +273,11 @@ const SCREENS = {
           <div class="kt-dashcard">
             <h3>Membership</h3>
             ${active ? `
-              <p class="kt-dash-big">Founding · ${pl.label} — ${pl.price}${pl.per}</p>
-              <p class="kt-dash-meta">Free until ${state.renews} — then the founding rate for your first year, then ${pl.standard}.</p>
+              <p class="kt-dash-big">${foundingOpen() ? 'Founding' : 'Membership'} · ${pl.label} — ${foundingOpen() ? pl.price : '$29.99'}${pl.per}</p>
+              <p class="kt-dash-meta">${foundingOpen()
+                ? `Founding rate for your first ${FOUNDING_INTRO_MONTHS} months, then ${pl.standard}. Renews ${state.renews}.`
+                : `Renews ${state.renews}.`}</p>
               <div class="kt-dash-ctas">
-                <button class="btn btn-outline btn-sm" id="kt-switch">Switch to ${state.plan === 'monthly' ? 'annual ($99 — save $129)' : 'monthly'}</button>
                 <button class="kt-linkbtn" id="kt-cancel">Cancel membership</button>
               </div>` : `
               <p class="kt-dash-big">Inactive</p>
@@ -413,7 +414,7 @@ function bind(step) {
       save();
     }));
     screen.querySelector('#kt-to-checkout').addEventListener('click', () => {
-      if (!state.pendingPlan) state.pendingPlan = 'annual';
+      if (!state.pendingPlan) state.pendingPlan = 'monthly';
       save();
       render('checkout');
     });
@@ -421,11 +422,11 @@ function bind(step) {
 
   if (step === 'checkout') {
     screen.querySelector('#kt-subscribe').addEventListener('click', () => {
-      state.plan = state.pendingPlan || 'annual';
+      state.plan = state.pendingPlan || 'monthly';
       state.canceled = false;
-      state.founding = true;
+      state.founding = foundingOpen();
       const d = new Date();
-      d.setDate(d.getDate() + TRIAL_DAYS); /* first charge lands when the free months end */
+      d.setMonth(d.getMonth() + 1); /* billed monthly from today — no free trial */
       state.renews = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       save();
       render('dashboard');
@@ -433,12 +434,6 @@ function bind(step) {
   }
 
   if (step === 'dashboard') {
-    const sw = screen.querySelector('#kt-switch');
-    if (sw) sw.addEventListener('click', () => {
-      state.pendingPlan = state.plan === 'monthly' ? 'annual' : 'monthly';
-      save();
-      render('checkout');
-    });
     const cancel = screen.querySelector('#kt-cancel');
     if (cancel) cancel.addEventListener('click', () => {
       if (!confirm('Cancel your membership? Your profile and history stay saved — you just stop appearing in new matches.')) return;
@@ -461,7 +456,7 @@ signoutBtn.addEventListener('click', () => render('welcome'));
 /* ===================== BOOT ===================== */
 
 (() => {
-  const m = location.hash.match(/plan=(monthly|annual)/);
+  const m = location.hash.match(/plan=(monthly)/);
   if (m) { state.pendingPlan = m[1]; save(); }
   if (state.plan && !state.canceled && state.profile.name) render('dashboard');
   else render('welcome');
