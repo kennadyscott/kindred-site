@@ -1,9 +1,13 @@
 /* ===================== Kindred marketing site — brand deck palette ===================== */
 :root {
-  --cream: #FFF8EF;          /* brand Cream */
-  --cream-2: #F6EDDF;
-  --paper: #FFFDF8;
-  --ink: #35263B;
+  /* Lightened 2026-07-28 — the airy near-white the mockup uses. The brand
+     cream is retired as a *surface*; it survives as an accent (--cream-warm)
+     where a genuinely warm field is wanted. Accents are untouched. */
+  --cream: #FCFCFE;          /* page ground — near-white, whisper of cool */
+  --cream-2: #F4F4F9;        /* insets, alternating bands */
+  --paper: #FFFFFF;          /* cards */
+  --cream-warm: #FCFCFE;     /* the old brand cream, kept for warm accents */
+  --ink: #2B2233;
   --ink-soft: #6E6172;
   --aubergine: #422448;      /* brand Aubergine — primary dark */
   --aubergine-deep: #301A35;
@@ -13,9 +17,11 @@
   --lilac-deep: #8E77A0;
   --moss: #687A65;           /* brand Moss */
   --gold: #E8C687;
-  --line: #EADFCC;
+  --line: #E9E7F0;
+  --line-warm: #E9E7F0;
   --radius: 18px;
-  --shadow: 0 10px 30px rgba(66, 36, 72, .08);
+  --shadow: 0 10px 30px rgba(43, 34, 51, .07);
+  --shadow-lift: 0 20px 48px rgba(43, 34, 51, .12);
   font-size: 16px;
 }
 
@@ -63,7 +69,7 @@ ul { list-style: none; }
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; gap: 1.5rem;
   padding: .8rem clamp(1rem, 4vw, 3rem);
-  background: rgba(255, 248, 239, .93); backdrop-filter: blur(10px);
+  background: rgba(252, 252, 254, .88); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: .6rem; }
@@ -184,7 +190,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 /* ---------- match band ---------- */
 .match-band { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
 .match-inner {
-  max-width: 1200px; margin: 0 auto; background: #FBF1E3;
+  max-width: 1200px; margin: 0 auto; background: #F4F4F9;
   border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow);
   display: grid; grid-template-columns: 1fr 1.5fr; gap: clamp(1.5rem, 3vw, 3rem);
   padding: clamp(1.5rem, 3.5vw, 3rem);
@@ -412,14 +418,14 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .path-therapy { --card-bg: #E6EAE2; --card-vis: #F4F6F1; }
 .path-loved { --card-bg: #E3E8EF; --card-vis: #F3F6FA; }
 .path-now {
-  --card-bg: #33534D; --card-ink: #F2EFE6; --card-title: #FFF8EF; --card-body: #D8DFD3;
+  --card-bg: #33534D; --card-ink: #F2EFE6; --card-title: #FCFCFE; --card-body: #D8DFD3;
   --card-vis: rgba(255,248,239,.12); --card-cta: #E8C687; --card-cta-hover: #F3DCA9;
   border-color: #2A453F;
 }
 .path-checkin {
   --card-bg: linear-gradient(135deg, #BE765F 0%, #A9829F 55%, #B8A3C4 100%);
-  --card-ink: #FFF6EC; --card-title: #FFF8EF; --card-body: #FBEBDD;
-  --card-vis: rgba(255,248,239,.16); --card-cta: #FFF8EF; --card-cta-hover: #F3DCA9;
+  --card-ink: #FFF6EC; --card-title: #FCFCFE; --card-body: #FBEBDD;
+  --card-vis: rgba(255,248,239,.16); --card-cta: #FCFCFE; --card-cta-hover: #F3DCA9;
   background: var(--card-bg); border-color: transparent;
 }
 
@@ -533,7 +539,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 /* ---------- closing banner ---------- */
 .sh-close { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
 .sh-close-inner {
-  max-width: 1100px; margin: 0 auto; background: #FBF1E3; border: 1px solid var(--line);
+  max-width: 1100px; margin: 0 auto; background: #F4F4F9; border: 1px solid var(--line);
   border-radius: 26px; box-shadow: var(--shadow); padding: clamp(1.6rem, 3.5vw, 2.8rem);
   display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;
 }
@@ -585,7 +591,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
   padding: 1.05rem 1rem; font-weight: 700; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase;
   background: var(--cream-2); color: var(--ink-soft); border-bottom: 1px solid var(--line); transition: background .15s, color .15s;
 }
-.uy-tab.active { background: var(--lilac-deep); color: #FFF8EF; }
+.uy-tab.active { background: var(--lilac-deep); color: #FCFCFE; }
 .uy-tab:not(.active):hover { background: #F0E6D6; }
 .uy-tabpanel { padding: clamp(1.4rem, 3vw, 2.4rem); }
 .uy-panel-title { font-size: clamp(1.3rem, 2.4vw, 1.7rem); text-align: center; }
@@ -716,7 +722,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 
 /* closing */
 .uy-begin { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
-.uy-begin-inner { max-width: 1100px; margin: 0 auto; background: #FBF1E3; border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); padding: clamp(1.6rem, 3.5vw, 2.8rem); text-align: center; }
+.uy-begin-inner { max-width: 1100px; margin: 0 auto; background: #F4F4F9; border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); padding: clamp(1.6rem, 3.5vw, 2.8rem); text-align: center; }
 .uy-begin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 1.6rem; }
 .uy-begin-card {
   background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 1.4rem 1.2rem;
@@ -748,7 +754,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 }
 
 /* ===================== My Kindred dashboard ===================== */
-.mk-body { background: #FBF4EA; }
+.mk-body { background: #F7F7FB; }
 .mk-bell { position: relative; }
 .mk-badge {
   position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; border-radius: 999px;
@@ -758,7 +764,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .mk-avatar {
   width: 38px; height: 38px; border-radius: 50%; background: var(--lilac);
   color: var(--aubergine); font-weight: 700; font-size: .95rem;
-  display: grid; place-items: center; border: 2px solid #FFF8EF; box-shadow: 0 2px 8px rgba(66,36,72,.18);
+  display: grid; place-items: center; border: 2px solid #FCFCFE; box-shadow: 0 2px 8px rgba(66,36,72,.18);
 }
 
 .mk-layout {
@@ -1283,7 +1289,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 /* therapy bridge */
 .fb-bridge { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
 .fb-bridge-inner {
-  max-width: 1100px; margin: 0 auto; background: #FBF1E3; border: 1px solid var(--line);
+  max-width: 1100px; margin: 0 auto; background: #F4F4F9; border: 1px solid var(--line);
   border-radius: 26px; box-shadow: var(--shadow); padding: clamp(1.6rem, 3.5vw, 2.8rem);
 }
 .fb-bridge-inner h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
@@ -1449,7 +1455,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .tp-faq-body { padding: 0 1.2rem 1.1rem; text-align: left; }
 .tp-faq-body p { font-size: .88rem; color: var(--ink-soft); line-height: 1.6; }
 .tp-worries { display: grid; gap: .8rem; margin-top: 1.2rem; }
-.tp-worry { background: #FBF1E3; border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.2rem; }
+.tp-worry { background: #F4F4F9; border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.2rem; }
 .tp-worry h3 { font-size: 1.05rem; font-style: italic; }
 .tp-worry p { font-size: .85rem; color: var(--ink-soft); margin-top: .35rem; line-height: 1.55; }
 
