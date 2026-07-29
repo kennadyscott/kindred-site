@@ -1606,3 +1606,4 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 
 /* match-band dual CTAs (client match + therapist build-profile) */
 .match-ctas { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
+.mkt-ctas { display: flex; gap: .6rem; flex-wrap: wrap; }

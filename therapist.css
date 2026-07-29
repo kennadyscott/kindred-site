@@ -399,3 +399,42 @@
   .kt-blob { display: none; }
   .kt-profilescene { padding: 0; }
 }
+
+/* =============================================================================
+   Client waitlist page
+============================================================================= */
+.wl-hero .kt-hero-copy h1 { font-size: clamp(1.9rem, 3.6vw, 2.8rem); max-width: 16ch; }
+.wl-hero .kt-sub { max-width: 34ch; }
+.wl-scene { position: relative; padding: 26px; display: grid; place-items: center; }
+.wl-phone {
+  position: relative; z-index: 1; width: min(300px, 100%);
+  background: var(--paper); border-radius: 26px; padding: 1.1rem 1rem 1.3rem;
+  box-shadow: 0 22px 54px rgba(43,34,51,.14), 0 2px 8px rgba(43,34,51,.05);
+  border: 1px solid var(--line);
+}
+.wl-phone-top { display: flex; align-items: center; gap: .5rem; font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: .9rem; padding: 0 .2rem; }
+.wl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--clay); }
+.wl-card { border-radius: 14px; padding: .8rem .9rem; margin-bottom: .55rem; }
+.wl-card-a { background: #F0EAF3; }
+.wl-card-b { background: #E9EDE7; }
+.wl-card-c { background: #F8EAE4; }
+.wl-k { font-size: .64rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: .2rem; }
+.wl-v { font-family: 'Literata', Georgia, serif; font-size: .92rem; color: var(--aubergine); line-height: 1.35; }
+
+.wl-helps .kt-sectiongrid { grid-template-columns: repeat(3, 1fr); }
+.wl-helps .wl-free { background: #F0EAF3; }
+@media (max-width: 940px) { .wl-helps .kt-sectiongrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .wl-helps .kt-sectiongrid { grid-template-columns: 1fr; } }
+
+.wl-promise { display: grid; gap: .5rem; margin-top: 1rem; }
+.wl-promise li { display: flex; gap: .6rem; font-size: .86rem; color: var(--ink-soft); line-height: 1.5; }
+.wl-promise li::before { content: '✓'; color: var(--moss); font-weight: 700; flex: none; }
+.wl-opt { font-size: .72em; font-weight: 500; color: var(--ink-faint, #9A8FA0); text-transform: none; letter-spacing: 0; }
+.wl-done-links { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; margin-top: .9rem; }
+
+.wl-app .kt-promise-inner h2 { margin-bottom: .3rem; }
+.wl-now-sub { text-align: center; color: var(--ink-soft); margin: -1.2rem auto 1.8rem; max-width: 46ch; }
+.wl-now .kt-benefitgrid article { display: flex; flex-direction: column; }
+.wl-now .pillar-link { margin-top: .7rem; font-size: .84rem; font-weight: 600; color: var(--lilac-deep); }
+.wl-crisis { margin-top: 1.6rem; font-size: .82rem; color: var(--ink-soft); background: #E9EDE7; border-radius: 14px; padding: .9rem 1.1rem; line-height: 1.6; text-align: left; }
+.wl-crisis b { color: var(--aubergine); }
