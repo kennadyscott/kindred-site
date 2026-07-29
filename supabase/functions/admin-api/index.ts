@@ -32,7 +32,10 @@ const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '')
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
+  // apikey must be listed: admin.html / app.js send it alongside the bearer
+  // token, and a header the preflight does not allow makes the browser block
+  // the real request entirely -- fetch() rejects before it reaches this code.
+  'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 

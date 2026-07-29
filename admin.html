@@ -270,17 +270,25 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
   async function adminApi(payload) {
     const sess = loadSession();
     if (!sess || !sess.access_token) return { error: 'no_session' };
-    const res = await fetch(`${DB_URL}/functions/v1/admin-api`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: DB_KEY,
-        Authorization: `Bearer ${sess.access_token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.status === 401) { clearSession(); return { error: 'expired' }; }
-    return await res.json().catch(() => ({ error: 'bad_response' }));
+    /* A rejected fetch (CORS, DNS, offline) must surface as a value, not an
+       exception: uncaught, it left the sign-in stuck on "Signing in..." with
+       nothing in the console to explain it. */
+    try {
+      const res = await fetch(`${DB_URL}/functions/v1/admin-api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: DB_KEY,
+          Authorization: `Bearer ${sess.access_token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 401) { clearSession(); return { error: 'expired' }; }
+      return await res.json().catch(() => ({ error: 'bad_response' }));
+    } catch (e) {
+      console.error('admin-api unreachable:', e);
+      return { error: 'unreachable' };
+    }
   }
 
   document.getElementById('adm-enter').addEventListener('click', async () => {
@@ -300,6 +308,13 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     if (probe.error === 'forbidden') {
       clearSession();
       gateMsg.textContent = 'That account is not an admin.';
+      return;
+    }
+    if (probe.error) {
+      clearSession();
+      gateMsg.textContent = probe.error === 'unreachable'
+        ? 'Signed in, but the admin service is unreachable. Check the browser console.'
+        : `Signed in, but the admin service returned: ${probe.error}`;
       return;
     }
     unlock();
