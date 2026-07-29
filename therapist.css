@@ -260,3 +260,92 @@
 @media (max-width: 720px) {
   .kt-claim-inner { grid-template-columns: 1fr; }
 }
+
+/* =============================================================================
+   For Therapists — mockup build (2026-07-28), Kindred brand
+============================================================================= */
+.kt-hero-copy h1 { line-height: 1.08; }
+.kt-offercard {
+  display: flex; align-items: center; gap: .9rem; margin: 1.4rem 0 1.5rem;
+  background: var(--paper); border: 1.5px solid var(--line); border-radius: 16px;
+  padding: .9rem 1.2rem; max-width: 420px;
+}
+.kt-offer-star { font-size: 1.1rem; color: var(--clay); background: #F8EAE4; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.kt-offer-name { font-size: .78rem; font-weight: 700; color: var(--aubergine); }
+.kt-offer-rate { font-size: .86rem; color: var(--ink-soft); }
+.kt-offer-rate b { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--aubergine); }
+.kt-hero-fine { font-size: .78rem; color: var(--ink-faint, #9A8FA0); margin-top: .7rem; }
+.kt-hero-card-flag { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: .5rem; }
+.kt-demo-body { font-size: .82rem; color: var(--ink-soft); line-height: 1.55; margin-bottom: .7rem; }
+.kt-demo-best { font-size: .76rem; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: .6rem; margin-top: .2rem; }
+
+/* the problem */
+.kt-flatten { background: var(--cream-2, #F6EDDF); padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.kt-flatten-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+.kt-flatten h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); line-height: 1.15; }
+.kt-questions { display: grid; gap: 1.1rem; }
+.kt-questions li { display: flex; align-items: center; gap: .9rem; font-size: 1.02rem; color: var(--ink); }
+.kt-questions span { width: 32px; height: 32px; border-radius: 50%; background: #EDE5EF; color: var(--lilac-deep); font-weight: 700; display: grid; place-items: center; flex: none; }
+@media (max-width: 820px) { .kt-flatten-inner { grid-template-columns: 1fr; } }
+
+/* profile sections */
+.kt-sections { background: #F0EAF3; padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.kt-sections-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: minmax(240px, 1fr) 2fr; gap: clamp(2rem, 5vw, 3.5rem); align-items: start; }
+.kt-sections h2 { font-size: clamp(1.6rem, 3.2vw, 2.3rem); line-height: 1.18; }
+.kt-sectiongrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .9rem; }
+.kt-sectiongrid article, .kt-benefitgrid article { background: var(--paper); border-radius: 16px; padding: 1.1rem 1.2rem; }
+.kt-sectiongrid h3, .kt-benefitgrid h3 { font-family: 'Inter', sans-serif; font-size: .92rem; font-weight: 700; color: var(--aubergine); margin: .6rem 0 .3rem; }
+.kt-sectiongrid p, .kt-benefitgrid p { font-size: .82rem; color: var(--ink-soft); line-height: 1.55; }
+.kt-secicon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 1rem; }
+.kt-secicon.t-gold { background: #F8EFDC; color: #B08B3C; }
+.kt-secicon.t-lilac { background: #EDE5EF; color: var(--lilac-deep); }
+.kt-secicon.t-clay { background: #F8EAE4; color: var(--clay); }
+.kt-secicon.t-moss { background: #E9EDE7; color: var(--moss); }
+@media (max-width: 940px) { .kt-sections-inner { grid-template-columns: 1fr; } .kt-sectiongrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .kt-sectiongrid { grid-template-columns: 1fr; } }
+
+/* fit tags */
+.kt-fittags { padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.kt-fittags-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+.kt-fittags-visual { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start; }
+.kt-fittag-card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 1.1rem 1.2rem; box-shadow: var(--shadow); }
+.kt-tagcloud { display: grid; gap: .4rem; }
+.kt-tagcloud span { background: #EDE5EF; color: var(--lilac-deep); font-size: .78rem; font-weight: 600; padding: .4rem .85rem; border-radius: 999px; white-space: nowrap; }
+.kt-fittags h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); line-height: 1.15; margin-bottom: .6rem; }
+.kt-fittags-copy p { color: var(--ink-soft); line-height: 1.65; }
+@media (max-width: 940px) { .kt-fittags-inner { grid-template-columns: 1fr; } .kt-fittags-visual { grid-template-columns: 1fr; } .kt-tagcloud { grid-auto-flow: column; grid-template-columns: none; overflow-x: auto; } }
+
+/* how it works */
+.kt-how { background: var(--cream-2, #F6EDDF); padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.kt-how-inner { max-width: 1080px; margin: 0 auto; text-align: center; }
+.kt-how h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); margin-bottom: 2.2rem; }
+.kt-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; text-align: center; }
+.kt-steps li { display: flex; flex-direction: column; align-items: center; }
+.kt-stepnum { width: 30px; height: 30px; border-radius: 50%; background: var(--aubergine); color: var(--cream); font-size: .82rem; font-weight: 700; display: grid; place-items: center; margin-bottom: .9rem; }
+.kt-steps h3 { font-family: 'Inter', sans-serif; font-size: .92rem; font-weight: 700; color: var(--aubergine); margin-bottom: .35rem; }
+.kt-steps p { font-size: .82rem; color: var(--ink-soft); line-height: 1.55; max-width: 24ch; }
+@media (max-width: 820px) { .kt-steps { grid-template-columns: repeat(2, 1fr); } }
+
+/* benefits */
+.kt-benefits { padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.kt-benefits-inner { max-width: 1080px; margin: 0 auto; text-align: center; }
+.kt-benefits h2 { font-size: clamp(1.6rem, 3.2vw, 2.2rem); margin-bottom: 2rem; }
+.kt-benefitgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: left; }
+.kt-benefitgrid article { border: 1px solid var(--line); }
+@media (max-width: 820px) { .kt-benefitgrid { grid-template-columns: 1fr; } }
+
+/* therapist voices (hidden until real) */
+.kt-voices { background: #F0EAF3; padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.kt-voices-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(2rem, 5vw, 3.5rem); align-items: center; }
+.kt-voices h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.18; margin-bottom: .7rem; }
+.kt-voices-copy p { color: var(--ink-soft); line-height: 1.65; margin-bottom: .8rem; }
+.kt-voicecards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 940px) { .kt-voices-inner, .kt-voicecards { grid-template-columns: 1fr; } }
+
+/* closing band */
+.kt-closing { background: #EDE5EF; padding: clamp(2.5rem, 6vw, 4rem) clamp(1rem, 4vw, 3rem); }
+.kt-closing-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: center; }
+.kt-closing h2 { font-size: clamp(1.4rem, 2.8vw, 2rem); line-height: 1.2; }
+.kt-closing-cta { text-align: center; background: var(--paper); border-radius: 18px; padding: 1.4rem 1.5rem; }
+.kt-closing-cta p:first-child { font-size: .92rem; color: var(--ink-soft); margin-bottom: .9rem; }
+@media (max-width: 820px) { .kt-closing-inner { grid-template-columns: 1fr; } }

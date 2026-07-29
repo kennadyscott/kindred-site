@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=25">
-<link rel="stylesheet" href="therapist.css?v=4">
+<link rel="stylesheet" href="therapist.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -54,25 +54,27 @@
   <div class="kt-hero-inner">
     <div class="kt-hero-copy">
       <p class="eyebrow">For therapists</p>
-      <h1>Meet clients who<br>already fit.</h1>
-      <p class="kt-sub">Kindred matches clients to you by style, communication, and what helps them feel understood — not by who's at the top of an alphabetical list. You show up for the people you work best with, and they arrive already knowing why you fit.</p>
-      <p class="kt-sub kt-sub-em">One flat membership. No per-client fees. No paying for placement — ever.</p>
-      <div class="hero-ctas">
-        <a class="btn btn-dark" href="https://app.kindredtherapymatch.com/">Create your profile</a>
-        <a class="btn btn-outline" href="#kt-pricing">See pricing</a>
+      <h1>Help clients feel your fit<br>before they reach out.</h1>
+      <p class="kt-sub">Kindred is a therapist discovery platform built around fit, not just filters.</p>
+
+      <div class="kt-offercard">
+        <span class="kt-offer-star" aria-hidden="true">✦</span>
+        <div>
+          <p class="kt-offer-name">Founding Therapist offer</p>
+          <p class="kt-offer-rate"><b id="kt-hero-rate">$9.99</b>/month for your first 12 months</p>
+        </div>
       </div>
-      <p class="hero-trust">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-        Billed on the web. Cancel anytime.
-      </p>
+
+      <div class="hero-ctas">
+        <a class="btn btn-dark" href="activate.html">Claim your Founding Therapist profile</a>
+      </div>
+      <p class="kt-hero-fine">Cancel anytime. No long-term contract.</p>
     </div>
 
-    <!-- therapist card as clients see it -->
     <div class="kt-hero-card">
-      <p class="kt-hero-card-flag">How clients see you</p>
+      <p class="kt-hero-card-flag">Example profile — how clients see you</p>
       <div class="kt-democard">
         <div class="kt-demophoto">
-          <span class="match-badge">94% Kindred Match</span>
           <svg viewBox="0 0 300 300" aria-hidden="true">
             <rect width="300" height="300" fill="#EFE2D3"/>
             <circle cx="150" cy="122" r="56" fill="#C68B62"/>
@@ -84,13 +86,92 @@
         </div>
         <div class="kt-demoinfo">
           <h3 class="match-name">Maya Chen, LMFT</h3>
-          <p class="match-meta">She/Her • Licensed in CA</p>
-          <div class="match-pills"><span>Warm</span><span>Direct</span><span>Collaborative</span></div>
-          <p class="match-prompt-label">You may be a fit if…</p>
-          <blockquote class="match-quote">"You look fine on paper but feel exhausted from being the strong one."</blockquote>
+          <p class="match-meta">Licensed Marriage &amp; Family Therapist · Oakland, CA · In-person &amp; online</p>
+          <p class="match-prompt-label">My therapy style</p>
+          <p class="kt-demo-body">I blend warmth and curiosity with evidence-based approaches. We’ll explore what’s underneath the surface and build tools that fit your real life.</p>
+          <p class="match-prompt-label">What sessions with me feel like</p>
+          <p class="kt-demo-body">Conversational, supportive, and down-to-earth. You can show up as you are — we’ll go at a pace that feels right for you.</p>
+          <div class="match-pills"><span>Warm + affirming</span><span>Collaborative</span><span>Practical</span></div>
+          <p class="kt-demo-best">Works best with adults (18+)</p>
         </div>
       </div>
       <p class="kt-hero-card-fine">Your profile leads with how you work — not just the letters after your name.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= THE PROBLEM ======================= -->
+<section class="kt-flatten">
+  <div class="kt-flatten-inner">
+    <h2>Most directories flatten what makes your work meaningful.</h2>
+    <ul class="kt-questions">
+      <li><span aria-hidden="true">?</span>Will I feel safe?</li>
+      <li><span aria-hidden="true">?</span>Will this therapist understand me?</li>
+      <li><span aria-hidden="true">?</span>What will sessions feel like?</li>
+      <li><span aria-hidden="true">?</span>Can I picture myself opening up?</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ======================= PROFILE SECTIONS ======================= -->
+<section class="kt-sections">
+  <div class="kt-sections-inner">
+    <h2>Your profile<br>should feel like you.</h2>
+    <div class="kt-sectiongrid">
+      <article><span class="kt-secicon t-gold" aria-hidden="true">✳</span><h3>My therapy style</h3><p>Share your approach, values, and the lens you bring to therapy.</p></article>
+      <article><span class="kt-secicon t-lilac" aria-hidden="true">◇</span><h3>Who I work best with</h3><p>Describe the clients you love working with — and why it matters.</p></article>
+      <article><span class="kt-secicon t-clay" aria-hidden="true">❝</span><h3>What sessions with me feel like</h3><p>Help clients picture what it’s like to sit with you.</p></article>
+      <article><span class="kt-secicon t-moss" aria-hidden="true">✓</span><h3>What clients can expect</h3><p>Set clear expectations around sessions, communication, and progress.</p></article>
+      <article><span class="kt-secicon t-moss" aria-hidden="true">❖</span><h3>Specialties</h3><p>Highlight the areas you specialize in and the issues you support.</p></article>
+      <article><span class="kt-secicon t-clay" aria-hidden="true">◎</span><h3>Practice details</h3><p>Share logistics like location, format, sliding scale, and availability.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= FIT TAGS ======================= -->
+<section class="kt-fittags">
+  <div class="kt-fittags-inner">
+    <div class="kt-fittags-visual">
+      <div class="kt-fittag-card">
+        <h3 class="match-name">Maya Chen, LMFT</h3>
+        <p class="match-meta">Oakland, CA · In-person &amp; online</p>
+        <p class="match-prompt-label">My therapy style</p>
+        <p class="kt-demo-body">I blend warmth and curiosity with evidence-based approaches. We’ll explore what’s underneath and build tools that fit your real life.</p>
+      </div>
+      <div class="kt-tagcloud">
+        <span>Warm and affirming</span><span>Direct and honest</span><span>Structured</span>
+        <span>Gentle and reflective</span><span>Collaborative</span><span>Uses humor</span>
+        <span>Identity-affirming</span>
+      </div>
+    </div>
+    <div class="kt-fittags-copy">
+      <h2>Help clients search for more than a specialty.</h2>
+      <p>Fit tags help clients quickly get a feel for how you show up in the room.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= HOW IT WORKS ======================= -->
+<section class="kt-how">
+  <div class="kt-how-inner">
+    <h2>How it works</h2>
+    <ol class="kt-steps">
+      <li><span class="kt-stepnum">1</span><h3>Create your profile</h3><p>Share what makes your approach and practice uniquely you.</p></li>
+      <li><span class="kt-stepnum">2</span><h3>Show clients how you work</h3><p>Highlight your style, values, and what sessions with you are really like.</p></li>
+      <li><span class="kt-stepnum">3</span><h3>Get discovered for the right reasons</h3><p>Clients find you through fit — not just keywords.</p></li>
+      <li><span class="kt-stepnum">4</span><h3>Receive more intentional inquiries</h3><p>Connect with clients who are already drawn to your approach.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ======================= BENEFITS ======================= -->
+<section class="kt-benefits">
+  <div class="kt-benefits-inner">
+    <h2>Less guessing for clients. Better-fit inquiries for therapists.</h2>
+    <div class="kt-benefitgrid">
+      <article><span class="kt-secicon t-lilac" aria-hidden="true">◇</span><h3>Stronger connections</h3><p>Clients know what to expect — so you start in a place of trust.</p></article>
+      <article><span class="kt-secicon t-clay" aria-hidden="true">♡</span><h3>Save time and energy</h3><p>Attract inquiries from clients who are a better fit for you.</p></article>
+      <article><span class="kt-secicon t-moss" aria-hidden="true">↗</span><h3>Grow your practice your way</h3><p>A sustainable way to reach the right clients — on your terms.</p></article>
     </div>
   </div>
 </section>
@@ -102,33 +183,6 @@
     <div>
       <h2>Matched by fit. Never by fee.</h2>
       <p>Every matchable therapist on Kindred is matched by compatibility alone. There is no premium placement, no boosted ranking, no bidding for visibility — not for you, not for anyone. Your membership buys access to the matching pool. The algorithm can't be tipped.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ======================= HOW IT WORKS ======================= -->
-<section class="kt-how">
-  <h2>How Kindred works for you</h2>
-  <div class="tp-steps kt-steps">
-    <div class="tp-step">
-      <span class="tp-stepnum">1</span>
-      <h3>Build a profile that sounds like you</h3>
-      <p>Your style, your specialties, and prompts in your own words — "My therapy style is…", "You may be a fit if…". Clients read the person, not just the credentials.</p>
-    </div>
-    <div class="tp-step">
-      <span class="tp-stepnum">2</span>
-      <h3>Become matchable</h3>
-      <p>One flat membership turns matching on. Kindred's filters — license, format, insurance, budget, needs — bring you clients you're actually right for.</p>
-    </div>
-    <div class="tp-step">
-      <span class="tp-stepnum">3</span>
-      <h3>Meet clients ready to start</h3>
-      <p>Match requests arrive with a brief intake note — what brings them to therapy, in their words. Message, offer intro calls, and grow a caseload that fits.</p>
-    </div>
-    <div class="tp-step">
-      <span class="tp-stepnum">4</span>
-      <h3>Keep every dollar you earn</h3>
-      <p>Kindred never takes a cut of your sessions. Clients pay you directly, however you already bill. Your membership is the whole cost.</p>
     </div>
   </div>
 </section>
@@ -259,15 +313,6 @@
 </section>
 
 <!-- ======================= CLOSING ======================= -->
-<section class="kt-closing">
-  <div class="kt-closing-inner">
-    <h2>Your next client is already looking<br>for someone like you.</h2>
-    <p>Build your profile in about ten minutes. Become matchable today, at today's founding rate.</p>
-    <a class="btn btn-dark" href="activate.html">Activate my listing</a>
-    <p class="mkt-fine">Founding rate rises monthly · Locked for 12 months · Matched by fit, never by fee</p>
-  </div>
-</section>
-
 <!-- ======================= FOOTER ======================= -->
 <footer class="site-footer">
   <div class="footer-inner">
@@ -305,6 +350,34 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
+<!-- ======================= THERAPIST VOICES =======================
+     Kept hidden until real founding therapists give real quotes (August week 4).
+     Do NOT populate with invented testimonials — these are attributed
+     endorsements from licensed professionals. Add entries here and remove the
+     `hidden` attribute once consent is on file. -->
+<section class="kt-voices" id="kt-voices" hidden>
+  <div class="kt-voices-inner">
+    <div class="kt-voices-copy">
+      <h2>A platform built with therapists — not just around them.</h2>
+      <p>We're creating Kindred together — so it truly supports the way you do this work.</p>
+      <a class="pillar-link" href="#kt-claim">Join our community of founding therapists →</a>
+    </div>
+    <div class="kt-voicecards" id="kt-voicecards"><!-- real quotes go here --></div>
+  </div>
+</section>
+
+<!-- ======================= CLOSING BAND ======================= -->
+<section class="kt-closing">
+  <div class="kt-closing-inner">
+    <h2>The right clients are looking for more than a list of credentials.</h2>
+    <div class="kt-closing-cta">
+      <p>Help them feel your fit — before they ever reach out.</p>
+      <a class="btn btn-dark" href="activate.html">Claim your Founding Therapist profile</a>
+      <p class="kt-hero-fine">Cancel anytime · Founding rate locked for 12 months · Matched by fit, never by fee</p>
+    </div>
+  </div>
+</section>
+
 </main>
 <script>
 /* mobile nav + billing toggle */
@@ -327,10 +400,12 @@ const PRICING_TIERS = [
   const now = new Date();
   const i = PRICING_TIERS.findIndex(t => now < t.until);
   const num = document.getElementById('kt-price-num');
+  const heroRate = document.getElementById('kt-hero-rate');
   const trial = document.getElementById('kt-price-trial');
   if (!num) return;
   if (i === -1) {
     num.textContent = '$29.99';
+    if (heroRate) heroRate.textContent = '$29.99';
     if (trial) trial.textContent = 'Billed monthly. Cancel anytime.';
     return;
   }
@@ -338,6 +413,7 @@ const PRICING_TIERS = [
   const next = PRICING_TIERS[i + 1] ? PRICING_TIERS[i + 1].rate : 29.99;
   const when = t.until.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   num.textContent = '$' + t.rate.toFixed(2);
+  if (heroRate) heroRate.textContent = '$' + t.rate.toFixed(2);
   if (trial) trial.textContent = `Today's founding rate — locked for 12 months. Rises to $${next.toFixed(2)} on ${when}.`;
 })();
 
