@@ -5,7 +5,7 @@
 .kt-hero-inner { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(1.5rem, 4vw, 4rem); max-width: 1200px; margin: 0 auto; align-items: center; }
 .kt-hero h1 { font-size: clamp(2rem, 4.2vw, 3.2rem); margin-top: .6rem; }
 .kt-sub { margin-top: 1rem; max-width: 46ch; color: var(--ink-soft); font-size: 1rem; line-height: 1.6; }
-.kt-sub-em { font-family: 'Fraunces', serif; font-style: italic; color: var(--clay); font-size: 1.05rem; }
+.kt-sub-em { font-family: 'Literata', Georgia, serif; font-style: italic; color: var(--clay); font-size: 1.05rem; }
 
 .kt-hero-card {
   background: var(--paper); border: 1px solid var(--line); border-radius: 22px;
@@ -53,7 +53,7 @@
   box-shadow: var(--shadow); padding: clamp(1.6rem, 3.5vw, 2.4rem); text-align: left;
 }
 .kt-plan-name { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--clay); }
-.kt-price { font-family: 'Fraunces', serif; color: var(--aubergine); margin-top: .5rem; }
+.kt-price { font-family: 'Literata', Georgia, serif; color: var(--aubergine); margin-top: .5rem; }
 .kt-price > span:first-child { font-size: 3.2rem; line-height: 1; }
 .kt-price-per { font-size: 1.1rem; color: var(--ink-soft); margin-left: .2rem; }
 .kt-price-note { font-size: .85rem; color: var(--ink-soft); margin-top: .4rem; }
@@ -143,7 +143,7 @@
 .kt-planopt:hover { transform: translateY(-2px); }
 .kt-planopt.selected { border-color: var(--aubergine); background: #F7F0F9; }
 .kt-planopt-name { font-weight: 700; font-size: .95rem; color: var(--ink); }
-.kt-planopt-price { font-family: 'Fraunces', serif; font-size: 1.9rem; color: var(--aubergine); }
+.kt-planopt-price { font-family: 'Literata', Georgia, serif; font-size: 1.9rem; color: var(--aubergine); }
 .kt-planopt-price small { font-size: .95rem; color: var(--ink-soft); font-family: 'Inter', sans-serif; }
 .kt-planopt-blurb { font-size: .8rem; color: var(--ink-soft); }
 
@@ -172,14 +172,14 @@
 .kt-dashgrid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; margin-top: 1.4rem; }
 .kt-dashcard { background: var(--cream); border: 1px solid var(--line); border-radius: 18px; padding: 1.3rem 1.3rem; }
 .kt-dashcard h3 { font-family: 'Inter', sans-serif; font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
-.kt-dash-big { font-family: 'Fraunces', serif; font-size: 1.35rem; color: var(--aubergine); margin-top: .5rem; }
+.kt-dash-big { font-family: 'Literata', Georgia, serif; font-size: 1.35rem; color: var(--aubergine); margin-top: .5rem; }
 .kt-dash-meta { font-size: .82rem; color: var(--ink-soft); margin-top: .2rem; }
 .kt-dash-ctas { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
 .kt-linkbtn { font-size: .82rem; font-weight: 600; color: var(--ink-soft); text-decoration: underline; }
 .kt-linkbtn:hover { color: var(--clay-deep); }
 .kt-stats { display: flex; gap: 1.6rem; margin-top: .8rem; }
 .kt-stats div { display: grid; }
-.kt-stats strong { font-family: 'Fraunces', serif; font-size: 1.6rem; color: var(--aubergine); }
+.kt-stats strong { font-family: 'Literata', Georgia, serif; font-size: 1.6rem; color: var(--aubergine); }
 .kt-stats span { font-size: .72rem; color: var(--ink-soft); }
 .kt-dash-profile { margin-top: 1rem; }
 .kt-sechead-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
@@ -235,7 +235,7 @@
   padding: clamp(1.8rem, 4vw, 3rem);
 }
 .kt-claim-copy .kt-founding-star { color: #E8C687; font-size: 1.4rem; }
-.kt-claim-copy h2 { font-family: 'Fraunces', serif; font-weight: 500; color: #FFF8EF; font-size: clamp(1.6rem, 3vw, 2.3rem); margin: .3rem 0 .8rem; }
+.kt-claim-copy h2 { font-family: 'Literata', Georgia, serif; font-weight: 500; color: #FFF8EF; font-size: clamp(1.6rem, 3vw, 2.3rem); margin: .3rem 0 .8rem; }
 .kt-claim-copy p { color: #DCC9E0; font-size: .97rem; line-height: 1.6; }
 .kt-claim-count { color: #E8C687 !important; font-size: .82rem !important; font-weight: 600; margin-top: 1rem !important; }
 
@@ -254,7 +254,7 @@
 
 .kt-claim-done { background: #FFFDF8; border-radius: 18px; padding: clamp(1.6rem, 4vw, 2.4rem); text-align: center; }
 .kt-claim-check { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #E6EAE2; color: #687A65; font-size: 1.3rem; font-weight: 700; margin-bottom: .6rem; }
-.kt-claim-done h3 { font-family: 'Fraunces', serif; font-weight: 500; color: #422448; font-size: 1.3rem; margin-bottom: .5rem; }
+.kt-claim-done h3 { font-family: 'Literata', Georgia, serif; font-weight: 500; color: #422448; font-size: 1.3rem; margin-bottom: .5rem; }
 .kt-claim-done p { color: #6E6172; font-size: .92rem; line-height: 1.6; margin-bottom: 1.1rem; }
 
 @media (max-width: 720px) {
@@ -273,7 +273,7 @@
 .kt-offer-star { font-size: 1.1rem; color: var(--clay); background: #F8EAE4; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .kt-offer-name { font-size: .78rem; font-weight: 700; color: var(--aubergine); }
 .kt-offer-rate { font-size: .86rem; color: var(--ink-soft); }
-.kt-offer-rate b { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--aubergine); }
+.kt-offer-rate b { font-family: 'Literata', Georgia, serif; font-size: 1.15rem; color: var(--aubergine); }
 .kt-hero-fine { font-size: .78rem; color: var(--ink-faint, #9A8FA0); margin-top: .7rem; }
 .kt-hero-card-flag { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: .5rem; }
 .kt-demo-body { font-size: .82rem; color: var(--ink-soft); line-height: 1.55; margin-bottom: .7rem; }
