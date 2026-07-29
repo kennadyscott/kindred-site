@@ -1,5 +1,5 @@
 // ============================================================================
-// Kindred — Stripe webhook  (Supabase Edge Function)
+// Kindred -- Stripe webhook  (Supabase Edge Function)
 // ----------------------------------------------------------------------------
 // Turns a completed Stripe checkout into a LIVE listing, with no manual step.
 //
@@ -10,7 +10,7 @@
 //
 // It also keeps the listing honest over time: if a subscription lapses, is
 // cancelled, or payment fails, the profile unlists automatically (nothing is
-// deleted — they just stop appearing in matching).
+// deleted -- they just stop appearing in matching).
 //
 // SECURITY
 //   * The Stripe signature is verified before we trust ANY payload. Without
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature');
   if (!signature) return new Response('Missing stripe-signature', { status: 400 });
 
-  // Must read the RAW body — parsing it first would break signature verification.
+  // Must read the RAW body -- parsing it first would break signature verification.
   const body = await req.text();
 
   let event: Stripe.Event;
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
         });
         if (!result?.ok) {
           // Paid but unmatched (e.g. checked out with a different email).
-          // Loud log so it can be reconciled by hand — never silently dropped.
+          // Loud log so it can be reconciled by hand -- never silently dropped.
           console.error('ACTIVATION NEEDS MANUAL REVIEW', { email, session: s.id, result });
         } else {
           console.log('listing activated', result);
@@ -122,9 +122,16 @@ Deno.serve(async (req) => {
       // ---- payment failed: unlist until they fix it ------------------------
       case 'invoice.payment_failed': {
         const inv = event.data.object as Stripe.Invoice;
+        // Stripe removed `invoice.subscription` in API version 2025-03-31.basil
+        // and moved it under `parent.subscription_details`. Read both so this
+        // survives whichever version the webhook endpoint is pinned to.
+        const invAny = inv as unknown as Record<string, any>;
+        const subId = typeof invAny.subscription === 'string'
+          ? invAny.subscription
+          : invAny.parent?.subscription_details?.subscription ?? null;
         const result = await rpc('stripe_sync_subscription', {
           p_customer_id: typeof inv.customer === 'string' ? inv.customer : inv.customer?.id ?? null,
-          p_subscription_id: typeof inv.subscription === 'string' ? inv.subscription : null,
+          p_subscription_id: typeof subId === 'string' ? subId : null,
           p_status: 'past_due',
         });
         console.log('payment failed, listing paused', result);
