@@ -16,7 +16,7 @@
 // from the request body, which the caller controls.
 //
 // Secrets:
-//   ADMIN_EMAILS   comma-separated allowlist, e.g. "kennady@cleark12.com"
+//   ADMIN_EMAILS   comma-separated allowlist, e.g. "kennady.nickell@gmail.com" (personal, NOT the ClearK12 work address)
 // Provided automatically by Supabase:
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
 // ============================================================================

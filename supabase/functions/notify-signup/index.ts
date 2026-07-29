@@ -11,7 +11,7 @@
 //
 // Secrets:
 //   RESEND_API_KEY   from resend.com
-//   NOTIFY_TO        where to send, e.g. kennady@cleark12.com
+//   NOTIFY_TO        where to send, e.g. kennady.nickell@gmail.com (personal, NOT the ClearK12 work address)
 //   NOTIFY_FROM      a verified sender, e.g. "Kindred <alerts@kindredtherapymatch.com>"
 //   NOTIFY_SECRET    any long random string; must match the webhook header
 // ============================================================================
