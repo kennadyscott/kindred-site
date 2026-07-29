@@ -20,6 +20,7 @@
 //     revoked from anon/authenticated for the same reason.
 //
 // Required secrets (set once, see DEPLOY.md):
+//   (also handles Stripe Identity verification results -- see 0010)
 //   STRIPE_SECRET_KEY       sk_live_...
 //   STRIPE_WEBHOOK_SECRET   whsec_...      (from the Stripe webhook endpoint)
 // Provided automatically by Supabase:
@@ -135,6 +136,26 @@ Deno.serve(async (req) => {
           p_status: 'past_due',
         });
         console.log('payment failed, listing paused', result);
+        break;
+      }
+
+      // ---- Stripe Identity: is this person who they say they are? ---------
+      // Matched on the session id, not an email -- identity events carry no
+      // email. The id was stored when identity-session created the session.
+      case 'identity.verification_session.verified':
+      case 'identity.verification_session.requires_input':
+      case 'identity.verification_session.canceled': {
+        const vs = event.data.object as { id: string; status?: string };
+        const verified = event.type === 'identity.verification_session.verified';
+        const result = await rpc('stripe_mark_identity_verified', {
+          p_session_id: vs.id,
+          p_status: verified ? 'verified' : (vs.status ?? 'unverified'),
+        });
+        if (!result?.ok) {
+          console.error('IDENTITY RESULT UNMATCHED', { session: vs.id, type: event.type, result });
+        } else {
+          console.log('identity updated', { type: event.type, result });
+        }
         break;
       }
 
