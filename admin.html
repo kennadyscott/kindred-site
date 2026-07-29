@@ -80,6 +80,36 @@
   .adm-leads tr:last-child td { border-bottom: none; }
   .adm-leads a { color: var(--aubergine); text-decoration: underline; }
   .adm-leads-wrap { overflow-x: auto; }
+
+  /* ---- therapist review queue ---- */
+  .adm-review { background:#fff; border:1px solid #EBDAC9; border-radius:18px; padding:20px 22px; margin-bottom:22px; }
+  .adm-review-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+  .adm-review-head h2 { font-family:'Fraunces',Georgia,serif; font-size:20px; margin:0; color:#422448; display:flex; align-items:center; gap:8px; }
+  .adm-badge { background:#BE765F; color:#fff; font-family:'Inter',sans-serif; font-size:12px; font-weight:700;
+               border-radius:999px; padding:2px 9px; }
+  .adm-review-tabs { display:flex; gap:6px; }
+  .adm-tab { border:1px solid #EBDAC9; background:#fff; border-radius:999px; padding:6px 14px;
+             font-size:13px; font-weight:600; color:#6b5a70; cursor:pointer; }
+  .adm-tab.is-on { background:#422448; color:#fff; border-color:#422448; }
+  .adm-review-note { font-size:13.5px; color:#6b5a70; margin:0 0 14px; }
+  .rev-row { border:1px solid #F2E7DA; border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .rev-row.is-urgent { border-color:#BE765F; background:#FFF6F1; }
+  .rev-top { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline; }
+  .rev-name { font-weight:700; color:#422448; font-size:15.5px; }
+  .rev-email { font-size:13px; color:#6b5a70; }
+  .rev-meta { font-size:13.5px; color:#3a2c40; margin:8px 0 0; line-height:1.7; }
+  .rev-chip { display:inline-block; font-size:11.5px; font-weight:700; border-radius:999px;
+              padding:2px 9px; margin-right:6px; }
+  .chip-ok { background:#E6EFE4; color:#41603c; }
+  .chip-wait { background:#F6E9DE; color:#8a5a3c; }
+  .chip-alert { background:#BE765F; color:#fff; }
+  .rev-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+  .rev-actions button, .rev-actions a { font-size:13px; font-weight:600; border-radius:999px;
+    padding:8px 15px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .btn-verify { background:#422448; color:#fff; border:none; }
+  .btn-unverify { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
+  .btn-board { background:#F6EFE6; color:#422448; border:1px solid #EBDAC9; }
+  .rev-empty { font-size:14px; color:#6b5a70; padding:8px 0; }
 </style>
 </head>
 <body>
@@ -91,10 +121,11 @@
     <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
   </svg>
   <h1>Kindred Admin</h1>
-  <p>Aggregate insights only — this dashboard contains no personal data.</p>
-  <input type="password" id="adm-pass" placeholder="Passcode" autocomplete="off">
-  <button class="btn btn-dark" id="adm-enter">Enter</button>
-  <p class="mkt-fine adm-gate-fine">Prototype gate — replace with real authentication before production.</p>
+  <p>Sign in with your Kindred admin account.</p>
+  <input type="email" id="adm-email" placeholder="you@example.com" autocomplete="username">
+  <input type="password" id="adm-pass" placeholder="Password" autocomplete="current-password">
+  <button class="btn btn-dark" id="adm-enter">Sign in</button>
+  <p class="mkt-fine adm-gate-fine" id="adm-gate-msg">Admin accounts only. This queue contains therapist personal data.</p>
 </div>
 
 <main class="adm-wrap" id="adm-main" hidden>
@@ -105,6 +136,20 @@
     </div>
     <span class="adm-mode" id="adm-mode">Demo mode — this browser only</span>
   </div>
+
+  <!-- ===================== THERAPIST REVIEW QUEUE ===================== -->
+  <section class="adm-review" id="adm-review">
+    <div class="adm-review-head">
+      <h2>Therapist review<span class="adm-badge" id="rev-badge" hidden>0</span></h2>
+      <div class="adm-review-tabs">
+        <button class="adm-tab is-on" data-filter="pending">Needs review</button>
+        <button class="adm-tab" data-filter="verified">Live</button>
+        <button class="adm-tab" data-filter="all">All</button>
+      </div>
+    </div>
+    <p class="adm-review-note" id="rev-summary">Loading&hellip;</p>
+    <div id="rev-rows"></div>
+  </section>
 
   <div class="adm-privacy">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
@@ -187,26 +232,181 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
 
 <script>
 (() => {
-  /* ---------- gate (simulated) ---------- */
-  const PASS = 'kindred-admin';
+  /* ---------- auth ----------
+     Was a hardcoded passcode ('kindred-admin') compared in JavaScript, i.e.
+     readable by anyone using View Source. Fine for anonymous click counts;
+     not fine now that this page lists therapist names, emails and licence
+     numbers and can mark someone verified.
+
+     The anon key below is safe to publish -- it is the public key, and RLS
+     plus the admin-api allowlist are the real boundary. The service_role key
+     is NOT here and must never be: it bypasses every policy on every table. */
+  const DB_URL = 'https://izukppxgoerqtustfbnk.supabase.co';
+  const DB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk';
+  const SESSION_KEY = 'kindred-admin-session';
+
   const gate = document.getElementById('adm-gate');
   const main = document.getElementById('adm-main');
-  function unlock() {
-    gate.hidden = true; main.hidden = false; renderAll();
+  const gateMsg = document.getElementById('adm-gate-msg');
+
+  const loadSession = () => { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; } };
+  const saveSession = (v) => { try { localStorage.setItem(SESSION_KEY, JSON.stringify(v)); } catch (e) {} };
+  const clearSession = () => { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} };
+
+  function unlock() { gate.hidden = true; main.hidden = false; renderAll(); loadReview(); }
+
+  async function signIn(email, password) {
+    const res = await fetch(`${DB_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: DB_KEY },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) return null;
+    return await res.json();
   }
-  document.getElementById('adm-enter').addEventListener('click', () => {
-    if (document.getElementById('adm-pass').value === PASS) {
-      sessionStorage.setItem('kadmin', '1');
-      unlock();
-    } else {
+
+  /* Every privileged action goes through admin-api, which re-checks the token
+     and the allowlist server-side. Nothing here is trusted. */
+  async function adminApi(payload) {
+    const sess = loadSession();
+    if (!sess || !sess.access_token) return { error: 'no_session' };
+    const res = await fetch(`${DB_URL}/functions/v1/admin-api`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: DB_KEY,
+        Authorization: `Bearer ${sess.access_token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.status === 401) { clearSession(); return { error: 'expired' }; }
+    return await res.json().catch(() => ({ error: 'bad_response' }));
+  }
+
+  document.getElementById('adm-enter').addEventListener('click', async () => {
+    const email = (document.getElementById('adm-email').value || '').trim();
+    const pass = document.getElementById('adm-pass').value || '';
+    if (!email || !pass) return;
+    gateMsg.textContent = 'Signing in...';
+    const sess = await signIn(email, pass);
+    if (!sess || !sess.access_token) {
       document.getElementById('adm-pass').value = '';
-      document.getElementById('adm-pass').placeholder = 'Try again';
+      gateMsg.textContent = 'That did not work. Check the email and password.';
+      return;
     }
+    saveSession(sess);
+    /* Being signed in is not being an admin -- admin-api decides that. */
+    const probe = await adminApi({ action: 'counts' });
+    if (probe.error === 'forbidden') {
+      clearSession();
+      gateMsg.textContent = 'That account is not an admin.';
+      return;
+    }
+    unlock();
   });
   document.getElementById('adm-pass').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('adm-enter').click();
   });
-  if (sessionStorage.getItem('kadmin')) unlock();
+  if (loadSession()) unlock();
+
+  /* ---------- therapist review queue ---------- */
+  /* Direct links to each board's public lookup: verification should be one
+     click from the queue, not a search every time. */
+  const BOARDS = {
+    TX: 'https://vo.ras.dshs.state.tx.us/datamart/searchByNameTX.do',
+    CA: 'https://search.dca.ca.gov/',
+    NY: 'https://www.op.nysed.gov/verification-search',
+    FL: 'https://mqa-internet.doh.state.fl.us/MQASearchServices/HealthCareProviders',
+    IL: 'https://online-dfpr.micropact.com/lookup/licenselookup.aspx',
+    OH: 'https://elicense.ohio.gov/oh_verifylicense',
+    GA: 'https://gov.georgia.gov/licensing',
+    WA: 'https://fortress.wa.gov/doh/providercredentialsearch/',
+    CO: 'https://apps2.colorado.gov/dora/licensing/lookup/licenselookup.aspx',
+    MN: 'https://mn.gov/boards/behavioral-health/public-information/online-license.jsp'
+  };
+  const boardLink = (states) => {
+    const st = (states || [])[0];
+    return st && BOARDS[st] ? `<a class="btn-board" target="_blank" rel="noopener" href="${BOARDS[st]}">Look up on ${st} board &#8599;</a>` : '';
+  };
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  let revFilter = 'pending';
+
+  async function loadReview() {
+    const rowsEl = document.getElementById('rev-rows');
+    const summary = document.getElementById('rev-summary');
+    const badge = document.getElementById('rev-badge');
+
+    const counts = await adminApi({ action: 'counts' });
+    if (counts.error) {
+      summary.textContent = counts.error === 'forbidden'
+        ? 'This account is not on the admin allowlist.'
+        : 'Could not load the queue.';
+      rowsEl.innerHTML = '';
+      return;
+    }
+    const c = counts.counts || {};
+    const pending = (c.awaiting_license || 0) + (c.awaiting_identity || 0);
+    badge.hidden = !pending; badge.textContent = pending;
+    summary.innerHTML = c.paying_but_hidden
+      ? `<strong style="color:#BE765F;">${c.paying_but_hidden} paying but still hidden.</strong> ${c.live || 0} live, ${c.total || 0} total.`
+      : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting licence &middot; ${c.awaiting_identity || 0} awaiting ID &middot; ${c.total || 0} total.`;
+
+    const res = await adminApi({ action: 'queue', filter: revFilter });
+    const rows = (res && res.rows) || [];
+    if (!rows.length) {
+      rowsEl.innerHTML = '<p class="rev-empty">Nothing here.</p>';
+      return;
+    }
+    rowsEl.innerHTML = rows.map(r => {
+      const lic = r.license_verified
+        ? '<span class="rev-chip chip-ok">licence verified</span>'
+        : '<span class="rev-chip chip-wait">licence pending</span>';
+      const id = r.identity_verified
+        ? '<span class="rev-chip chip-ok">ID verified</span>'
+        : '<span class="rev-chip chip-wait">ID pending</span>';
+      const hidden = r.published && !(r.license_verified && r.identity_verified);
+      return `
+        <div class="rev-row ${hidden ? 'is-urgent' : ''}">
+          <div class="rev-top">
+            <div><span class="rev-name">${esc(r.name) || '(no name)'}</span>
+                 <span class="rev-email">${esc(r.email)}</span></div>
+            <div>${lic}${id}${hidden ? '<span class="rev-chip chip-alert">paying, hidden</span>' : ''}</div>
+          </div>
+          <p class="rev-meta">Licence <strong>${esc(r.license_number) || '(none)'}</strong>
+             &middot; states ${esc((r.license_states || []).join(', ')) || '(none)'}
+             ${r.license_verified_at ? `&middot; verified ${esc(String(r.license_verified_at).slice(0, 10))}` : ''}</p>
+          <div class="rev-actions">
+            ${boardLink(r.license_states)}
+            ${r.license_verified
+              ? `<button class="btn-unverify" data-unverify="${esc(r.email)}">Un-verify licence</button>`
+              : `<button class="btn-verify" data-verify="${esc(r.email)}" data-lic="${esc(r.license_number)}">Mark licence verified</button>`}
+          </div>
+        </div>`;
+    }).join('');
+
+    rowsEl.querySelectorAll('[data-verify]').forEach(b => b.addEventListener('click', async () => {
+      b.disabled = true; b.textContent = 'Verifying...';
+      const out = await adminApi({ action: 'verify_license', email: b.dataset.verify, license: b.dataset.lic });
+      if (out.error) { b.disabled = false; b.textContent = 'Failed - retry'; return; }
+      loadReview();
+    }));
+    rowsEl.querySelectorAll('[data-unverify]').forEach(b => b.addEventListener('click', async () => {
+      if (!confirm('Un-verify this licence? They will stop appearing to clients immediately.')) return;
+      b.disabled = true;
+      const out = await adminApi({ action: 'unverify_license', email: b.dataset.unverify });
+      if (out.error) { b.disabled = false; return; }
+      loadReview();
+    }));
+  }
+
+  document.querySelectorAll('.adm-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.adm-tab').forEach(x => x.classList.remove('is-on'));
+    t.classList.add('is-on');
+    revFilter = t.dataset.filter;
+    loadReview();
+  }));
 
   /* ---------- data ---------- */
   const FRIENDLY = {
