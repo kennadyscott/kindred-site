@@ -319,7 +319,11 @@ const PRICING_TIERS = [
       email = (s && s.user && s.user.email) || '';
     }
   } catch (e) {}
-  if (email) btn.href = btn.href + '?email=' + encodeURIComponent(email);
+  /* #therapist-signup skips the app's "what brings you to Kindred?" step and
+     opens the therapist login with the email prefilled -- they have just paid,
+     so the only thing left to type is a password. The hash must come AFTER the
+     query string or the app reads the email as part of the fragment. */
+  btn.href = btn.href + (email ? '?email=' + encodeURIComponent(email) : '') + '#therapist-signup';
 })();
 </script>
 <script src="site.js?v=4"></script>
