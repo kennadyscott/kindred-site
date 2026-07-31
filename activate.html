@@ -29,6 +29,29 @@
   .kt-offer.standard .kt-offer-badge { color: #5b4470; background: #EFE7F2; }
   .kt-offer-price { font-family: 'Literata', Georgia, serif; font-size: 52px; font-weight: 600; color: #422448; line-height: 1; }
   .kt-offer-price span { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 500; color: #6b5a70; }
+  .kt-track { list-style: none; display: flex; gap: 8px; justify-content: center; margin: 0 0 26px; padding: 0; flex-wrap: wrap; }
+  .kt-track-step { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #9A8FA0; }
+  .kt-track-step span { width: 26px; height: 26px; border-radius: 50%; background: #F0EEF6; color: #9A8FA0; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
+  .kt-track-step + .kt-track-step::before { content: ''; width: 26px; height: 1.5px; background: #E9E7F0; margin-right: 8px; }
+  .kt-track-step.on { color: #422448; }
+  .kt-track-step.on span { background: #422448; color: #fff; }
+  .kt-track-step.done { color: #4c6b4c; }
+  .kt-track-step.done span { background: #E9EDE7; color: #4c6b4c; }
+  .kt-acct { background: #fff; border: 1.5px solid #E9E7F0; border-radius: 20px; padding: 26px 26px 22px; max-width: 460px; margin: 0 auto 26px; }
+  .kt-acct h2 { font-family: 'Literata', Georgia, serif; font-size: 22px; font-weight: 500; color: #422448; margin: 0 0 6px; }
+  .kt-acct-sub { font-size: 14px; color: #6b5a70; line-height: 1.55; margin: 0 0 18px; }
+  .kt-acct .kt-field { margin-bottom: 14px; }
+  .kt-acct label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #9A8FA0; margin-bottom: 5px; }
+  .kt-hint { font-size: .82em; font-weight: 500; text-transform: none; letter-spacing: 0; color: #b3a9b8; }
+  .kt-acct input { width: 100%; font: inherit; font-size: 15px; padding: 11px 14px; border: 1.5px solid #E9E7F0; border-radius: 12px; background: #FCFCFE; }
+  .kt-acct input:focus { outline: none; border-color: #8E77A0; }
+  .kt-acct-btn { width: 100%; margin-top: 4px; }
+  .kt-acct-err { font-size: 13.5px; font-weight: 600; color: #a8443a; margin: 10px 0 0; }
+  .kt-acct-fine { font-size: 13px; color: #6b5a70; text-align: center; margin: 12px 0 0; }
+  .kt-acct-secure { border-top: 1px solid #F0EEF6; padding-top: 12px; margin-top: 16px; font-size: 12.5px; color: #9A8FA0; }
+  .kt-linkish { background: none; border: none; padding: 0; font: inherit; color: #8E77A0; font-weight: 600; text-decoration: underline; cursor: pointer; }
+  .kt-acct-who { text-align: center; font-size: 14px; color: #6b5a70; background: #E9EDE7; border-radius: 999px; padding: 9px 16px; max-width: 460px; margin: 0 auto 20px; }
+  .kt-acct-who b { color: #422448; }
   .kt-offer-terms { font-size: 15px; color: #6b5a70; margin: 10px 0 0; }
   .kt-offer-was { font-size: 14px; color: #6b5a70; margin: 0 0 4px; }
   .kt-offer-was s { text-decoration: line-through; text-decoration-thickness: 1.5px; color: #9A8FA0; }
@@ -69,9 +92,39 @@
 <main class="kt-activate">
 
   <div class="kt-activate-head">
-    <h1>Activate your listing</h1>
-    <p>Your profile is built. Start your membership, and once we’ve verified your identity and licence you’ll go live and begin being matched with clients who already fit.</p>
+    <h1>Join Kindred</h1>
+    <p>Three steps: make your account, start your membership, then build your profile. Once we’ve verified your identity and licence you go live and begin being matched.</p>
   </div>
+
+  <ol class="kt-track" id="kt-track">
+    <li class="kt-track-step on" data-step="1"><span>1</span>Account</li>
+    <li class="kt-track-step" data-step="2"><span>2</span>Membership</li>
+    <li class="kt-track-step" data-step="3"><span>3</span>Profile</li>
+  </ol>
+
+  <!-- ===== STEP 1 — create the account ===== -->
+  <section class="kt-acct" id="kt-acct">
+    <h2>Create your Kindred account</h2>
+    <p class="kt-acct-sub">One account for the website and the app. You’ll use this to build your profile and manage your membership.</p>
+    <form id="kt-acct-form" novalidate>
+      <div class="kt-field">
+        <label for="ka-email">Email</label>
+        <input type="email" id="ka-email" autocomplete="email" required placeholder="you@practice.com">
+      </div>
+      <div class="kt-field">
+        <label for="ka-pass">Password <span class="kt-hint">at least 8 characters</span></label>
+        <input type="password" id="ka-pass" autocomplete="new-password" required placeholder="••••••••">
+      </div>
+      <p class="kt-acct-err" id="ka-err" hidden></p>
+      <button type="submit" class="btn btn-dark kt-acct-btn" id="ka-submit">Create account &amp; continue <span aria-hidden="true">→</span></button>
+      <p class="kt-acct-fine">Already have an account? <button type="button" class="kt-linkish" id="ka-signin-toggle">Sign in instead</button></p>
+    </form>
+    <p class="kt-acct-fine kt-acct-secure">We only use this to run your membership and profile. Your licence details come later, in the profile step.</p>
+  </section>
+
+  <!-- ===== STEP 2 — membership (revealed once the account exists) ===== -->
+  <div id="kt-step2" hidden>
+  <p class="kt-acct-who" id="kt-acct-who"></p>
 
   <!-- Offer card — filled in by the script below based on the founding deadline -->
   <div class="kt-offer" id="kt-offer">
@@ -105,6 +158,7 @@
     <a href="therapists.html#kt-claim">For Therapists page</a> and we'll set your profile up personally —
     and you'll still get the founding rate.
   </div>
+  </div><!-- /step 2 -->
 
 </main>
 
@@ -143,7 +197,7 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=1"></script>
+<script src="activate.js?v=2"></script>
 <script src="site.js?v=4"></script>
 <script src="analytics.js?v=7"></script>
 </body>

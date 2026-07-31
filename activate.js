@@ -118,3 +118,136 @@ const FOUNDING_LOCK_MONTHS = 12;
   btn.href = url.toString();
   btn.textContent = `Continue to secure checkout — $${rate.toFixed(2)}/mo`;
 })();
+
+/* ===========================================================================
+   Step 1 — the Kindred account.
+   Same Supabase project the app uses, same raw GoTrue endpoints (no SDK), so
+   ONE account works on the website and in the app. We create the account
+   BEFORE payment so the Stripe email always matches the Kindred account, and
+   so anyone who drops off mid-way is still reachable.
+   =========================================================================== */
+const KINDRED_AUTH = {
+  url: 'https://izukppxgoerqtustfbnk.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk'
+};
+const AUTH_SESSION_KEY = 'kindred-session';   /* same key the app uses */
+const PENDING_EMAIL_KEY = 'kindred-pending-email';
+
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || 'null'); } catch (e) { return null; }
+}
+function saveSession(d) {
+  if (!d || !d.access_token) return null;
+  const s = { access_token: d.access_token, refresh_token: d.refresh_token,
+              expires_at: Date.now() + ((d.expires_in || 3600) * 1000), user: d.user };
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(s));
+  return s;
+}
+async function authPost(path, body) {
+  const res = await fetch(KINDRED_AUTH.url + '/auth/v1' + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': KINDRED_AUTH.key },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error_description || data.msg || data.message || ('Something went wrong (' + res.status + ')'));
+  return data;
+}
+
+(function initAccount() {
+  const form   = document.getElementById('kt-acct-form');
+  const step2  = document.getElementById('kt-step2');
+  const acct   = document.getElementById('kt-acct');
+  const who    = document.getElementById('kt-acct-who');
+  const err    = document.getElementById('ka-err');
+  const submit = document.getElementById('ka-submit');
+  const toggle = document.getElementById('ka-signin-toggle');
+  if (!form) return;
+
+  let mode = 'signup';   /* or 'signin' */
+
+  function markStep(n) {
+    document.querySelectorAll('.kt-track-step').forEach(el => {
+      const s = Number(el.dataset.step);
+      el.classList.toggle('on', s === n);
+      el.classList.toggle('done', s < n);
+    });
+  }
+
+  function revealStep2(email) {
+    localStorage.setItem(PENDING_EMAIL_KEY, email);
+    acct.hidden = true;
+    step2.hidden = false;
+    if (who) who.innerHTML = 'Account ready for <b>' + email.replace(/[<>&]/g, '') + '</b>. Next: start your membership.';
+    markStep(2);
+    /* carry the email into Stripe so billing and the account can never diverge */
+    const btn = document.getElementById('kt-checkout-btn');
+    if (btn && btn.href && btn.href.indexOf('buy.stripe.com') !== -1) {
+      const u = new URL(btn.href);
+      u.searchParams.set('prefilled_email', email);
+      btn.href = u.toString();
+    }
+    step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* already signed in on this browser? skip straight to membership */
+  const existing = loadSession();
+  if (existing && existing.user && existing.user.email) {
+    revealStep2(existing.user.email);
+  }
+
+  toggle.addEventListener('click', () => {
+    mode = mode === 'signup' ? 'signin' : 'signup';
+    submit.innerHTML = (mode === 'signup' ? 'Create account &amp; continue' : 'Sign in &amp; continue') + ' <span aria-hidden="true">→</span>';
+    toggle.textContent = mode === 'signup' ? 'Sign in instead' : 'Create an account instead';
+    document.querySelector('#kt-acct h2').textContent = mode === 'signup' ? 'Create your Kindred account' : 'Sign in to Kindred';
+    document.getElementById('ka-pass').setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
+    err.hidden = true;
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('ka-email').value.trim();
+    const pass  = document.getElementById('ka-pass').value;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      err.textContent = 'Please enter a valid email.'; err.hidden = false; return;
+    }
+    if (mode === 'signup' && pass.length < 8) {
+      err.textContent = 'Please use at least 8 characters.'; err.hidden = false; return;
+    }
+    err.hidden = true;
+    submit.disabled = true;
+    submit.textContent = mode === 'signup' ? 'Creating your account…' : 'Signing you in…';
+
+    try {
+      if (mode === 'signup') {
+        const data = await authPost('/signup', { email, password: pass });
+        saveSession(data);   /* null-safe: returns null when confirmation is required */
+        /* Whether or not Supabase requires email confirmation, the account now
+           exists — so we let them continue to payment rather than stranding
+           them at a "check your inbox" wall with their card already out. */
+      } else {
+        const data = await authPost('/token?grant_type=password', { email, password: pass });
+        saveSession(data);
+      }
+      revealStep2(email);
+    } catch (ex) {
+      const m = String(ex.message || '');
+      if (/already registered|already been registered/i.test(m)) {
+        err.innerHTML = 'That email already has a Kindred account — <button type="button" class="kt-linkish" id="ka-jump">sign in instead</button>.';
+        err.hidden = false;
+        const jump = document.getElementById('ka-jump');
+        if (jump) jump.addEventListener('click', () => toggle.click());
+      } else if (/invalid login/i.test(m)) {
+        err.textContent = 'That email and password don’t match. Try again, or create an account.';
+        err.hidden = false;
+      } else {
+        err.textContent = m;
+        err.hidden = false;
+      }
+    } finally {
+      submit.disabled = false;
+      submit.innerHTML = (mode === 'signup' ? 'Create account &amp; continue' : 'Sign in &amp; continue') + ' <span aria-hidden="true">→</span>';
+    }
+  });
+})();

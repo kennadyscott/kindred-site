@@ -75,8 +75,8 @@
       <li class="wel-step">
         <span class="wel-num">2</span>
         <div>
-          <h3>Verify your identity and licence</h3>
-          <p>Part of the same flow. You’ll enter your licence number and the state that issued it, and confirm your identity. Every therapist on Kindred goes through this — it’s what lets a client trust the person they’re reading about.</p>
+          <h3>Sign in once, then verify your identity and licence</h3>
+          <p>Use the same email and password you just created. You’ll enter your licence number and the state that issued it, and confirm your identity — every therapist on Kindred goes through this, and it’s what lets a client trust the person they’re reading about.</p>
         </div>
       </li>
       <li class="wel-step">
@@ -302,6 +302,24 @@ const PRICING_TIERS = [
     done.hidden = false;
     done.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
+})();
+</script>
+<script>
+/* Carry the account email to the app so the sign-in there is one field, not
+   two. The site and app are different subdomains, so the session itself can't
+   travel — but the email can, and that's the annoying half. */
+(() => {
+  const btn = document.getElementById('wel-cta');
+  if (!btn) return;
+  let email = '';
+  try {
+    email = localStorage.getItem('kindred-pending-email') || '';
+    if (!email) {
+      const s = JSON.parse(localStorage.getItem('kindred-session') || 'null');
+      email = (s && s.user && s.user.email) || '';
+    }
+  } catch (e) {}
+  if (email) btn.href = btn.href + '?email=' + encodeURIComponent(email);
 })();
 </script>
 <script src="site.js?v=4"></script>
