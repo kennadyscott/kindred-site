@@ -61,7 +61,7 @@
         <span class="kt-offer-star" aria-hidden="true">✦</span>
         <div>
           <p class="kt-offer-name">Founding Therapist offer</p>
-          <p class="kt-offer-rate"><b id="kt-hero-rate">$9.99</b>/month for your first 12 months</p>
+          <p class="kt-offer-rate"><s class="kt-was">$29.99</s> <b id="kt-hero-rate">$9.99</b>/month for your first 12 months</p>
         </div>
       </div>
 
@@ -201,8 +201,10 @@
 
     <div class="kt-pricecard">
       <p class="kt-plan-name">Founding Membership</p>
+      <p class="kt-was-line">Usually <s>$29.99</s>/month</p>
       <p class="kt-price"><span id="kt-price-num">$9.99</span><span class="kt-price-per" id="kt-price-per">/month</span></p>
       <p class="kt-price-trial" id="kt-price-trial">Locked in for your first 12 months.</p>
+      <p class="kt-save" id="kt-save">You save $240 in your first year.</p>
       <p class="kt-price-note" id="kt-price-note">Billed monthly. Cancel anytime.</p>
       <ul class="kt-features">
         <li>Matchable to every compatible client — by fit alone</li>
@@ -410,11 +412,15 @@ const PRICING_TIERS = [
   if (i === -1) {
     num.textContent = '$29.99';
     if (heroRate) heroRate.textContent = '$29.99';
+    /* no founding discount running — hide the comparison rather than fake it */
+    document.querySelectorAll('.kt-was-line, .kt-was, #kt-save').forEach(el => el.hidden = true);
     return;
   }
   const t = PRICING_TIERS[i];
   num.textContent = '$' + t.rate.toFixed(2);
   if (heroRate) heroRate.textContent = '$' + t.rate.toFixed(2);
+  const save = document.getElementById('kt-save');
+  if (save) save.textContent = 'You save $' + Math.round((29.99 - t.rate) * 12) + ' in your first year.';
 })();
 
 /* ---------- founding-therapist lead capture ----------

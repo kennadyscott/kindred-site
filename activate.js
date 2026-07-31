@@ -78,11 +78,15 @@ const FOUNDING_LOCK_MONTHS = 12;
     badge.textContent = '★ Founding Therapist offer';
     price.innerHTML = `$${rate.toFixed(2)}<span>/month</span>`;
     terms.textContent = `locked in for your first ${FOUNDING_LOCK_MONTHS} months`;
+    const save = document.getElementById('kt-offer-save');
+    if (save) save.textContent = `You save $${Math.round((STANDARD_RATE - rate) * FOUNDING_LOCK_MONTHS)} in your first year.`;
   } else {
     offer.classList.add('standard');
     badge.textContent = 'Kindred Membership';
     price.innerHTML = `$${STANDARD_RATE.toFixed(2)}<span>/month</span>`;
     terms.textContent = 'billed monthly · cancel anytime';
+    /* no discount running — don't show a comparison that isn't real */
+    ['kt-offer-was', 'kt-offer-save'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
   }
 
 

@@ -30,6 +30,9 @@
   .kt-offer-price { font-family: 'Literata', Georgia, serif; font-size: 52px; font-weight: 600; color: #422448; line-height: 1; }
   .kt-offer-price span { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 500; color: #6b5a70; }
   .kt-offer-terms { font-size: 15px; color: #6b5a70; margin: 10px 0 0; }
+  .kt-offer-was { font-size: 14px; color: #6b5a70; margin: 0 0 4px; }
+  .kt-offer-was s { text-decoration: line-through; text-decoration-thickness: 1.5px; color: #9A8FA0; }
+  .kt-offer-save { display: inline-block; font-size: 13.5px; font-weight: 700; color: #4c6b4c; background: #E9EDE7; padding: 5px 13px; border-radius: 999px; margin: 12px 0 0; }
   .kt-includes { list-style: none; padding: 0; margin: 24px 0; }
   .kt-includes li { position: relative; padding: 0 0 0 30px; margin-bottom: 12px; font-size: 15px; line-height: 1.55; color: #3a2c40; }
   .kt-includes li::before { content: '✓'; position: absolute; left: 6px; color: #687A65; font-weight: 700; }
@@ -73,8 +76,10 @@
   <!-- Offer card — filled in by the script below based on the founding deadline -->
   <div class="kt-offer" id="kt-offer">
     <div class="kt-offer-badge" id="kt-offer-badge">Founding rate</div>
+    <p class="kt-offer-was" id="kt-offer-was">Usually <s>$29.99</s>/month</p>
     <div class="kt-offer-price" id="kt-offer-price">$19.99<span>/month</span></div>
     <p class="kt-offer-terms" id="kt-offer-terms">for your first 12 months</p>
+    <p class="kt-offer-save" id="kt-offer-save"></p>
   </div>
 
   <ul class="kt-includes">

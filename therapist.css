@@ -464,3 +464,9 @@
 .wel-handy .kt-sectiongrid { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 620px) { .wel-handy .kt-sectiongrid { grid-template-columns: 1fr; } }
 .wel-help .kt-benefitgrid article h3 { font-family: 'Literata', Georgia, serif; font-size: 1.05rem; font-weight: 500; }
+
+/* list-price comparison — $29.99 is the real Stripe price, not an invented anchor */
+.kt-was-line { font-size: .84rem; color: var(--ink-soft); margin-bottom: .1rem; }
+.kt-was-line s, .kt-was { text-decoration: line-through; text-decoration-thickness: 1.5px; color: var(--ink-faint, #9A8FA0); }
+.kt-was { font-weight: 600; margin-right: .1rem; }
+.kt-save { font-size: .84rem; font-weight: 700; color: var(--moss); background: #E9EDE7; display: inline-block; padding: .3rem .8rem; border-radius: 999px; margin-top: .5rem; }
