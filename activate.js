@@ -75,9 +75,9 @@ const FOUNDING_LOCK_MONTHS = 12;
   const terms = document.getElementById('kt-offer-terms');
 
   if (founding) {
-    badge.textContent = `★ Rate rises to $${nextRate.toFixed(2)} on ${fmt(tier.until)}`;
+    badge.textContent = '★ Founding Therapist offer';
     price.innerHTML = `$${rate.toFixed(2)}<span>/month</span>`;
-    terms.textContent = `locked for ${FOUNDING_LOCK_MONTHS} months, then $${STANDARD_RATE.toFixed(2)}/month`;
+    terms.textContent = `locked in for your first ${FOUNDING_LOCK_MONTHS} months`;
   } else {
     offer.classList.add('standard');
     badge.textContent = 'Kindred Membership';
@@ -85,21 +85,6 @@ const FOUNDING_LOCK_MONTHS = 12;
     terms.textContent = 'billed monthly · cancel anytime';
   }
 
-  // ---- the full ladder, so the urgency is visible and honest ----
-  const ladder = document.getElementById('kt-ladder');
-  if (ladder) {
-    ladder.innerHTML = PRICING_TIERS.map((t, i) => {
-      const past = now >= t.until;
-      const current = founding && i === idx;
-      return `<li class="${past ? 'past' : ''}${current ? ' current' : ''}">
-        <span class="kt-ladder-when">by ${fmt(t.until)}</span>
-        <span class="kt-ladder-rate">$${t.rate.toFixed(2)}/mo</span>
-      </li>`;
-    }).join('') + `<li class="${founding ? '' : 'current'}">
-        <span class="kt-ladder-when">after December 1</span>
-        <span class="kt-ladder-rate">$${STANDARD_RATE.toFixed(2)}/mo</span>
-      </li>`;
-  }
 
   // ---- wire the checkout button (or show the graceful fallback) ----
   const btn = document.getElementById('kt-checkout-btn');

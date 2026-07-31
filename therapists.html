@@ -197,18 +197,13 @@
 <section class="kt-pricing" id="kt-pricing">
   <div class="kt-pricing-inner">
     <h2>Founding member pricing.</h2>
-    <p class="section-sub">The founding rate rises every month. Whatever rate you join at is locked for a full year.</p>
-
-    <div class="kt-founding-banner">
-      <span class="kt-founding-star" aria-hidden="true">★</span>
-      <p><strong>The rate goes up on the 1st of every month:</strong> $9.99 by Sept 1 · $14.99 by Oct 1 · $16.99 by Nov 1 · $19.99 by Dec 1 — then $29.99 for everyone. <strong>Your rate is locked for 12 months.</strong></p>
-    </div>
+    <p class="section-sub">One flat membership. Lock it in for your first 12 months.</p>
 
     <div class="kt-pricecard">
       <p class="kt-plan-name">Founding Membership</p>
       <p class="kt-price"><span id="kt-price-num">$9.99</span><span class="kt-price-per" id="kt-price-per">/month</span></p>
-      <p class="kt-price-trial" id="kt-price-trial">Today's founding rate — locked for a full 12 months from the day you join.</p>
-      <p class="kt-price-note" id="kt-price-note">Then $29.99/month. Billed monthly, cancel anytime.</p>
+      <p class="kt-price-trial" id="kt-price-trial">Locked in for your first 12 months.</p>
+      <p class="kt-price-note" id="kt-price-note">Billed monthly. Cancel anytime.</p>
       <ul class="kt-features">
         <li>Matchable to every compatible client — by fit alone</li>
         <li>Full profile: style prompts, specialties, photo &amp; voice</li>
@@ -219,7 +214,7 @@
         <li>No per-client fees. No commission on sessions. Ever.</li>
       </ul>
       <a class="btn btn-dark kt-price-cta" href="activate.html" id="kt-price-cta">Activate my listing</a>
-      <p class="kt-price-standard" id="kt-price-standard">After December 1, membership is $29.99/month for everyone.</p>
+      <p class="kt-price-standard" id="kt-price-standard">We’ll notify you before any pricing changes after your introductory period.</p>
       <p class="kt-price-fine">Membership makes you matchable — it never changes how you rank. Nothing does.</p>
     </div>
   </div>
@@ -232,7 +227,7 @@
       <span class="kt-founding-star" aria-hidden="true">★</span>
       <h2>Claim your founding spot.</h2>
       <p>Prefer we walk you through it? Tell us where to reach you and we'll set up your profile personally — no credit card now. You'll lock in whatever founding rate is live the day you join.</p>
-      <p class="kt-claim-count" id="kt-claim-count">The founding rate rises on the 1st of every month, and your rate is locked for 12 months.</p>
+      <p class="kt-claim-count" id="kt-claim-count">Your rate is locked for your first 12 months.</p>
     </div>
 
     <form class="kt-claim-form" id="kt-claim-form" novalidate>
@@ -381,7 +376,7 @@
     <div class="kt-closing-cta">
       <p>Help them feel your fit — before they ever reach out.</p>
       <a class="btn btn-dark btn-arrow" href="activate.html">Claim your Founding Therapist profile <span aria-hidden="true">→</span></a>
-      <p class="kt-hero-fine">Cancel anytime · Founding rate locked for 12 months · Matched by fit, never by fee</p>
+      <p class="kt-hero-fine">Cancel anytime · Locked for 12 months · Matched by fit, never by fee</p>
     </div>
   </div>
 </section>
@@ -414,15 +409,11 @@ const PRICING_TIERS = [
   if (i === -1) {
     num.textContent = '$29.99';
     if (heroRate) heroRate.textContent = '$29.99';
-    if (trial) trial.textContent = 'Billed monthly. Cancel anytime.';
     return;
   }
   const t = PRICING_TIERS[i];
-  const next = PRICING_TIERS[i + 1] ? PRICING_TIERS[i + 1].rate : 29.99;
-  const when = t.until.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   num.textContent = '$' + t.rate.toFixed(2);
   if (heroRate) heroRate.textContent = '$' + t.rate.toFixed(2);
-  if (trial) trial.textContent = `Today's founding rate — locked for 12 months. Rises to $${next.toFixed(2)} on ${when}.`;
 })();
 
 /* ---------- founding-therapist lead capture ----------

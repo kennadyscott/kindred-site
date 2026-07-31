@@ -30,18 +30,6 @@
   .kt-offer-price { font-family: 'Literata', Georgia, serif; font-size: 52px; font-weight: 600; color: #422448; line-height: 1; }
   .kt-offer-price span { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 500; color: #6b5a70; }
   .kt-offer-terms { font-size: 15px; color: #6b5a70; margin: 10px 0 0; }
-  .kt-ladder-wrap { margin: 26px 0 6px; }
-  .kt-ladder-head { font-size: 14px; color: #6b5a70; text-align: center; margin: 0 0 12px; line-height: 1.5; }
-  .kt-ladder { list-style: none; padding: 0; margin: 0; border: 1px solid #EBDAC9; border-radius: 14px; overflow: hidden; }
-  .kt-ladder li {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 11px 16px; font-size: 14.5px; color: #3a2c40; background: #fff;
-    border-bottom: 1px solid #F2E7DA;
-  }
-  .kt-ladder li:last-child { border-bottom: none; }
-  .kt-ladder li.past { opacity: .45; text-decoration: line-through; }
-  .kt-ladder li.current { background: #FFFDF5; font-weight: 700; color: #422448; box-shadow: inset 3px 0 0 #E3C15A; }
-  .kt-ladder-rate { font-variant-numeric: tabular-nums; }
   .kt-includes { list-style: none; padding: 0; margin: 24px 0; }
   .kt-includes li { position: relative; padding: 0 0 0 30px; margin-bottom: 12px; font-size: 15px; line-height: 1.55; color: #3a2c40; }
   .kt-includes li::before { content: '✓'; position: absolute; left: 6px; color: #687A65; font-weight: 700; }
@@ -86,16 +74,11 @@
   <div class="kt-offer" id="kt-offer">
     <div class="kt-offer-badge" id="kt-offer-badge">Founding rate</div>
     <div class="kt-offer-price" id="kt-offer-price">$19.99<span>/month</span></div>
-    <p class="kt-offer-terms" id="kt-offer-terms">for your first 3 months, then $29.99/month</p>
-  </div>
-
-  <div class="kt-ladder-wrap">
-    <p class="kt-ladder-head">The founding rate rises every month — yours locks in the day you join.</p>
-    <ul class="kt-ladder" id="kt-ladder"></ul>
+    <p class="kt-offer-terms" id="kt-offer-terms">for your first 12 months</p>
   </div>
 
   <ul class="kt-includes">
-    <li>Your rate is locked for a <strong>full 12 months</strong> — join later and you'll pay more, for longer</li>
+    <li>Your rate is locked for a <strong>full 12 months</strong></li>
     <li>Your profile goes live in client matching as soon as payment clears</li>
     <li>Matched by fit alone — membership makes you matchable, it never changes how you rank</li>
     <li>Unlimited client matches and conversations, no per-client fees</li>
