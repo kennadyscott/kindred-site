@@ -305,14 +305,9 @@
 @media (max-width: 620px) { .kt-sectiongrid { grid-template-columns: 1fr; } }
 
 /* fit tags */
-.kt-fittags { padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 4vw, 3rem); }
-.kt-fittags-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
-.kt-fittags-visual { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start; }
 .kt-fittag-card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; padding: 1.1rem 1.2rem; box-shadow: var(--shadow); }
 .kt-tagcloud { display: grid; gap: .4rem; }
 .kt-tagcloud span { background: #EDE5EF; color: var(--lilac-deep); font-size: .78rem; font-weight: 600; padding: .4rem .85rem; border-radius: 999px; white-space: nowrap; }
-.kt-fittags h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); line-height: 1.15; margin-bottom: .6rem; }
-.kt-fittags-copy p { color: var(--ink-soft); line-height: 1.65; }
 @media (max-width: 940px) { .kt-fittags-inner { grid-template-columns: 1fr; } .kt-fittags-visual { grid-template-columns: 1fr; } .kt-tagcloud { grid-auto-flow: column; grid-template-columns: none; overflow-x: auto; } }
 
 /* how it works */
@@ -516,8 +511,6 @@
 .kt-hero-tagcloud span { white-space: nowrap; }
 
 /* The fit-tags section keeps only its tags now, so let them breathe. */
-.kt-fittags-visual { grid-template-columns: 1fr; }
-.kt-fittags-visual .kt-tagcloud { display: flex; flex-wrap: wrap; gap: .45rem; }
 
 @media (max-width: 940px) {
   .kt-hero-card { max-width: 100%; }
