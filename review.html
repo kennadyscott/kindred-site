@@ -244,6 +244,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
   const DB_URL = 'https://izukppxgoerqtustfbnk.supabase.co';
   const DB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk';
   const SESSION_KEY = 'kindred-admin-session';
+  let pendingSession = null;   /* held in memory until the admin check passes */
 
   const gate = document.getElementById('adm-gate');
   const main = document.getElementById('adm-main');
@@ -268,7 +269,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
   /* Every privileged action goes through admin-api, which re-checks the token
      and the allowlist server-side. Nothing here is trusted. */
   async function adminApi(payload) {
-    const sess = loadSession();
+    const sess = pendingSession || loadSession();
     if (!sess || !sess.access_token) return { error: 'no_session' };
     /* A rejected fetch (CORS, DNS, offline) must surface as a value, not an
        exception: uncaught, it left the sign-in stuck on "Signing in..." with
@@ -302,27 +303,47 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
       gateMsg.textContent = 'That did not work. Check the email and password.';
       return;
     }
-    saveSession(sess);
-    /* Being signed in is not being an admin -- admin-api decides that. */
+    /* Hold the token in memory for the admin check and only persist it if that
+       passes. Saving first meant a non-admin who closed the tab mid-check left
+       a session behind that unlocked the shell on the next load. */
+    pendingSession = sess;
     const probe = await adminApi({ action: 'counts' });
     if (probe.error === 'forbidden') {
-      clearSession();
+      pendingSession = null; clearSession();
       gateMsg.textContent = 'That account is not an admin.';
       return;
     }
     if (probe.error) {
-      clearSession();
+      pendingSession = null; clearSession();
       gateMsg.textContent = probe.error === 'unreachable'
         ? 'Signed in, but the admin service is unreachable. Check the browser console.'
         : `Signed in, but the admin service returned: ${probe.error}`;
       return;
     }
+    saveSession(sess);          /* admin confirmed -- now it is safe to keep */
+    pendingSession = null;
     unlock();
   });
   document.getElementById('adm-pass').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('adm-enter').click();
   });
-  if (loadSession()) unlock();
+  /* A stored session is not proof of admin access -- it is only proof that
+     someone signed in here once. Re-ask admin-api on every load before showing
+     anything. Supabase tokens also expire (~1h), so this is what catches a
+     stale one instead of leaving a half-dead page open. */
+  (async () => {
+    if (!loadSession()) return;
+    gateMsg.textContent = 'Checking your access...';
+    const probe = await adminApi({ action: 'counts' });
+    if (probe.error) {
+      clearSession();
+      gateMsg.textContent = probe.error === 'forbidden'
+        ? 'That account is not an admin.'
+        : 'Your session expired. Please sign in again.';
+      return;
+    }
+    unlock();
+  })();
 
   /* ---------- therapist review queue ---------- */
   /* Direct links to each board's public lookup: verification should be one
