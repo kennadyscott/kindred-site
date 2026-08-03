@@ -91,9 +91,13 @@
   .adm-tab { border:1px solid #EBDAC9; background:#fff; border-radius:999px; padding:6px 14px;
              font-size:13px; font-weight:600; color:#6b5a70; cursor:pointer; }
   .adm-tab.is-on { background:#422448; color:#fff; border-color:#422448; }
+  .adm-tab.has-denied:not(.is-on) { color:#C0392B; border-color:#E8BEB8; }
   .adm-review-note { font-size:13.5px; color:#6b5a70; margin:0 0 14px; }
   .rev-row { border:1px solid #F2E7DA; border-radius:14px; padding:14px 16px; margin-bottom:10px; }
   .rev-row.is-urgent { border-color:#BE765F; background:#FFF6F1; }
+  /* Denied and live are the two states worth spotting from across the room. */
+  .rev-row.is-denied { border-color:#C0392B; border-left-width:5px; background:#FDF3F2; }
+  .rev-row.is-live   { border-color:#8FBF84; border-left-width:5px; background:#F6FBF5; }
   .rev-top { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline; }
   .rev-name { font-weight:700; color:#422448; font-size:15.5px; }
   .rev-email { font-size:13px; color:#6b5a70; }
@@ -103,14 +107,16 @@
   .chip-ok { background:#E6EFE4; color:#41603c; }
   .chip-wait { background:#F6E9DE; color:#8a5a3c; }
   .chip-alert { background:#BE765F; color:#fff; }
+  .chip-denied { background:#C0392B; color:#fff; letter-spacing:.01em; }
+  .chip-ok { background:#DCEBD8; color:#33562D; }
   .rev-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
   .rev-actions button, .rev-actions a { font-size:13px; font-weight:600; border-radius:999px;
     padding:8px 15px; cursor:pointer; text-decoration:none; display:inline-block; }
   .btn-verify { background:#422448; color:#fff; border:none; }
   .btn-unverify { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
   .btn-deny { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
-  .rev-rejected { font-size:13px; color:#a8443a; background:#FBF0EE; border-radius:10px;
-                  padding:7px 11px; margin:10px 0 0; }
+  .rev-rejected { font-size:13px; color:#912B21; background:#FAE6E3; border-radius:10px;
+                  padding:8px 12px; margin:10px 0 0; border-left:3px solid #C0392B; }
   .btn-board { background:#F6EFE6; color:#422448; border:1px solid #EBDAC9; }
   .rev-empty { font-size:14px; color:#6b5a70; padding:8px 0; }
 </style>
@@ -392,6 +398,8 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     const c = counts.counts || {};
     const pending = (c.awaiting_license || 0) + (c.awaiting_identity || 0);
     badge.hidden = !pending; badge.textContent = pending;
+    const rejTab = document.querySelector('.adm-tab[data-filter="rejected"]');
+    if (rejTab) rejTab.classList.toggle('has-denied', !!c.rejected);
     summary.innerHTML = c.paying_but_hidden
       ? `<strong style="color:#BE765F;">${c.paying_but_hidden} paying but still hidden.</strong> ${c.live || 0} live, ${c.total || 0} total.`
       : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting licence &middot; ${c.awaiting_identity || 0} awaiting ID${c.rejected ? ` &middot; ${c.rejected} denied` : ''} &middot; ${c.total || 0} total.`;
@@ -404,16 +412,18 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     }
     rowsEl.innerHTML = rows.map(r => {
       const lic = r.license_verified
-        ? '<span class="rev-chip chip-ok">licence verified</span>'
+        ? '<span class="rev-chip chip-ok">&#10003; licence verified</span>'
         : r.rejected_at
-          ? '<span class="rev-chip chip-alert">licence denied</span>'
+          ? '<span class="rev-chip chip-denied">&#10007; licence denied</span>'
           : '<span class="rev-chip chip-wait">licence pending</span>';
       const id = r.identity_verified
-        ? '<span class="rev-chip chip-ok">ID verified</span>'
+        ? '<span class="rev-chip chip-ok">&#10003; ID verified</span>'
         : '<span class="rev-chip chip-wait">ID pending</span>';
       const hidden = r.published && !(r.license_verified && r.identity_verified);
+      const denied = !!r.rejected_at;
+      const live = r.license_verified && r.identity_verified;
       return `
-        <div class="rev-row ${hidden ? 'is-urgent' : ''}">
+        <div class="rev-row ${denied ? 'is-denied' : live ? 'is-live' : hidden ? 'is-urgent' : ''}">
           <div class="rev-top">
             <div><span class="rev-name">${esc(r.name) || '(no name)'}</span>
                  <span class="rev-email">${esc(r.email)}</span></div>
