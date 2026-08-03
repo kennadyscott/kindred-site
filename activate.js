@@ -109,8 +109,15 @@ const FOUNDING_LOCK_MONTHS = 12;
 
   // Carry the therapist's email through so Stripe prefills it and the
   // resulting subscription can be matched back to their Kindred account.
+  /* A session on this browser is more trustworthy than a query string anyone
+     could have edited -- and on the account-first path there IS no ?email=. */
+  let sessionEmail = null;
+  try {
+    const st = JSON.parse(localStorage.getItem('kindred-session') || 'null');
+    sessionEmail = (st && st.user && st.user.email) || null;
+  } catch (e) {}
   const params = new URLSearchParams(location.search);
-  const email = params.get('email');
+  const email = sessionEmail || params.get('email');
   if (email) {
     url.searchParams.set('prefilled_email', email);
     url.searchParams.set('client_reference_id', email); // ties the Stripe session to the account
@@ -180,11 +187,21 @@ async function authPost(path, body) {
     step2.hidden = false;
     if (who) who.innerHTML = 'Account ready for <b>' + email.replace(/[<>&]/g, '') + '</b>. Next: start your membership.';
     markStep(2);
-    /* carry the email into Stripe so billing and the account can never diverge */
+    /* Carry the account into Stripe. BOTH parameters matter, differently:
+         prefilled_email     - a suggestion. The customer can edit it at
+                               checkout, and Stripe Link will auto-fill a saved
+                               address over it. Never authoritative.
+         client_reference_id - passed through untouched and unreachable by the
+                               customer. stripe-webhook prefers it over
+                               customer_details.email, so this is what actually
+                               ties the subscription to the Kindred account.
+       Setting only prefilled_email meant a first live test attached the
+       membership to a different account than the one just created. */
     const btn = document.getElementById('kt-checkout-btn');
     if (btn && btn.href && btn.href.indexOf('buy.stripe.com') !== -1) {
       const u = new URL(btn.href);
       u.searchParams.set('prefilled_email', email);
+      u.searchParams.set('client_reference_id', email);
       btn.href = u.toString();
     }
     step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
