@@ -145,11 +145,18 @@ Deno.serve(async (req) => {
       case 'identity.verification_session.verified':
       case 'identity.verification_session.requires_input':
       case 'identity.verification_session.canceled': {
-        const vs = event.data.object as { id: string; status?: string };
+        const vs = event.data.object as {
+          id: string; status?: string; metadata?: Record<string, string>;
+        };
         const verified = event.type === 'identity.verification_session.verified';
+        // Match on the user, not the session: identity-session overwrites the
+        // stored session id on every retry, so an earlier attempt's verdict
+        // would otherwise match nothing. metadata.kindred_user_id is stamped
+        // on every session we create and survives retries.
         const result = await rpc('stripe_mark_identity_verified', {
           p_session_id: vs.id,
           p_status: verified ? 'verified' : (vs.status ?? 'unverified'),
+          p_user_id: vs.metadata?.kindred_user_id ?? null,
         });
         if (!result?.ok) {
           console.error('IDENTITY RESULT UNMATCHED', { session: vs.id, type: event.type, result });
