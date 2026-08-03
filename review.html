@@ -108,6 +108,9 @@
     padding:8px 15px; cursor:pointer; text-decoration:none; display:inline-block; }
   .btn-verify { background:#422448; color:#fff; border:none; }
   .btn-unverify { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
+  .btn-deny { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
+  .rev-rejected { font-size:13px; color:#a8443a; background:#FBF0EE; border-radius:10px;
+                  padding:7px 11px; margin:10px 0 0; }
   .btn-board { background:#F6EFE6; color:#422448; border:1px solid #EBDAC9; }
   .rev-empty { font-size:14px; color:#6b5a70; padding:8px 0; }
 </style>
@@ -134,7 +137,7 @@
       <h1>Therapist Review</h1>
       <p>Counting clicks, not people.</p>
     </div>
-    <span class="adm-mode" id="adm-mode">Demo mode — this browser only</span>
+    <span class="adm-mode" id="adm-mode">Analytics: this browser only</span>
   </div>
 
   <!-- ===================== THERAPIST REVIEW QUEUE ===================== -->
@@ -144,10 +147,12 @@
       <div class="adm-review-tabs">
         <button class="adm-tab is-on" data-filter="pending">Needs review</button>
         <button class="adm-tab" data-filter="verified">Live</button>
+        <button class="adm-tab" data-filter="rejected">Rejected</button>
         <button class="adm-tab" data-filter="all">All</button>
       </div>
     </div>
     <p class="adm-review-note" id="rev-summary">Loading&hellip;</p>
+    <p class="adm-review-live">Live data from Supabase. Verifying here changes what clients see.</p>
     <div id="rev-rows"></div>
   </section>
 
@@ -389,7 +394,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     badge.hidden = !pending; badge.textContent = pending;
     summary.innerHTML = c.paying_but_hidden
       ? `<strong style="color:#BE765F;">${c.paying_but_hidden} paying but still hidden.</strong> ${c.live || 0} live, ${c.total || 0} total.`
-      : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting licence &middot; ${c.awaiting_identity || 0} awaiting ID &middot; ${c.total || 0} total.`;
+      : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting licence &middot; ${c.awaiting_identity || 0} awaiting ID${c.rejected ? ` &middot; ${c.rejected} denied` : ''} &middot; ${c.total || 0} total.`;
 
     const res = await adminApi({ action: 'queue', filter: revFilter });
     const rows = (res && res.rows) || [];
@@ -400,7 +405,9 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     rowsEl.innerHTML = rows.map(r => {
       const lic = r.license_verified
         ? '<span class="rev-chip chip-ok">licence verified</span>'
-        : '<span class="rev-chip chip-wait">licence pending</span>';
+        : r.rejected_at
+          ? '<span class="rev-chip chip-alert">licence denied</span>'
+          : '<span class="rev-chip chip-wait">licence pending</span>';
       const id = r.identity_verified
         ? '<span class="rev-chip chip-ok">ID verified</span>'
         : '<span class="rev-chip chip-wait">ID pending</span>';
@@ -415,11 +422,13 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
           <p class="rev-meta">Licence <strong>${esc(r.license_number) || '(none)'}</strong>
              &middot; states ${esc((r.license_states || []).join(', ')) || '(none)'}
              ${r.license_verified_at ? `&middot; verified ${esc(String(r.license_verified_at).slice(0, 10))}` : ''}</p>
+          ${r.rejected_at ? `<p class="rev-rejected">Rejected ${esc(String(r.rejected_at).slice(0,10))} &middot; ${esc(r.rejected_reason)}</p>` : ''}
           <div class="rev-actions">
             ${boardLink(r.license_states)}
             ${r.license_verified
               ? `<button class="btn-unverify" data-unverify="${esc(r.email)}">Un-verify licence</button>`
-              : `<button class="btn-verify" data-verify="${esc(r.email)}" data-lic="${esc(r.license_number)}">Mark licence verified</button>`}
+              : `<button class="btn-verify" data-verify="${esc(r.email)}" data-lic="${esc(r.license_number)}">Mark licence verified</button>
+                 <button class="btn-deny" data-deny="${esc(r.email)}">Deny</button>`}
           </div>
         </div>`;
     }).join('');
@@ -427,6 +436,17 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     rowsEl.querySelectorAll('[data-verify]').forEach(b => b.addEventListener('click', async () => {
       b.disabled = true; b.textContent = 'Verifying...';
       const out = await adminApi({ action: 'verify_license', email: b.dataset.verify, license: b.dataset.lic });
+      if (out.error) { b.disabled = false; b.textContent = 'Failed - retry'; return; }
+      loadReview();
+    }));
+    rowsEl.querySelectorAll('[data-deny]').forEach(b => b.addEventListener('click', async () => {
+      /* A reason is required, and the therapist sees it -- they have paid, and
+         "denied, no explanation" is the worst version of this. */
+      const reason = prompt('Why is this licence being denied?\n\nThe therapist will see this, so write something they can act on.');
+      if (reason === null) return;
+      if (!reason.trim()) { alert('A reason is required.'); return; }
+      b.disabled = true; b.textContent = 'Denying...';
+      const out = await adminApi({ action: 'reject_license', email: b.dataset.deny, reason });
       if (out.error) { b.disabled = false; b.textContent = 'Failed - retry'; return; }
       loadReview();
     }));
@@ -559,7 +579,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
 
     const cfg = localStorage.getItem('kindred-analytics-config');
     const mode = document.getElementById('adm-mode');
-    if (cfg) { mode.textContent = 'Live mode — sending to Supabase'; mode.classList.add('live'); }
+    if (cfg) { mode.textContent = 'Analytics: live'; mode.classList.add('live'); }
   }
 
   document.getElementById('adm-reset').addEventListener('click', () => {

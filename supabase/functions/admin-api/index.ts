@@ -111,6 +111,18 @@ Deno.serve(async (req) => {
         return json({ ok: true, result });
       }
 
+      case 'reject_license': {
+        if (!body.email) return json({ error: 'email_required' }, 400);
+        if (!body.reason || !String(body.reason).trim()) return json({ error: 'reason_required' }, 400);
+        const result = await rpc('reject_therapist_license', {
+          p_email: String(body.email),
+          p_reason: String(body.reason),
+          p_verifier: email,
+        });
+        console.log('license REJECTED', { by: email, subject: body.email, result });
+        return json({ ok: true, result });
+      }
+
       case 'unverify_license': {
         if (!body.email) return json({ error: 'email_required' }, 400);
         const result = await rpc('unverify_therapist_license', {
