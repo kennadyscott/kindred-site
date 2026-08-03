@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=28">
-<link rel="stylesheet" href="therapist.css?v=7">
+<link rel="stylesheet" href="therapist.css?v=8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -74,32 +74,19 @@
     <div class="kt-profilescene">
       <i class="kt-blob kt-blob-lilac" aria-hidden="true"></i>
       <i class="kt-blob kt-blob-blue" aria-hidden="true"></i>
-      <article class="kt-profilecard">
-        <header class="kt-pc-head">
-          <div>
-            <h3>Aiyana Moore, <span class="kt-cred">LCSW</span></h3>
-            <p>Oakland, CA · In-person &amp; online</p>
-          </div>
-          <span class="kt-pc-save" aria-hidden="true">♡</span>
-        </header>
-        <div class="kt-pc-body">
-          <div class="kt-pc-portrait">
-            <img src="assets/therapist-example.jpg" alt="" loading="lazy">
-          </div>
-          <div class="kt-pc-text">
-            <div>
-              <h4>My therapy style</h4>
-              <p>I blend warmth and curiosity with evidence-based approaches. We’ll build tools that fit your real life.</p>
-            </div>
-            <div>
-              <h4>What sessions with me feel like</h4>
-              <p>Conversational, supportive, and down-to-earth. You can show up exactly as you are.</p>
-            </div>
-            <span class="kt-pc-link">View full profile <span aria-hidden="true">→</span></span>
-          </div>
-        </div>
-        <div class="kt-pc-tags"><span>Warm + affirming</span><span>Collaborative</span><span>Practical</span></div>
+      <article class="kt-fittag-card kt-hero-card">
+        <img class="kt-fittag-photo" src="assets/therapist-example.jpg" alt="" loading="lazy">
+        <span class="kt-pc-save" aria-hidden="true">&#9825;</span>
+        <h3 class="match-name">Aiyana Moore, <span class="kt-cred">LCSW</span></h3>
+        <p class="match-meta">Oakland, CA &middot; In-person &amp; online</p>
+        <p class="match-prompt-label">My therapy style</p>
+        <p class="kt-demo-body">I blend warmth and curiosity with evidence-based approaches. We&rsquo;ll explore what&rsquo;s underneath and build tools that fit your real life.</p>
       </article>
+      <div class="kt-tagcloud kt-hero-tagcloud">
+        <span>Warm and affirming</span><span>Direct and honest</span><span>Structured</span>
+        <span>Gentle and reflective</span><span>Collaborative</span><span>Uses humor</span>
+        <span>Identity-affirming</span>
+      </div>
       <p class="kt-hero-card-fine">Example profile — your profile leads with how you work, not the letters after your name.</p>
     </div>
   </div>
@@ -137,17 +124,12 @@
 <section class="kt-fittags">
   <div class="kt-fittags-inner">
     <div class="kt-fittags-visual">
-      <div class="kt-fittag-card">
-        <img class="kt-fittag-photo" src="assets/therapist-example.jpg" alt="" loading="lazy">
-        <h3 class="match-name">Aiyana Moore, <span class="kt-cred">LCSW</span></h3>
-        <p class="match-meta">Oakland, CA · In-person &amp; online</p>
-        <p class="match-prompt-label">My therapy style</p>
-        <p class="kt-demo-body">I blend warmth and curiosity with evidence-based approaches. We’ll explore what’s underneath and build tools that fit your real life.</p>
-      </div>
+      <!-- The example card now leads the hero; repeating it here showed the
+           same profile twice on one page. The tags alone still make the point. -->
       <div class="kt-tagcloud">
         <span>Warm and affirming</span><span>Direct and honest</span><span>Structured</span>
         <span>Gentle and reflective</span><span>Collaborative</span><span>Uses humor</span>
-        <span>Identity-affirming</span>
+        <span>Identity-affirming</span><span>Trauma-informed</span><span>Faith-aware</span>
       </div>
     </div>
     <div class="kt-fittags-copy">

@@ -470,3 +470,56 @@
 .kt-was-line s, .kt-was { text-decoration: line-through; text-decoration-thickness: 1.5px; color: var(--ink-faint, #9A8FA0); }
 .kt-was { font-weight: 600; margin-right: .1rem; }
 .kt-save { font-size: .84rem; font-weight: 700; color: var(--moss); background: #E9EDE7; display: inline-block; padding: .3rem .8rem; border-radius: 999px; margin-top: .5rem; }
+
+/* ---------------------------------------------------------------------------
+   Hero example profile (swapped in from the fit-tags section, 2026-07-31).
+   The tall photo-led card reads as an actual Kindred profile; the wide
+   landscape panel it replaced read as a marketing diagram. Laid out as a
+   card-over-tags column rather than the fit-tags row, because the hero's
+   right-hand column is narrow and portrait.
+--------------------------------------------------------------------------- */
+.kt-profilescene { display: grid; gap: .9rem; justify-items: center; }
+.kt-hero-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 340px;
+  border: none;
+  box-shadow: 0 22px 54px rgba(43,34,51,.13), 0 2px 8px rgba(43,34,51,.05);
+  border-radius: 22px;
+  padding: 1rem 1.1rem 1.2rem;
+}
+.kt-hero-card .kt-fittag-photo {
+  width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: 14px; display: block; margin-bottom: .85rem;
+}
+/* The save heart sits on the card, not in a flex header like the old panel. */
+.kt-hero-card .kt-pc-save {
+  position: absolute; top: 1.55rem; right: 1.65rem;
+  width: 30px; height: 30px; display: grid; place-items: center;
+  background: rgba(255,255,255,.92); border-radius: 999px;
+  color: var(--lilac-deep); font-size: .95rem;
+  box-shadow: 0 2px 6px rgba(43,34,51,.12);
+}
+.kt-hero-card .match-name { font-size: 1.12rem; margin-bottom: .15rem; }
+.kt-hero-card .match-meta { font-size: .84rem; color: var(--ink-soft); margin-bottom: .7rem; }
+.kt-hero-card .match-prompt-label {
+  font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--clay); font-weight: 700; margin-bottom: .25rem;
+}
+.kt-hero-card .kt-demo-body { font-size: .88rem; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+
+/* Tags wrap under the card instead of stacking in a rigid column. */
+.kt-hero-tagcloud {
+  position: relative; z-index: 1;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem;
+  max-width: 380px;
+}
+.kt-hero-tagcloud span { white-space: nowrap; }
+
+/* The fit-tags section keeps only its tags now, so let them breathe. */
+.kt-fittags-visual { grid-template-columns: 1fr; }
+.kt-fittags-visual .kt-tagcloud { display: flex; flex-wrap: wrap; gap: .45rem; }
+
+@media (max-width: 940px) {
+  .kt-hero-card { max-width: 100%; }
+  .kt-hero-tagcloud { max-width: 100%; }
+}
