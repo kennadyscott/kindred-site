@@ -1,12 +1,12 @@
 // ============================================================================
 // Kindred -- admin API
 // ----------------------------------------------------------------------------
-// The only bridge between admin.html and the service-role functions.
+// The only bridge between review.html and the service-role functions.
 //
 // WHY THIS EXISTS AT ALL
 // verify_therapist_license() and the review queue are service-role only. The
 // service_role key bypasses every RLS policy on every table, so it can never
-// sit in a browser -- admin.html would become a public master key. This
+// sit in a browser -- review.html would become a public master key. This
 // function holds the key instead, and only acts after proving who is asking.
 //
 // TWO CHECKS, BOTH REQUIRED
@@ -32,7 +32,7 @@ const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '')
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  // apikey must be listed: admin.html / app.js send it alongside the bearer
+  // apikey must be listed: review.html / app.js send it alongside the bearer
   // token, and a header the preflight does not allow makes the browser block
   // the real request entirely -- fetch() rejects before it reaches this code.
   'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',

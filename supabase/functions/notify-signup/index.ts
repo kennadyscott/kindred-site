@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       <p style="margin:18px 0 8px;">They will not appear to clients until their license is verified
       against the state board and their ID is confirmed.</p>
       <p style="margin:0;">
-        <a href="https://kindredtherapymatch.com/admin.html"
+        <a href="https://kindredtherapymatch.com/review"
            style="display:inline-block;background:#422448;color:#fff;text-decoration:none;
                   padding:11px 20px;border-radius:999px;font-weight:600;">Open the review queue</a>
       </p>

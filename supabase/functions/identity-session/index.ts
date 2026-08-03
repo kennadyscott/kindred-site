@@ -43,7 +43,7 @@ const RETURN_URL = 'https://app.kindredtherapymatch.com/?identity=done';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  // apikey must be listed: admin.html / app.js send it alongside the bearer
+  // apikey must be listed: review.html / app.js send it alongside the bearer
   // token, and a header the preflight does not allow makes the browser block
   // the real request entirely -- fetch() rejects before it reaches this code.
   'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
