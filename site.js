@@ -54,7 +54,8 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
 })();
 
 /* ---------------------------------------------------------------------------
-   Footer newsletter — every page.
+   Newsletter signup — the homepage band and the footer form on every other
+   page are the same component, wired here.
 
    The anon key is safe in the client: RLS is the boundary, and
    newsletter_signups is insert-only for anon, so this can add an address and
@@ -66,22 +67,12 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
    what makes this safe to run before the BAA is signed.
 --------------------------------------------------------------------------- */
 (() => {
-  const form = document.getElementById('footer-newsletter');
-  if (!form) return;
+  const forms = document.querySelectorAll('form.news-signup');
+  if (!forms.length) return;
 
   const SUPABASE_URL  = 'https://izukppxgoerqtustfbnk.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk';
   const PENDING = 'kindred-newsletter-pending';
-
-  const input = document.getElementById('fn-email');
-  const btn   = form.querySelector('.fn-btn');
-  const note  = document.getElementById('fn-note');
-
-  const say = (msg, isErr) => {
-    note.textContent = msg;
-    note.classList.toggle('is-err', !!isErr);
-    input.setAttribute('aria-invalid', isErr ? 'true' : 'false');
-  };
 
   /* Deliberately loose. A strict pattern rejects real addresses (new TLDs,
      plus-tags, unicode domains) and the only cost of letting a typo through is
@@ -133,27 +124,41 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
     } catch (e) {}
   })();
 
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const email = (input.value || '').trim();
-    if (!looksLikeEmail(email)) { say('That address looks incomplete — mind checking it?', true); input.focus(); return; }
+  forms.forEach(form => {
+    /* Scoped to the form, not looked up by id: the same component appears in
+       two placements and duplicate ids would silently wire only the first. */
+    const input = form.querySelector('.ns-input');
+    const btn   = form.querySelector('.ns-btn');
+    const note  = form.querySelector('.ns-note');
 
-    const label = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Signing up…';
-    try {
-      await send(email);
-      form.reset();
-      say("You're on the list. Thank you.");
-    } catch (err) {
-      /* Either way their address is kept -- never tell someone it failed and
-         then also throw the address away. */
-      queue(email);
-      form.reset();
-      /* No "check your inbox" here: nothing sends a confirmation yet, and a
-         promise the system cannot keep is worse than a plain acknowledgement. */
-      say("You're on the list. Thank you.");
-    } finally {
-      btn.disabled = false; btn.textContent = label;
-    }
+    const say = (msg, isErr) => {
+      note.textContent = msg;
+      note.classList.toggle('is-err', !!isErr);
+      input.setAttribute('aria-invalid', isErr ? 'true' : 'false');
+    };
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = (input.value || '').trim();
+      if (!looksLikeEmail(email)) { say('That address looks incomplete — mind checking it?', true); input.focus(); return; }
+
+      const label = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Signing up…';
+      try {
+        await send(email);
+        form.reset();
+        say("You're on the list. Thank you.");
+      } catch (err) {
+        /* Either way their address is kept -- never tell someone it failed and
+           then also throw the address away. */
+        queue(email);
+        form.reset();
+        /* No "check your inbox" here: nothing sends a confirmation yet, and a
+           promise the system cannot keep is worse than a plain acknowledgement. */
+        say("You're on the list. Thank you.");
+      } finally {
+        btn.disabled = false; btn.textContent = label;
+      }
+    });
   });
 })();

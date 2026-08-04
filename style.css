@@ -337,43 +337,67 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
   max-width: 1200px; margin: 0 auto; display: grid;
   grid-template-columns: 1.4fr 1fr 1fr 1fr 1.6fr; gap: clamp(1.2rem, 3vw, 2.5rem);
 }
-/* The newsletter spans the full width beneath the columns -- it is a second
-   ask, not a sixth column, and squeezing an input into a 1fr track gives you a
-   field too narrow to read your own address in. */
-.footer-news {
+/* ---------------------------------------------------------------------------
+   Newsletter signup. One component, two placements: a band on the homepage
+   and the footer form everywhere else. Only the frame differs -- the row,
+   input, button and notes are shared so they cannot drift apart.
+--------------------------------------------------------------------------- */
+.ns-row { display: flex; gap: .55rem; flex-wrap: wrap; }
+.ns-input {
+  flex: 1 1 240px; min-width: 0; font: inherit; font-size: .95rem;
+  padding: .8rem 1rem; border-radius: 10px; border: 1px solid var(--line);
+  background: #FFFDF8; color: var(--ink);
+}
+.ns-input::placeholder { color: #7C7080; }
+.ns-input:focus-visible { outline: 3px solid var(--aubergine); outline-offset: 2px; border-color: transparent; }
+.ns-input[aria-invalid="true"] { border-color: #C0564A; box-shadow: 0 0 0 2px rgba(192, 86, 74, .3); }
+.ns-btn {
+  font: inherit; font-size: .95rem; font-weight: 700; cursor: pointer;
+  padding: .8rem 1.5rem; border-radius: 10px; border: none;
+  background: var(--aubergine); color: #fff; white-space: nowrap;
+}
+.ns-btn:hover { background: #35203C; }
+.ns-btn:disabled { opacity: .6; cursor: default; }
+.ns-btn:focus-visible { outline: 3px solid var(--aubergine); outline-offset: 3px; }
+/* Empty by default -- an aria-live region that ships with text announces it on
+   load, and a reserved-height box that never fills is just a gap. */
+.ns-note:empty { display: none; }
+.ns-note { margin-top: .7rem; font-size: .88rem; font-weight: 600; color: var(--moss-deep, #4A5D42); }
+.ns-note.is-err { color: #A3342A; }
+.ns-fine { margin-top: .75rem; font-size: .76rem; color: var(--ink-soft); line-height: 1.5; }
+
+/* ---- homepage band ---- */
+.news-band { background: var(--wash, #F6EFE6); padding: clamp(2.6rem, 6vw, 4.2rem) clamp(1rem, 4vw, 3rem); }
+.news-inner {
+  max-width: 1100px; margin: 0 auto; display: grid;
+  grid-template-columns: 1.1fr 1fr; gap: clamp(1.6rem, 4vw, 3.4rem); align-items: center;
+}
+.news-copy h2 { font-family: 'Literata', Georgia, serif; font-weight: 500; font-size: clamp(1.6rem, 3.2vw, 2.2rem); color: var(--aubergine); margin: .35rem 0 .6rem; line-height: 1.15; }
+.news-copy p { color: var(--ink-soft); line-height: 1.6; max-width: 46ch; }
+@media (max-width: 820px) { .news-inner { grid-template-columns: 1fr; } }
+
+/* ---- footer form ---- */
+.news-signup--footer {
   grid-column: 1 / -1; margin-top: clamp(1.4rem, 3vw, 2.2rem);
   padding-top: clamp(1.3rem, 3vw, 1.9rem); border-top: 1px solid rgba(255, 248, 239, .16);
   max-width: 620px;
 }
-.footer-news h4 {
+.ns-title {
   font-family: 'Inter', sans-serif; font-size: .7rem; font-weight: 700;
   letter-spacing: .14em; text-transform: uppercase; color: var(--lilac); margin-bottom: .45rem;
 }
-.fn-copy { font-size: .88rem; color: #EBE2E6; line-height: 1.55; margin-bottom: .9rem; }
-.fn-row { display: flex; gap: .55rem; flex-wrap: wrap; }
-.fn-input {
-  flex: 1 1 240px; min-width: 0; font: inherit; font-size: .92rem;
-  padding: .72rem .95rem; border-radius: 10px; border: 1px solid rgba(255, 248, 239, .3);
-  background: rgba(255, 253, 248, .97); color: var(--ink);
-}
-.fn-input::placeholder { color: #7C7080; }
-.fn-input:focus-visible { outline: 3px solid var(--lilac); outline-offset: 2px; border-color: transparent; }
-.fn-input[aria-invalid="true"] { border-color: #E8A79E; box-shadow: 0 0 0 2px rgba(232, 167, 158, .45); }
-.fn-btn {
-  font: inherit; font-size: .92rem; font-weight: 700; cursor: pointer;
-  padding: .72rem 1.35rem; border-radius: 10px; border: none;
-  background: var(--cream); color: var(--aubergine); white-space: nowrap;
-}
-.fn-btn:hover { background: #fff; }
-.fn-btn:disabled { opacity: .6; cursor: default; }
-.fn-btn:focus-visible { outline: 3px solid var(--lilac); outline-offset: 2px; }
-/* Empty by default -- an aria-live region that ships with text announces it on
-   load, and a reserved-height box that never fills is just a gap. */
-.fn-note:empty { display: none; }
-.fn-note { margin-top: .7rem; font-size: .86rem; font-weight: 600; color: #F3E7D9; }
-.fn-note.is-err { color: #F6C9C1; }
-.fn-fine { margin-top: .7rem; font-size: .74rem; color: #C9BBCB; line-height: 1.5; }
-@media (max-width: 560px) { .fn-btn { flex: 1 1 100%; } }
+.news-signup--footer .ns-copy { font-size: .88rem; color: #EBE2E6; line-height: 1.55; margin-bottom: .9rem; }
+/* On aubergine the shared colours invert: a dark button on a dark ground is
+   invisible, and ink-soft body copy fails contrast outright. */
+.news-signup--footer .ns-input { border-color: rgba(255, 248, 239, .3); background: rgba(255, 253, 248, .97); }
+.news-signup--footer .ns-input:focus-visible { outline-color: var(--lilac); }
+.news-signup--footer .ns-btn { background: var(--cream); color: var(--aubergine); }
+.news-signup--footer .ns-btn:hover { background: #fff; }
+.news-signup--footer .ns-btn:focus-visible { outline-color: var(--lilac); }
+.news-signup--footer .ns-note { color: #F3E7D9; }
+.news-signup--footer .ns-note.is-err { color: #F6C9C1; }
+.news-signup--footer .ns-fine { color: #C9BBCB; }
+@media (max-width: 560px) { .ns-btn { flex: 1 1 100%; } }
 .footer-brand { display: flex; gap: .7rem; align-items: flex-start; }
 .footer-brand .brand-name { color: var(--cream); font-size: 1.4rem; }
 .footer-brand .brand-tag { color: var(--lilac); }

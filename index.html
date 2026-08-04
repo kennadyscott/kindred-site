@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=35">
+<link rel="stylesheet" href="style.css?v=36">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -365,6 +365,29 @@
 </section>
 
 <!-- ======================= MY KINDRED TEASER ======================= -->
+<!-- ======================= NEWSLETTER ======================= -->
+<!-- Sits between "keep what helps" and the app band on purpose: it is the same
+     ask as My Kindred (stay in touch with Kindred) but with a far lower cost,
+     so it belongs beside it rather than buried under the footer links. -->
+<section class="news-band" id="newsletter">
+  <div class="news-inner">
+    <div class="news-copy">
+      <p class="eyebrow">Stay close</p>
+      <h2>Kindred, in your inbox.</h2>
+      <p>Tools that actually help, a note when therapists join in your state, and what we&rsquo;re learning about finding the right fit. No more than twice a month.</p>
+    </div>
+    <form class="news-signup news-signup--band" novalidate>
+      <div class="ns-row">
+        <input class="ns-input" type="email" name="email" inputmode="email" autocomplete="email"
+               aria-label="Email address" placeholder="you@example.com" required>
+        <button class="ns-btn" type="submit">Sign up</button>
+      </div>
+      <p class="ns-note" role="status" aria-live="polite"></p>
+      <p class="ns-fine">Your address, and nothing else &mdash; never sold, never shared, and never tied to what you searched for. Unsubscribe in one click.</p>
+    </form>
+  </div>
+</section>
+
 <section class="mkt-band">
   <div class="mkt-inner">
     <div>
@@ -465,7 +488,7 @@
     </nav>
     <nav class="footer-col" aria-label="Connect">
       <h4>Connect</h4>
-      <a href="https://www.instagram.com/kindred.therapymatch" target="_blank" rel="noopener">Instagram</a><a href="#footer-newsletter">Newsletter</a><a href="mailto:info@kindredtherapymatch.com">Email us</a>
+      <a href="https://www.instagram.com/kindred.therapymatch" target="_blank" rel="noopener">Instagram</a><a href="#newsletter">Newsletter</a><a href="mailto:info@kindredtherapymatch.com">Email us</a>
     </nav>
 
     <div class="footer-crisis">
@@ -474,18 +497,6 @@
       <a class="btn btn-clay" href="tel:988">Get immediate help</a>
     </div>
 
-    <form class="footer-news" id="footer-newsletter" novalidate>
-      <h4>Kindred, in your inbox</h4>
-      <p class="fn-copy">Tools that actually help, and a note when therapists join in your state. No more than twice a month.</p>
-      <div class="fn-row">
-        <label class="sr-only" for="fn-email">Email address</label>
-        <input class="fn-input" id="fn-email" name="email" type="email" inputmode="email"
-               autocomplete="email" placeholder="you@example.com" required>
-        <button class="fn-btn" type="submit">Sign up</button>
-      </div>
-      <p class="fn-note" id="fn-note" role="status" aria-live="polite"></p>
-      <p class="fn-fine">Your address, and nothing else &mdash; never sold, never shared, and never tied to what you searched for. Unsubscribe in one click.</p>
-    </form>
   </div>
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
@@ -758,7 +769,7 @@
 })();
 </script>
 
-<script src="site.js?v=6"></script>
+<script src="site.js?v=7"></script>
 <script src="analytics.js?v=9"></script>
 <!-- Persistent route to help. Someone in crisis should not have to reach the
      footer to find 988. Quiet by default so it never nags. -->
