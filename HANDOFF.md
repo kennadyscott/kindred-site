@@ -66,7 +66,10 @@ must never delete someone's work.
 - **No visibility into accounts without profiles.** Someone who creates an
   account and stops before paying is invisible. Worth an "Accounts, no profile
   yet" list on `/review` once real signups start.
-- **`hello@kindred.care` is a placeholder** — referenced on privacy and welcome.
+- **`hello@kindredtherapymatch.com` needs to exist.** The domain has Google Workspace MX,
+  but confirm the alias actually delivers — it is the deletion and accessibility
+  contact on the privacy page. (It replaced `hello@kindred.care`, a domain
+  Kindred does not own, which was live on About, Privacy and Welcome.)
 - **Therapist testimonials** on therapists.html ship with `hidden` on the quote
   cards. The mockup's two were invented. Populate only with real quotes and
   consent, then remove `hidden`.
@@ -111,7 +114,7 @@ primary source verification, the actual industry standard. No affordable
 per-lookup licence API exists; Verifiable/Medallion/CertifyOS are
 enterprise-priced.
 
-**Migrations run: 0008–0017.** All verified live.
+**Migrations run: 0008–0020.** All verified live.
 
 ---
 
