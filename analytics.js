@@ -58,7 +58,9 @@
     ['#kaud-therapist', 'frontdoor_im_a_therapist'],
     ['#kaud-988', 'frontdoor_crisis_line'],
     /* homepage */
-    ['.hero-ctas a[href="#find-therapist"]', 'home_hero_find_therapist'],
+    /* keyed on data-app-link, not the href -- the href is rewritten at runtime
+       from KINDRED_APP_URL, so a URL-based selector silently stops matching */
+    ['.hero-ctas a[data-app-link]', 'home_hero_find_therapist'],
     ['.hero-ctas a[href="start-here.html"]', 'home_start_where_you_are'],
     ['.mood', 'home_mood_tap'], /* counts the tap only — never which mood */
     ['#checkin-cta', 'home_checkin'],

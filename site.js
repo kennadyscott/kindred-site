@@ -10,7 +10,13 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
   /* point every static app link at the current KINDRED_APP_URL (their hardcoded
      href stays as a no-JS fallback; this makes the constant authoritative) */
   function wireAppLinks() {
-    document.querySelectorAll('a[data-app-link]').forEach(a => { a.href = window.KINDRED_APP_URL; });
+    document.querySelectorAll('a[data-app-link]').forEach(a => {
+      /* data-app-link="match" deep-links into the questionnaire instead of the
+         app's "what brings you to Kindred?" screen. Without this the constant
+         would overwrite the whole href and wipe the hash off every link. */
+      const target = a.getAttribute('data-app-link');
+      a.href = window.KINDRED_APP_URL + (target ? '#' + target : '');
+    });
   }
 
   /* Horizontal scroll strips (card rows, tab bars) can trap vertical page
