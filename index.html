@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=37">
+<link rel="stylesheet" href="style.css?v=38">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -385,58 +385,25 @@
 </section>
 
 
-<!-- ======================= APP ======================= -->
-<section class="app-band" id="app">
-  <div class="app-inner">
-    <div class="app-phone" aria-hidden="true">
-      <div class="app-phone-col"><div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <p class="phone-greet">Good morning, Jamie.</p>
-          <div class="phone-card phone-card-dark">
-            <p class="phone-label">Your Kindred Snapshot <span>Updated today</span></p>
-            <p class="phone-msg">You seem to be carrying a lot right now.</p>
-            <p class="phone-link">See full results →</p>
-          </div>
-          <div class="phone-card">
-            <p class="phone-label">Continue where you left off</p>
-            <p class="phone-msg-sm"><strong>Overthinking</strong> · 5 min tool</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    </div>
-
-      <div class="app-copy">
-      <h2>Take Kindred<br>with you.</h2>
-      <p>Your check-ins. Your saved tools. Your matches. Your support.</p>
-      <!-- App Store and Google Play badges lived here, both linking to the WEB app.
-           There is no Kindred app in either store, so "Download on the App Store"
-           failed the moment anyone clicked it. Restore the badges when a build
-           actually ships; until then this says what is true. -->
-      <a class="btn btn-dark btn-arrow" href="https://app.kindredtherapymatch.com" target="_blank" rel="noopener">Open Kindred in your browser <span aria-hidden="true">&rarr;</span></a>
-      <p class="app-note">Works on any phone &mdash; nothing to install. Add it to your home screen and it opens like an app. Native apps are coming.</p>
-    </div>
-
-    <div class="app-values">
-      <div class="app-value">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
-        <h3>Private &amp; Secure</h3>
-        <p>Your privacy is our priority. Always.</p>
-      </div>
-      <div class="app-value">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>
-        <h3>Made for Real Life</h3>
-        <p>Tools that fit in your life, not the other way around.</p>
-      </div>
-      <div class="app-value">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
-        <h3>You Belong Here</h3>
-        <p>Judgement-free support for every part of you.</p>
-      </div>
-    </div>
-  </div>
+<!-- ======================= TRUST BAR ======================= -->
+<!-- What survived the app band. The rest of it -- a phone mockup greeting a
+     visitor as Jamie, and copy promising check-ins and saved tools -- was a
+     preview of the signed-in experience that V1 no longer has. -->
+<section class="trust-bar" aria-label="What Kindred promises">
+  <ul class="trust-inner">
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
+      <div><strong>Private &amp; Secure</strong> <span>Your privacy is our priority. Always.</span></div>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M4 19c.6-3.4 2.6-5 5-5s4.4 1.6 5 5"/><path d="M14.5 15.6c1.6.4 2.9 1.6 3.5 3.4"/></svg>
+      <div><strong>Made for Real Life</strong> <span>Tools that fit in your life, not the other way around.</span></div>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5C7 16.5 3.5 13.3 3.5 9.6 3.5 7 5.5 5 8 5c1.6 0 3.1.8 4 2.1C12.9 5.8 14.4 5 16 5c2.5 0 4.5 2 4.5 4.6 0 3.7-3.5 6.9-8.5 10.9z"/></svg>
+      <div><strong>You Belong Here</strong> <span>Judgement-free support for every part of you.</span></div>
+    </li>
+  </ul>
 </section>
 
 <!-- ======================= FOOTER ======================= -->
@@ -639,7 +606,7 @@
 })();
 </script>
 
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11"></script>
 <!-- ======================= SITE SEARCH ======================= -->
 <style>
   .ksearch-overlay {

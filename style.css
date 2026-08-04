@@ -1845,3 +1845,29 @@ main:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ---------------------------------------------------------------------------
+   Trust bar. What was left of the app band once the phone mockup went: three
+   promises on one skinny line above the footer, rather than a section.
+--------------------------------------------------------------------------- */
+.trust-bar {
+  background: var(--cream-2, #F6EFE6);
+  border-top: 1px solid var(--line);
+  padding: clamp(1rem, 2.4vw, 1.5rem) clamp(1rem, 4vw, 3rem);
+}
+.trust-inner {
+  max-width: 1100px; margin: 0 auto; list-style: none; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 3vw, 2.4rem);
+}
+.trust-inner li { display: flex; align-items: center; gap: .7rem; }
+.trust-inner svg { width: 22px; height: 22px; flex: none; color: var(--aubergine); }
+.trust-inner strong {
+  display: block; font-size: .84rem; font-weight: 700; color: var(--ink);
+  letter-spacing: .01em;
+}
+.trust-inner span { display: block; font-size: .78rem; color: var(--ink-soft); line-height: 1.45; }
+/* Stacks rather than shrinks: three columns at 375px gives you two words per
+   line and an icon bigger than its label. */
+@media (max-width: 780px) {
+  .trust-inner { grid-template-columns: 1fr; gap: .8rem; }
+}
