@@ -57,7 +57,7 @@ const NEEDS = [
     ] },
   { key: 'talk', label: 'I want to talk to someone',
     lead: "That's a strong step, not a last resort.",
-    note: 'You have 3 therapist profiles saved — Dr. Maya Chen is a 94% match.',
+    note: 'You have 3 therapist profiles saved — Dr. Maya Chen matches on warmth, availability and insurance.',
     steps: [
       { title: 'See your saved therapists', meta: 'Therapy fit', href: 'index.html#find-therapist' },
       { title: 'Need support right now? Call or text 988', meta: 'Free · confidential · 24/7', href: 'start-here.html' }

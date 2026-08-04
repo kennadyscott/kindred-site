@@ -103,7 +103,10 @@ function showTherapist(i) {
   const t = THERAPISTS[i];
   matchName.textContent = t.name;
   matchMeta.textContent = t.meta;
-  matchBadge.textContent = `${t.match}% Kindred Match`;
+  /* No percentage: a score that could not fall below 62 was reassurance
+     dressed as measurement, and it argued against the filter-not-score
+     thesis. The fit tags carry it. */
+  matchBadge.textContent = 'Kindred Match';
   matchPills.innerHTML = t.pills.map(p => `<span>${p}</span>`).join('');
   matchPromptLabel.textContent = t.promptLabel;
   matchQuote.textContent = t.quote;
