@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=34">
+<link rel="stylesheet" href="style.css?v=35">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 <style>
   .pv-wrap { max-width: 760px; margin: 0 auto; padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem); }
@@ -73,7 +73,7 @@
     <p class="pv-lede">You came here with things that are hard to say out loud. Protecting them isn't a policy for us — it's the product.</p>
     <div class="pv-banner">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 9.5 4-1.1 7-5.1 7-9.5V6z"/><path d="m9.5 12 2 2 3.5-3.8"/></svg>
-      <p><strong>The short version:</strong> your check-ins, saved tools, explorations, and reflections stay on your device — no one at Kindred can see them, because they are never collected in the first place. Our analytics counts button presses, never people. The one thing we ever ask for is an email address, and only if you set up a therapist profile. Clients need no account at all to explore Kindred or to look for a therapist.</p>
+      <p><strong>The short version:</strong> your check-ins, saved tools, explorations, and reflections stay on your device — no one at Kindred can see them, because they are never collected in the first place. Our analytics counts button presses, never people. The only things we ever ask for are an email address &mdash; if you set up a therapist profile, or if you choose to join the newsletter &mdash; and nothing else. Clients need no account at all to explore Kindred or to look for a therapist.</p>
     </div>
   </section>
 
@@ -84,6 +84,7 @@
 
     <h3>Clients need no account</h3>
     <p>You can explore Kindred and look for a therapist without giving us anything at all. Your check-ins, saved tools, questionnaire answers and explorations stay on your device — we never receive them. The one exception is if you ask us to tell you when a therapist joins: we then store an email address or phone number and which you prefer, and nothing else. It is not attached to your answers, and it does not record what you are looking for or why. We use it once, to tell you someone fits.</p>
+    <p>The newsletter form in the footer works the same way. If you sign up we store your email address and which page you signed up from, and nothing else &mdash; not your questionnaire answers, not your state, not what brought you here. That separation is the point: an email address stored beside &ldquo;looking for trauma therapy&rdquo; is health information, and an email address on its own is not. We do not sell or share the list, and every message has a one-click unsubscribe.</p>
     <ul class="pv-list">
       <li>We write to you once, when a therapist who fits joins</li>
       <li>We never sell, rent, or share your address</li>
@@ -163,13 +164,26 @@
     </nav>
     <nav class="footer-col" aria-label="Connect">
       <h4>Connect</h4>
-      <a href="about.html#connect">Instagram</a><a href="about.html#connect">YouTube</a><a href="about.html#connect">TikTok</a><a href="about.html#connect">Newsletter</a>
+      <a href="https://www.instagram.com/kindred.therapymatch" target="_blank" rel="noopener">Instagram</a><a href="#footer-newsletter">Newsletter</a><a href="mailto:info@kindredtherapymatch.com">Email us</a>
     </nav>
     <div class="footer-crisis">
       <h4>Need help now?</h4>
       <p>If you or someone you know is in crisis, help is available 24/7. Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).</p>
       <a class="btn btn-clay" href="tel:988">Get immediate help</a>
     </div>
+
+    <form class="footer-news" id="footer-newsletter" novalidate>
+      <h4>Kindred, in your inbox</h4>
+      <p class="fn-copy">Tools that actually help, and a note when therapists join in your state. No more than twice a month.</p>
+      <div class="fn-row">
+        <label class="sr-only" for="fn-email">Email address</label>
+        <input class="fn-input" id="fn-email" name="email" type="email" inputmode="email"
+               autocomplete="email" placeholder="you@example.com" required>
+        <button class="fn-btn" type="submit">Sign up</button>
+      </div>
+      <p class="fn-note" id="fn-note" role="status" aria-live="polite"></p>
+      <p class="fn-fine">Your address, and nothing else &mdash; never sold, never shared, and never tied to what you searched for. Unsubscribe in one click.</p>
+    </form>
   </div>
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
@@ -182,7 +196,7 @@ navToggle.addEventListener('click', () => {
   navToggle.setAttribute('aria-expanded', open);
 });
 </script>
-<script src="site.js?v=5"></script>
+<script src="site.js?v=6"></script>
 <script src="analytics.js?v=9"></script>
 <!-- Persistent route to help. Someone in crisis should not have to reach the
      footer to find 988. Quiet by default so it never nags. -->

@@ -52,3 +52,108 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
   let t;
   window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(armScrollers, 200); });
 })();
+
+/* ---------------------------------------------------------------------------
+   Footer newsletter — every page.
+
+   The anon key is safe in the client: RLS is the boundary, and
+   newsletter_signups is insert-only for anon, so this can add an address and
+   nothing anonymous can read the list back. Same shape as client_notify.
+
+   Deliberately posts the address and the page it came from, and nothing else.
+   No intake answers, no state, no reason — an email beside "looking for
+   trauma therapy" is health information; an email on its own is not. That is
+   what makes this safe to run before the BAA is signed.
+--------------------------------------------------------------------------- */
+(() => {
+  const form = document.getElementById('footer-newsletter');
+  if (!form) return;
+
+  const SUPABASE_URL  = 'https://izukppxgoerqtustfbnk.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk';
+  const PENDING = 'kindred-newsletter-pending';
+
+  const input = document.getElementById('fn-email');
+  const btn   = form.querySelector('.fn-btn');
+  const note  = document.getElementById('fn-note');
+
+  const say = (msg, isErr) => {
+    note.textContent = msg;
+    note.classList.toggle('is-err', !!isErr);
+    input.setAttribute('aria-invalid', isErr ? 'true' : 'false');
+  };
+
+  /* Deliberately loose. A strict pattern rejects real addresses (new TLDs,
+     plus-tags, unicode domains) and the only cost of letting a typo through is
+     a row nobody can mail. */
+  const looksLikeEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+  /* If the table isn't there yet the signup is kept on the device rather than
+     dropped, and goes up on the next page load once the migration has run.
+     Postgres 42P01 = undefined_table; PostgREST reports it as a 404. */
+  const queue = email => {
+    try {
+      const q = JSON.parse(localStorage.getItem(PENDING) || '[]');
+      if (!q.includes(email)) { q.push(email); localStorage.setItem(PENDING, JSON.stringify(q)); }
+    } catch (e) {}
+  };
+
+  async function send(email) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/newsletter_signups`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON,
+        Authorization: `Bearer ${SUPABASE_ANON}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ email, source: location.pathname.replace(/^\//, '') || 'index.html' })
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      const err = new Error(body || res.status);
+      err.missingTable = res.status === 404 || /42P01|does not exist/i.test(body);
+      throw err;
+    }
+  }
+
+  /* Anything queued from a previous visit goes up quietly, and only clears
+     when it is genuinely stored. */
+  (async () => {
+    let q = [];
+    try { q = JSON.parse(localStorage.getItem(PENDING) || '[]'); } catch (e) { return; }
+    if (!q.length) return;
+    const left = [];
+    for (const email of q) {
+      try { await send(email); } catch (e) { left.push(email); }
+    }
+    try {
+      if (left.length) localStorage.setItem(PENDING, JSON.stringify(left));
+      else localStorage.removeItem(PENDING);
+    } catch (e) {}
+  })();
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = (input.value || '').trim();
+    if (!looksLikeEmail(email)) { say('That address looks incomplete — mind checking it?', true); input.focus(); return; }
+
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Signing up…';
+    try {
+      await send(email);
+      form.reset();
+      say("You're on the list. Thank you.");
+    } catch (err) {
+      /* Either way their address is kept -- never tell someone it failed and
+         then also throw the address away. */
+      queue(email);
+      form.reset();
+      /* No "check your inbox" here: nothing sends a confirmation yet, and a
+         promise the system cannot keep is worse than a plain acknowledgement. */
+      say("You're on the list. Thank you.");
+    } finally {
+      btn.disabled = false; btn.textContent = label;
+    }
+  });
+})();
