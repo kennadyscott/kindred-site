@@ -193,7 +193,16 @@ $sync$;
 
 -- ---------------------------------------------------------------------------
 -- Admin actions are now per-state.
+--
+-- DROP BEFORE CREATE. verify_therapist_license keeps the same arity and types
+-- (text, text, text) but renames its second parameter p_license -> p_state, and
+-- CREATE OR REPLACE cannot rename a parameter: it fails with 42P13. The old
+-- shapes are dropped here rather than after the new ones are defined.
 -- ---------------------------------------------------------------------------
+drop function if exists verify_therapist_license(text, text, text);
+drop function if exists reject_therapist_license(text, text, text);
+drop function if exists unverify_therapist_license(text, text);
+
 create or replace function verify_therapist_license(
   p_email    text,
   p_state    text,
@@ -259,11 +268,6 @@ begin
   return jsonb_build_object('ok', true, 'state', upper(btrim(p_state)));
 end;
 $$;
-
--- The old single-argument shapes would silently do nothing now.
-drop function if exists verify_therapist_license(text, text, text);
-drop function if exists reject_therapist_license(text, text, text);
-drop function if exists unverify_therapist_license(text, text);
 
 -- ---------------------------------------------------------------------------
 -- Queue: each therapist carries their licences, so the admin can act per state.
