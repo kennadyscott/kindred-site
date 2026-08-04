@@ -66,7 +66,7 @@ must never delete someone's work.
 - **No visibility into accounts without profiles.** Someone who creates an
   account and stops before paying is invisible. Worth an "Accounts, no profile
   yet" list on `/review` once real signups start.
-- **`hello@kindredtherapymatch.com` needs to exist.** The domain has Google Workspace MX,
+- **`info@kindredtherapymatch.com` needs to exist.** The domain has Google Workspace MX,
   but confirm the alias actually delivers — it is the deletion and accessibility
   contact on the privacy page. (It replaced `hello@kindred.care`, a domain
   Kindred does not own, which was live on About, Privacy and Welcome.)
