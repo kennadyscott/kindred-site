@@ -56,8 +56,7 @@
     /* front-door audience router */
     ['#kaud-client', 'frontdoor_looking_for_therapy'],
     ['#kaud-therapist', 'frontdoor_im_a_therapist'],
-    ['#kaud-skip', 'frontdoor_dismissed'],
-    ['#kaud-close', 'frontdoor_dismissed'],
+    ['#kaud-988', 'frontdoor_crisis_line'],
     /* homepage */
     ['.hero-ctas a[href="#find-therapist"]', 'home_hero_find_therapist'],
     ['.hero-ctas a[href="start-here.html"]', 'home_start_where_you_are'],

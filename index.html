@@ -495,8 +495,6 @@
     transform: translateY(14px); transition: transform .3s ease;
   }
   .kaud-overlay.kaud-show .kaud-modal { transform: none; }
-  .kaud-close { position: absolute; top: 1rem; right: 1.1rem; font-size: 1rem; color: #6E6172; background: none; border: none; cursor: pointer; }
-  .kaud-close:hover { color: #422448; }
   .kaud-mark { width: 44px; height: 44px; margin: 0 auto .8rem; }
   .kaud-kicker { font-size: .68rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: #BE765F; }
   .kaud-title { font-family: 'Literata', Georgia, serif; font-weight: 500; font-size: clamp(1.5rem, 3vw, 1.9rem); color: #422448; margin-top: .4rem; line-height: 1.15; }
@@ -514,14 +512,23 @@
   .kaud-icon svg { width: 26px; height: 26px; }
   .kaud-card strong { font-size: 1rem; color: #35263B; }
   .kaud-card span { font-size: .78rem; color: #6E6172; line-height: 1.4; }
-  .kaud-skip { margin-top: 1.2rem; font-size: .82rem; font-weight: 600; color: #6E6172; text-decoration: underline; background: none; border: none; cursor: pointer; }
-  .kaud-skip:hover { color: #422448; }
+  .kaud-sub { margin-top: .6rem; font-size: .86rem; color: #6E6172; }
+  /* Not an escape hatch -- a third path. This modal has no exit, and holding
+     someone in crisis behind a marketing question is not a trade this site
+     makes. Leaving by this route is always allowed. */
+  .kaud-crisis { margin-top: 1.5rem; padding-top: 1.1rem; border-top: 1px solid #EADFCC; font-size: .82rem; color: #6E6172; line-height: 1.5; }
+  .kaud-crisis a { color: #422448; font-weight: 700; text-decoration: underline; }
+  .kaud-crisis a:hover { color: #BE765F; }
+  .kaud-card:focus-visible { outline: 3px solid #422448; outline-offset: 3px; }
+  /* The page behind must not scroll while the modal owns the screen.
+     It has to go on <html> as well as <body>: this site's scroller is the
+     root element, so locking body alone does nothing at all. */
+  html.kaud-locked, body.kaud-locked { overflow: hidden; }
   @media (max-width: 560px) { .kaud-cards { grid-template-columns: 1fr; } }
 </style>
 
 <div class="kaud-overlay" id="kaud" hidden>
   <div class="kaud-modal" role="dialog" aria-modal="true" aria-labelledby="kaud-title">
-    <button class="kaud-close" id="kaud-close" aria-label="Close">✕</button>
     <svg class="kaud-mark" viewBox="0 0 100 100" aria-hidden="true">
       <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
       <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
@@ -529,6 +536,7 @@
     </svg>
     <p class="kaud-kicker">Welcome to Kindred</p>
     <h2 class="kaud-title" id="kaud-title">Which brings you here today?</h2>
+    <p class="kaud-sub">Pick one so we can show you the right side of Kindred.</p>
     <div class="kaud-cards">
       <button class="kaud-card kaud-card-client" id="kaud-client">
         <span class="kaud-icon" aria-hidden="true">
@@ -545,7 +553,10 @@
         <span>Meet clients who already fit — founding spots open.</span>
       </button>
     </div>
-    <button class="kaud-skip" id="kaud-skip">Just browsing for now</button>
+    <p class="kaud-crisis">
+      In crisis right now? Call or text <a href="tel:988" id="kaud-988">988</a> &mdash;
+      the Suicide &amp; Crisis Lifeline, free and open every hour of the day.
+    </p>
   </div>
 </div>
 
@@ -568,25 +579,62 @@
     try { localStorage.setItem(KEY, JSON.stringify({ choice, at: Date.now() })); } catch (e) {}
   };
   const overlay = document.getElementById('kaud');
+  const modal   = overlay.querySelector('.kaud-modal');
+
+  /* Every way out of this modal is a choice. No close button, no backdrop
+     click, no Escape -- the only exits are picking a side or ringing 988.
+     That makes two things mandatory rather than nice to have:
+
+     1. A focus trap. Tab must not wander behind an overlay that cannot be
+        closed, or a keyboard user ends up stranded in a page they cannot see
+        with no way back to the buttons.
+     2. `inert` on everything else, which also hides the page behind from
+        screen readers. Browsers without `inert` fall back to the manual trap. */
+  const outside = [...document.body.children].filter(el => el !== overlay);
+  const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+  const trap = e => {
+    if (e.key === 'Tab') {
+      const f = [...modal.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    /* Escape is swallowed on purpose. Letting it through would be a silent
+       exit that only keyboard users get. */
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); }
+  };
+
   const open = () => {
     overlay.hidden = false;
-    setTimeout(() => overlay.classList.add('kaud-show'), 30); /* not rAF — throttled tabs never fire it */
+    document.body.classList.add('kaud-locked');
+    document.documentElement.classList.add('kaud-locked');
+    outside.forEach(el => el.setAttribute('inert', ''));
+    document.addEventListener('keydown', trap, true);
+    setTimeout(() => overlay.classList.add('kaud-show'), 30); /* not rAF -- throttled tabs never fire it */
     document.getElementById('kaud-client').focus();
   };
+
   const close = (choice) => {
     remember(choice);
+    document.removeEventListener('keydown', trap, true);
+    outside.forEach(el => el.removeAttribute('inert'));
+    document.body.classList.remove('kaud-locked');
+    document.documentElement.classList.remove('kaud-locked');
     overlay.classList.remove('kaud-show');
     setTimeout(() => overlay.hidden = true, 300);
   };
+
   document.getElementById('kaud-client').addEventListener('click', () => close('client'));
   document.getElementById('kaud-therapist').addEventListener('click', () => {
     remember('therapist');
     window.location.href = 'therapists.html';
   });
-  document.getElementById('kaud-close').addEventListener('click', () => close('dismissed'));
-  document.getElementById('kaud-skip').addEventListener('click', () => close('dismissed'));
-  overlay.addEventListener('click', e => { if (e.target === overlay) close('dismissed'); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !overlay.hidden) close('dismissed'); });
+  /* Reaching for 988 counts as answered -- nobody should meet this again on
+     the way back. */
+  document.getElementById('kaud-988').addEventListener('click', () => remember('crisis'));
+
   setTimeout(open, 400);
 })();
 </script>
@@ -698,7 +746,7 @@
 </script>
 
 <script src="site.js?v=4"></script>
-<script src="analytics.js?v=7"></script>
+<script src="analytics.js?v=8"></script>
 <!-- Persistent route to help. Someone in crisis should not have to reach the
      footer to find 988. Quiet by default so it never nags. -->
 <a class="crisis-mini" href="tel:988" aria-label="In crisis? Call or text 988"><span aria-hidden="true">&#9679;</span> In crisis? Call 988</a>
