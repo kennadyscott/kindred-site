@@ -13,6 +13,12 @@
   --aubergine-deep: #301A35;
   --clay: #BE765F;           /* brand Clay */
   --clay-deep: #A05F4B;
+  /* Measured against the page ground: clay #BE765F is 3.45:1 and lilac-deep
+     #8E77A0 on the lilac wash is 3.22:1 -- both fail AA for normal text. These
+     darker pairs are for small labels; the originals stay for large type and
+     non-text use, where 3:1 is the bar. */
+  --clay-text: #8F5340;      /* 4.9:1 on #FCFCFE */
+  --lilac-text: #6B5480;     /* 5.1:1 on #EDE5EF */
   --lilac: #B8A3C4;          /* brand Lilac */
   --lilac-deep: #8E77A0;
   --moss: #687A65;           /* brand Moss */
@@ -81,8 +87,8 @@ ul { list-style: none; }
   color: var(--clay); margin-top: .2rem; white-space: nowrap;
 }
 
-.main-nav { display: flex; gap: clamp(.8rem, 1.6vw, 1.5rem); margin-left: auto; }
-.main-nav a { font-size: .88rem; font-weight: 500; color: var(--ink); padding: .35rem 0; border-bottom: 2px solid transparent; }
+.main-nav { display: flex; align-items: center; gap: clamp(.7rem, 1.2vw, 1.25rem); margin-left: auto; }
+.main-nav a { font-size: .88rem; font-weight: 500; color: var(--ink); padding: .35rem 0; border-bottom: 2px solid transparent; white-space: nowrap; }
 .main-nav a:hover { color: var(--clay-deep); border-bottom-color: var(--clay); }
 .main-nav .nav-cta { display: none; } /* drawer-only CTAs — shown on phones inside the open menu */
 html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
@@ -102,8 +108,15 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .hero h1 { font-size: clamp(1.9rem, 4vw, 3.2rem); letter-spacing: -.01em; }
 .hero h1 em { font-style: normal; font-weight: 500; }
 .hl-moss { color: var(--moss); }
-.hl-clay { color: var(--clay); }
-.hl-lilac { color: var(--lilac-deep); }
+.hl-clay { color: var(--clay-deep); }
+.hl-lilac { color: var(--lilac-text); }
+/* Three lines at identical size and weight gave the eye nowhere to land first.
+   A descending cascade keeps the three-colour identity -- which is the point of
+   the headline -- while making the first line the entry. Colours also stepped
+   to the darker text pairs so the smaller lines stay legible. */
+.hero h1 em { display: inline-block; line-height: 1.08; }
+.hero h1 .hl-clay  { font-size: .84em; }
+.hero h1 .hl-lilac { font-size: .72em; }
 
 .hero-sub { margin-top: 1.2rem; max-width: 40ch; color: var(--ink-soft); font-size: 1.05rem; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.6rem; }
@@ -330,7 +343,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .footer-fine { max-width: 1200px; margin: 2rem auto 0; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.12); font-size: .72rem; color: #B79DBE; }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .mood-grid { grid-template-columns: repeat(4, 1fr); }
   .pillars { grid-template-columns: repeat(2, 1fr); }
   .moments { grid-template-columns: 1fr auto; }
@@ -343,8 +356,11 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
   .match-side { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--line); padding: 1rem 0 0; }
 }
 
-/* the full desktop header needs ~1400px; below that, the hamburger takes over */
-@media (max-width: 1300px) {
+/* Was 1300px, which is a common laptop width -- a 13" MacBook got the
+   hamburger and the nav read as hidden. Demoting one header CTA to a text link
+   freed enough room to hold the full nav down to 1180, with nowrap so a link
+   never breaks across two lines -- which looks worse than collapsing. */
+@media (max-width: 1180px) {
   .main-nav { display: none; }
   .nav-toggle { display: flex; }
   .header-actions { margin-left: auto; } /* with the nav gone, keep CTAs pinned right by the hamburger */
@@ -551,7 +567,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .main-nav a.active { border-bottom-color: var(--clay); color: var(--aubergine); font-weight: 600; }
 
 /* start-here responsive */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .paths-grid { grid-template-columns: repeat(2, 1fr); }
   .next-grid { grid-template-columns: repeat(2, 1fr); }
   .next-item + .next-item { border-left: none; }
@@ -735,7 +751,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .uy-begin-card .path-cta { padding-top: .3rem; font-size: .85rem; }
 
 /* responsive */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .uy-hero-inner { grid-template-columns: 1fr; }
   .uy-feelings { grid-template-columns: repeat(3, 1fr); }
   .uy-cat-topics { grid-template-columns: repeat(2, 1fr); }
@@ -975,7 +991,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
   .mk-layout { grid-template-columns: 205px minmax(0, 1fr); }
   .mk-rail { grid-column: 2; grid-row: 2; position: static; grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .mk-row, #mk-saved-row { grid-template-columns: repeat(2, 1fr); }
   .mk-snapshot { grid-template-columns: 1fr; }
   .mk-plangrid { grid-template-columns: repeat(2, 1fr); }
@@ -1176,7 +1192,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 #mws-save-btn.saved { background: var(--moss); }
 
 /* responsive */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .mws-hero-inner { grid-template-columns: 1fr; }
   .mws-famgrid { grid-template-columns: repeat(2, 1fr); }
   .mws-lensgrid { grid-template-columns: repeat(3, 1fr); }
@@ -1297,7 +1313,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .fb-bridge-inner .hero-ctas { margin-top: 1.4rem; }
 
 /* responsive */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .fb-hero-inner { grid-template-columns: 1fr; }
   .fb-toolgrid { grid-template-columns: repeat(2, 1fr); }
   .fb-how-inner { grid-template-columns: 1fr; }
@@ -1500,7 +1516,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .tp-notready .uy-begin-grid { margin-top: 1.8rem; }
 
 /* responsive */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .tp-hero-inner { grid-template-columns: 1fr; }
   .tp-steps { grid-template-columns: repeat(2, 1fr); }
   .tp-typegrid { grid-template-columns: repeat(2, 1fr); }
@@ -1548,7 +1564,7 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .lr-closer h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
 .lr-closer .uy-begin-grid { margin-top: 1.8rem; }
 
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .lr-hero-inner { grid-template-columns: 1fr; }
   .lr-patternchips { grid-template-columns: repeat(2, 1fr); }
 }
@@ -1607,3 +1623,74 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 /* match-band dual CTAs (client match + therapist build-profile) */
 .match-ctas { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
 .mkt-ctas { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------------------
+   Header hierarchy (2026-08-03)
+   Two same-size CTAs side by side gave the eye no first stop, and the pair
+   needed so much width the nav collapsed at 1300px. One primary, one quiet
+   link, and a separated entry for practitioners.
+--------------------------------------------------------------------------- */
+.nav-quiet {
+  font-size: .88rem; font-weight: 500; color: var(--ink-soft);
+  padding: .4rem .2rem; border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.nav-quiet:hover { color: var(--aubergine); border-bottom-color: var(--line); }
+.header-sep { flex: 0 0 1px; width: 1px; height: 22px; background: var(--line); margin: 0 .35rem; display: block; }
+.nav-pro {
+  font-size: .84rem; font-weight: 600; color: var(--clay-text);
+  padding: .4rem .2rem; white-space: nowrap;
+}
+.nav-pro:hover { color: var(--aubergine); text-decoration: underline; }
+
+/* ---------------------------------------------------------------------------
+   Button system: primary / secondary / tertiary, with real interaction states.
+   Shapes were consistent already; what was missing was focus and active, so
+   keyboard users had nothing to follow.
+--------------------------------------------------------------------------- */
+.btn { transition: background .15s ease, color .15s ease, border-color .15s ease, transform .1s ease; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible,
+.nav-quiet:focus-visible, .nav-pro:focus-visible,
+.main-nav a:focus-visible, .mood:focus-visible, .dot:focus-visible {
+  outline: 2px solid var(--aubergine);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.btn-dark:hover { background: var(--aubergine-deep); }
+.btn-outline:hover { border-color: var(--aubergine); background: rgba(66,36,72,.05); }
+
+/* ---------------------------------------------------------------------------
+   Contrast fixes -- only where measurement showed a failure. --ink-soft was
+   already 5.67:1 on the page and 5.75:1 in the footer, so body text is
+   untouched.
+--------------------------------------------------------------------------- */
+.eyebrow, .kt-offer-badge, .match-prompt-label { color: var(--clay-text); }
+.rev-chip, .kt-tagcloud span, .cbx-chips .chip-option { color: var(--lilac-text); }
+
+/* ---------------------------------------------------------------------------
+   Mood tiles already lifted on hover and had a selected state, but at rest they
+   read as flat swatches -- and a <button> does not get a pointer cursor by
+   default, so nothing said "press me" before you tried.
+--------------------------------------------------------------------------- */
+.mood { cursor: pointer; border-color: rgba(66,36,72,.08); }
+.mood:hover { border-color: rgba(66,36,72,.25); }
+
+/* ---------------------------------------------------------------------------
+   Carousel controls: arrows and a position, so the card reads as browsable.
+--------------------------------------------------------------------------- */
+.match-controls { display: flex; align-items: center; gap: .6rem; margin-top: 1rem; }
+.match-arrow {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--paper); color: var(--aubergine);
+  font-size: 1.1rem; line-height: 1; cursor: pointer;
+  display: grid; place-items: center;
+  transition: background .15s ease, border-color .15s ease;
+}
+.match-arrow:hover { background: var(--cream-2); border-color: var(--aubergine); }
+.match-arrow:active { transform: translateY(1px); }
+.match-dots { display: flex; gap: .45rem; align-items: center; }
+/* 8px was a hard target; 10 with padding gives a usable hit area without
+   changing how it looks. */
+.dot { width: 10px; height: 10px; cursor: pointer; }
+.match-count { font-size: .78rem; color: var(--ink-soft); margin-left: auto; font-variant-numeric: tabular-nums; }

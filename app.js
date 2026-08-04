@@ -88,6 +88,7 @@ const matchSpecs = document.getElementById('match-specs');
 const matchPortrait = document.getElementById('match-portrait');
 const dots = document.querySelectorAll('.dot');
 const matchFav = document.querySelector('.match-fav');
+let rotateIdx = 0;
 
 function portraitSvg(t) {
   return `
@@ -125,6 +126,9 @@ function showTherapist(i) {
     if (i === j) d.setAttribute('aria-current', 'true');
     else d.removeAttribute('aria-current');
   });
+  const countEl = document.getElementById('match-count');
+  if (countEl) countEl.textContent = `${i + 1} of ${THERAPISTS.length}`;
+  rotateIdx = i;                    // arrows and auto-rotate share one position
   matchFav.classList.remove('faved');
 }
 
@@ -133,7 +137,17 @@ dots.forEach(d => d.addEventListener('click', () => {
   showTherapist(Number(d.dataset.idx));
 }));
 
-let rotateIdx = 0;
+/* 8px dots were the only control -- no arrows, no sense of position, so the
+   card was browsable by accident rather than by design. */
+const step = (delta) => {
+  clearInterval(autoRotate);
+  showTherapist((rotateIdx + delta + THERAPISTS.length) % THERAPISTS.length);
+};
+const prevBtn = document.getElementById('match-prev');
+const nextBtn = document.getElementById('match-next');
+if (prevBtn) prevBtn.addEventListener('click', () => step(-1));
+if (nextBtn) nextBtn.addEventListener('click', () => step(1));
+
 const autoRotate = setInterval(() => {
   rotateIdx = (rotateIdx + 1) % THERAPISTS.length;
   showTherapist(rotateIdx);
