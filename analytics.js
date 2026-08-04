@@ -73,8 +73,6 @@
     ['.match-copy .btn-dark', 'home_find_matches'],
     ['.home-therapist-cta', 'home_therapist_build_profile'],
     ['.match-side .pillar-link', 'home_view_profile'],
-    ['.match-fav', 'home_save_therapist'],
-    ['.mkt-inner .btn-dark', 'home_create_my_kindred'],
     /* therapists landing */
     ['#kt-price-cta', 'therapists_claim_spot'],
     ['.kt-bill', el => ({ event: 'therapists_toggle', props: { bill: el.dataset.bill } })],

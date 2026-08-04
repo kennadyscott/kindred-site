@@ -176,9 +176,6 @@ document.getElementById('mws-momentrow').innerHTML = MOMENTS.map((m, i) => `
     <p>${m.desc}</p>
     <div class="mws-momentctas">
       <a class="pillar-link" href="feel-better.html">Start <span aria-hidden="true">→</span></a>
-      <button class="mws-savemoment" data-moment="${i}" aria-label="Save ${m.title} to My Kindred">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"/></svg>
-      </button>
     </div>
   </article>`).join('');
 
@@ -236,37 +233,3 @@ function showComparisons(intro, keys, title) {
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ---------- save drawer (shared pattern with homepage) ---------- */
-const drawer = document.createElement('div');
-drawer.className = 'save-drawer';
-drawer.innerHTML = `
-  <button class="save-drawer-close" aria-label="Dismiss">✕</button>
-  <h3>Keep this somewhere safe.</h3>
-  <p>Save articles, tools, check-ins, and therapists to your own Kindred space.</p>
-  <a class="btn btn-dark" href="my-kindred.html">Create My Kindred</a>
-  <p class="mkt-fine">Free. Private. No app required.</p>`;
-document.body.appendChild(drawer);
-drawer.querySelector('.save-drawer-close').addEventListener('click', () => drawer.classList.remove('open'));
-
-function trySave(el) {
-  if (localStorage.getItem('mk-account')) {
-    el.classList.add('saved');
-    return true;
-  }
-  if (!sessionStorage.getItem('mk-drawer-shown')) {
-    sessionStorage.setItem('mk-drawer-shown', '1');
-    drawer.classList.add('open');
-    setTimeout(() => drawer.classList.remove('open'), 12000);
-  } else {
-    drawer.classList.add('open');
-  }
-  return false;
-}
-
-document.querySelectorAll('.mws-savemoment').forEach(b =>
-  b.addEventListener('click', () => trySave(b)));
-
-const saveBtn = document.getElementById('mws-save-btn');
-saveBtn.addEventListener('click', () => {
-  if (trySave(saveBtn)) saveBtn.textContent = '✓ Saved to My Kindred';
-});

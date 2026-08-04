@@ -98,7 +98,6 @@ const matchQuote = document.getElementById('match-quote');
 const matchSpecs = document.getElementById('match-specs');
 const matchPortrait = document.getElementById('match-portrait');
 const dots = document.querySelectorAll('.dot');
-const matchFav = document.querySelector('.match-fav');
 let rotateIdx = 0;
 
 function portraitSvg(t) {
@@ -146,7 +145,6 @@ function showTherapist(i) {
   const countEl = document.getElementById('match-count');
   if (countEl) countEl.textContent = `${i + 1} of ${THERAPISTS.length}`;
   rotateIdx = i;                    // arrows and auto-rotate share one position
-  matchFav.classList.remove('faved');
 }
 
 dots.forEach(d => d.addEventListener('click', () => {
@@ -170,28 +168,7 @@ const autoRotate = setInterval(() => {
   showTherapist(rotateIdx);
 }, 7000);
 
-/* ---------- save → My Kindred drawer (first-touch account moment) ---------- */
-const drawer = document.createElement('div');
-drawer.className = 'save-drawer';
-drawer.innerHTML = `
-  <button class="save-drawer-close" aria-label="Dismiss">✕</button>
-  <h3>Keep this somewhere safe.</h3>
-  <p>Save articles, tools, check-ins, and therapists to your own Kindred space.</p>
-  <a class="btn btn-dark" href="my-kindred.html">Create My Kindred</a>
-  <p class="mkt-fine">Free. Private. No app required.</p>`;
-document.body.appendChild(drawer);
-drawer.querySelector('.save-drawer-close').addEventListener('click', () => drawer.classList.remove('open'));
 
-matchFav.addEventListener('click', () => {
-  matchFav.classList.toggle('faved');
-  if (matchFav.classList.contains('faved') && !localStorage.getItem('mk-account') && !sessionStorage.getItem('mk-drawer-shown')) {
-    sessionStorage.setItem('mk-drawer-shown', '1');
-    drawer.classList.add('open');
-    setTimeout(() => drawer.classList.remove('open'), 12000);
-  }
-});
-
-/* ---------- moments scroll ---------- */
 const momentsRow = document.getElementById('moments-row');
 document.getElementById('moments-arrow').addEventListener('click', () => {
   const nearEnd = momentsRow.scrollLeft + momentsRow.clientWidth >= momentsRow.scrollWidth - 20;
