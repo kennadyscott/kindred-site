@@ -180,7 +180,7 @@
   <div class="adm-grid">
     <div class="adm-tile"><h3>Front door answered</h3><strong id="t-frontdoor">0</strong><span>audience pop-up choices</span></div>
     <div class="adm-tile"><h3>Founding signups</h3><strong id="t-subs">0</strong><span>therapists who claimed a spot</span></div>
-    <div class="adm-tile"><h3>Founding spots left</h3><strong id="t-spots">200</strong><span>of 200 remaining</span></div>
+    <div class="adm-tile"><h3>Founding members</h3><strong id="t-founding">&mdash;</strong><span>therapists paying, from the database</span></div>
     <div class="adm-tile"><h3>Cancellations</h3><strong id="t-cancels">0</strong><span>memberships canceled</span></div>
   </div>
 
@@ -406,6 +406,11 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
       return;
     }
     const c = counts.counts || {};
+    /* Real, from the database: everyone whose subscription is active, whether or
+       not they have finished verification. No cap, because the founding offer
+       is date-based -- there is no quantity to run out of. */
+    const foundingEl = document.getElementById('t-founding');
+    if (foundingEl) foundingEl.textContent = (c.live || 0) + (c.paying_but_hidden || 0);
     const pending = (c.awaiting_license || 0) + (c.awaiting_identity || 0);
     badge.hidden = !pending; badge.textContent = pending;
     const rejTab = document.querySelector('.adm-tab[data-filter="rejected"]');
@@ -566,7 +571,10 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     const fd = ['frontdoor_looking_for_therapy', 'frontdoor_im_a_therapist', 'frontdoor_dismissed'];
     document.getElementById('t-frontdoor').textContent = fd.reduce((s, k) => s + g(k), 0);
     document.getElementById('t-subs').textContent = leadCount;
-    document.getElementById('t-spots').textContent = Math.max(0, 200 - leadCount);
+    /* "200 - leads" was wrong three ways: it counted form fills rather than
+       subscriptions, subtracted from a cap that no longer exists (the founding
+       offer is date-based, so nothing counts down), and read localStorage, so
+       it was per-browser. Replaced by a real count -- see loadReview(). */
     document.getElementById('t-cancels').textContent = g('portal_cancel');
     renderLeads();
 

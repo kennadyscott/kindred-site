@@ -80,6 +80,25 @@ must never delete someone's work.
 
 ---
 
+## Guardrails
+
+**The founding counter must be real before it is published anywhere.** No
+spots-remaining number ships until it reads from live subscriptions.
+
+Two things make this easy to get wrong:
+
+- **There is no 200-spot cap any more.** The founding offer is date-based
+  ($9.99 until Sep 1, $14.99 until Oct 1, $16.99 until Nov 1, $19.99 until
+  Dec 1, then $29.99). Nothing counts down, so "X of 200 remaining" is fiction
+  regardless of how accurately it is computed. If creative needs scarcity, the
+  honest version is temporal: "this rate until September 1".
+- The old `/review` tile computed `200 - leads` from localStorage — form fills,
+  not subscriptions, per browser. Replaced with a real count of active
+  subscriptions from the database.
+
+Nothing public shows a number today. Keep it that way unless it reads from
+`admin_review_counts()`.
+
 ## Things worth not re-learning
 
 **Deploys.** Bump the `?v=` on `style.css` / `app.js` / `activate.js` every
