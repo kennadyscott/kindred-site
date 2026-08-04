@@ -18,17 +18,17 @@
   h1 { font-family: 'Literata', Georgia, serif; font-weight: 500; font-size: 1.9rem; color: #FAF9FC; }
   .tag { font-size: .64rem; letter-spacing: .18em; text-transform: uppercase; color: #BE765F; margin-top: .4rem; font-weight: 700; }
   form { margin-top: 1.8rem; display: grid; gap: .7rem; }
-  input[type="password"] { font: inherit; font-size: 1rem; padding: .85rem 1.1rem; border-radius: 14px; border: 1.5px solid rgba(250,249,252,.25);
+  input { font: inherit; font-size: 1rem; padding: .85rem 1.1rem; border-radius: 14px; border: 1.5px solid rgba(250,249,252,.25);
           background: rgba(250,249,252,.08); color: #FAF9FC; text-align: center; outline: none; transition: border-color .15s; }
-  input[type="password"]::placeholder { color: rgba(239,231,234,.45); }
-  input[type="password"]:focus { border-color: #B8A3C4; }
+  input::placeholder { color: rgba(239,231,234,.45); }
+  input:focus { border-color: #B8A3C4; }
   button { font: inherit; font-weight: 600; font-size: .95rem; padding: .85rem; border-radius: 999px; border: none; cursor: pointer;
            background: #FAF9FC; color: #422448; transition: transform .14s; }
   button:hover { transform: translateY(-1px); }
   button:disabled { opacity: .55; cursor: wait; transform: none; }
   label.rem { display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: .8rem; color: rgba(239,231,234,.75); cursor: pointer; }
   label.rem input { accent-color: #B8A3C4; width: 15px; height: 15px; }
-  .err { font-size: .84rem; font-weight: 600; color: #E8C687; min-height: 1.3em; }
+  .err { font-size: .84rem; font-weight: 600; color: #E8C687; min-height: 1.3em; line-height: 1.4; }
   .fine { margin-top: 1.6rem; font-size: .72rem; color: rgba(239,231,234,.55); line-height: 1.6; }
 </style>
 </head>
@@ -42,28 +42,47 @@
   <h1>Kindred HQ</h1>
   <p class="tag">Therapy, matched to you</p>
   <form id="f">
-    <input type="password" id="pw" placeholder="Workspace password" autocomplete="current-password" autofocus>
+    <input type="email" id="em" placeholder="Your email" autocomplete="username" autofocus>
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
     <p class="err" id="err"></p>
-    <button type="submit" id="go">Unlock</button>
-    <label class="rem"><input type="checkbox" id="rem"> Keep me in on this device</label>
+    <button type="submit" id="go">Sign in</button>
+    <label class="rem"><input type="checkbox" id="rem" checked> Keep me signed in on this device</label>
   </form>
-  <p class="fine">Everything behind this door is encrypted. Ask Kennady or Desi for the password — it isn’t written down here, and that’s the point.</p>
+  <p class="fine">Your own account — the same one you use across Kindred. Nothing here is
+    shared, and access can be removed for one person without changing anything for the other.</p>
 </div>
+<script src="supabase.js"></script>
 <script>
 (async () => {
-  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-  const meta = await fetch('payload.enc').then(r => r.json());
+  const URL_ = "https://izukppxgoerqtustfbnk.supabase.co", ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk";
+  const err = document.getElementById('err');
+  const client = window.supabase.createClient(URL_, ANON, {
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'khq-auth' }
+  });
 
-  async function decryptWith(key) {
-    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(meta.iv) }, key, b64(meta.data));
-    return JSON.parse(new TextDecoder().decode(plain));
+  /* The app never sits on a public URL. Signing in earns a 60-second signed
+     link to it; the bucket policy refuses to issue one to anyone outside
+     hq_members, so a valid Kindred account is not by itself a way in. */
+  async function loadApp(token) {
+    const r = await fetch(URL_ + '/storage/v1/object/sign/hq-app/app.json', {
+      method: 'POST',
+      headers: { apikey: ANON, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 60 })
+    });
+    if (r.status === 400 || r.status === 403 || r.status === 404) return { denied: true };
+    if (!r.ok) return null;
+    const j = await r.json().catch(() => null);
+    const rel = j && (j.signedURL || j.signedUrl);
+    if (!rel) return null;
+    /* storage returns this relative in some versions, absolute in others */
+    const href = /^https?:/.test(rel) ? rel : URL_ + '/storage/v1' + (rel[0] === '/' ? '' : '/') + rel;
+    const app = await fetch(href).then(x => x.json()).catch(() => null);
+    /* never hand boot() something half-formed: it replaces the whole page, so
+       a truncated or unexpected response would blank the screen with no clue */
+    if (!app || typeof app.js !== 'string' || typeof app.html !== 'string' || typeof app.css !== 'string') return null;
+    return { app };
   }
-  async function deriveKey(pw) {
-    const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-    return crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: b64(meta.salt), iterations: meta.iter, hash: 'SHA-256' },
-      raw, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
-  }
+
   function boot(p) {
     document.getElementById('lock').remove();
     const lc = document.getElementById('lockcss'); if (lc) lc.remove();
@@ -72,38 +91,38 @@
     document.body.innerHTML = p.html;
     const sc = document.createElement('script'); sc.textContent = p.js; document.body.appendChild(sc);
   }
-  async function remember(key, persist) {
-    const raw = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', key))));
-    sessionStorage.setItem('khq-key', raw);
-    if (persist) localStorage.setItem('khq-key', raw);
-  }
 
-  /* silent unlock from a remembered key */
-  const stored = sessionStorage.getItem('khq-key') || localStorage.getItem('khq-key');
-  if (stored) {
-    try {
-      const key = await crypto.subtle.importKey('raw', b64(stored), 'AES-GCM', true, ['decrypt']);
-      boot(await decryptWith(key));
-      return;
-    } catch (e) {
-      sessionStorage.removeItem('khq-key'); localStorage.removeItem('khq-key');
-    }
+  /* already signed in on this device */
+  const { data } = await client.auth.getSession();
+  if (data && data.session) {
+    const got = await loadApp(data.session.access_token);
+    if (got && got.app) { boot(got.app); return; }
+    if (got && got.denied) err.textContent = 'That account does not have access to HQ.';
   }
 
   document.getElementById('f').addEventListener('submit', async e => {
     e.preventDefault();
-    const btn = document.getElementById('go'), err = document.getElementById('err');
-    btn.disabled = true; btn.textContent = 'Unlocking…'; err.textContent = '';
-    try {
-      const key = await deriveKey(document.getElementById('pw').value);
-      const payload = await decryptWith(key);   /* GCM auth fails on a wrong password */
-      await remember(key, document.getElementById('rem').checked);
-      boot(payload);
-    } catch (e2) {
-      err.textContent = 'That’s not it.';
-      btn.disabled = false; btn.textContent = 'Unlock';
-      document.getElementById('pw').select();
+    const btn = document.getElementById('go');
+    btn.disabled = true; btn.textContent = 'Signing in…'; err.textContent = '';
+    const { data: d, error } = await client.auth.signInWithPassword({
+      email: document.getElementById('em').value.trim(),
+      password: document.getElementById('pw').value
+    });
+    if (error || !d.session) {
+      err.textContent = 'That email and password don’t match.';
+      btn.disabled = false; btn.textContent = 'Sign in';
+      return;
     }
+    if (!document.getElementById('rem').checked) {
+      /* session should die with the tab */
+      window.addEventListener('pagehide', () => { try { localStorage.removeItem('khq-auth'); } catch (e) {} });
+    }
+    const got = await loadApp(d.session.access_token);
+    if (got && got.app) { boot(got.app); return; }
+    err.textContent = got && got.denied
+      ? 'Signed in, but this account isn’t on the HQ member list.'
+      : 'Signed in, but HQ didn’t load. Check your connection and try again.';
+    btn.disabled = false; btn.textContent = 'Sign in';
   });
 })();
 </script>
