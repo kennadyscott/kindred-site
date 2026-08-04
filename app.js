@@ -3,9 +3,20 @@
 /* ---------- mobile nav ---------- */
 const navToggle = document.querySelector('.nav-toggle');
 const mainNav = document.querySelector('.main-nav');
+navToggle.setAttribute('aria-controls', 'primary-nav');
 navToggle.addEventListener('click', () => {
   const open = mainNav.classList.toggle('open');
   navToggle.setAttribute('aria-expanded', open);
+  /* Move focus into the menu when it opens, and back to the button when it
+     closes -- a keyboard user was otherwise left behind the drawer. */
+  if (open) { const first = mainNav.querySelector('a'); if (first) first.focus(); }
+});
+/* Escape closes it, which is what every other disclosure on the web does. */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !mainNav.classList.contains('open')) return;
+  mainNav.classList.remove('open');
+  navToggle.setAttribute('aria-expanded', 'false');
+  navToggle.focus();
 });
 mainNav.addEventListener('click', e => {
   if (e.target.tagName === 'A') mainNav.classList.remove('open');
@@ -123,9 +134,15 @@ function showTherapist(i) {
   }
   dots.forEach((d, j) => {
     d.classList.toggle('active', i === j);
+    d.setAttribute('aria-selected', i === j ? 'true' : 'false');
+    d.setAttribute('role', 'tab');
     if (i === j) d.setAttribute('aria-current', 'true');
     else d.removeAttribute('aria-current');
   });
+  /* Announce the change: without this a screen-reader user pressing the arrows
+     hears nothing, because the card updates silently. */
+  const live = document.getElementById('match-live');
+  if (live) live.textContent = `Showing ${t.name}, therapist ${i + 1} of ${THERAPISTS.length}`;
   const countEl = document.getElementById('match-count');
   if (countEl) countEl.textContent = `${i + 1} of ${THERAPISTS.length}`;
   rotateIdx = i;                    // arrows and auto-rotate share one position
@@ -191,3 +208,4 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     }
   });
 });
+

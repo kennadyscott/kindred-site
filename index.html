@@ -8,12 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=32">
+<link rel="stylesheet" href="style.css?v=34">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
 
 <!-- ======================= HEADER ======================= -->
+<a class="skip-link" href="#top">Skip to content</a>
 <header class="site-header">
   <a class="brand" href="#top" aria-label="Kindred home">
     <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
@@ -27,7 +28,7 @@
     </span>
   </a>
 
-  <nav class="main-nav" aria-label="Primary">
+  <nav class="main-nav" id="primary-nav" aria-label="Primary">
     <a href="start-here.html">Start Here</a>
     <a href="understand-yourself.html">Understand Yourself</a>
     <a href="feel-better.html">Feel Better</a>
@@ -51,7 +52,7 @@
   </button>
 </header>
 
-<main id="top">
+<main id="top" tabindex="-1">
 
 <!-- ======================= HERO ======================= -->
 <section class="hero">
@@ -102,6 +103,17 @@
         <a data-app-link class="btn btn-dark" href="https://app.kindredtherapymatch.com" target="_blank" rel="noopener">Find my Kindred Matches</a>
         <a class="btn btn-outline home-therapist-cta" href="therapists.html">I'm a Therapist — Build my Profile</a>
       </div>
+      <!-- The reassurance existed further down the page; it belongs where the
+           decision is made. Numbers are real: the questionnaire is 8-10 steps
+           depending on your answers, and the client side needs no account. -->
+      <p class="match-expect">About 10 questions, three or four minutes. Free, and you don&rsquo;t need an account to start.</p>
+      <!-- Vetting is what a careful person wants before trusting a match, and it
+           is now true rather than aspirational. -->
+      <ul class="match-vetting">
+        <li><strong>Every licence is checked by hand</strong> against the issuing state board &mdash; one per state they practise in.</li>
+        <li><strong>Every therapist verifies their identity</strong> through Stripe before a profile can go live.</li>
+        <li><strong>Matched by fit, never by fee.</strong> Membership makes a therapist matchable; it can never move them up your list.</li>
+      </ul>
     </div>
 
     <div class="match-card" id="match-card">
@@ -130,7 +142,8 @@
         </ul>
         <a data-app-link class="pillar-link" href="https://app.kindredtherapymatch.com" target="_blank" rel="noopener">View profile <span aria-hidden="true">→</span></a>
       </div>
-      <div class="match-controls">
+      <p class="sr-only" id="match-live" role="status" aria-live="polite"></p>
+        <div class="match-controls">
         <button class="match-arrow" id="match-prev" aria-label="Previous therapist">&#8249;</button>
         <div class="match-dots" role="tablist" aria-label="Featured therapists">
           <button class="dot active" data-idx="0" aria-label="Therapist 1"></button>
@@ -355,8 +368,9 @@
 <section class="mkt-band">
   <div class="mkt-inner">
     <div>
-      <h2>Make Kindred yours.</h2>
-      <p>Save what helps. Come back when you need it. My Kindred is a quiet place to keep what matters.</p>
+      <h2>A private place to keep what helps.</h2>
+      <p>The tool that worked at 2am. The article you want to reread. The three therapists you&rsquo;re still thinking about. My Kindred holds them, so you don&rsquo;t have to remember where you found them.</p>
+      <p class="mkt-benefit">Everything on Kindred works without one &mdash; nothing here is gated. Make an account only if you want your things to still be here next time.</p>
       <div class="mkt-ctas">
         <a class="btn btn-dark" href="my-kindred.html">Create My Kindred</a>
         <a class="btn btn-outline" href="find-a-therapist.html">Find a therapist</a>
@@ -577,7 +591,7 @@
 })();
 </script>
 
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 <!-- ======================= SITE SEARCH ======================= -->
 <style>
   .ksearch-overlay {
@@ -688,5 +702,6 @@
 <!-- Persistent route to help. Someone in crisis should not have to reach the
      footer to find 988. Quiet by default so it never nags. -->
 <a class="crisis-mini" href="tel:988" aria-label="In crisis? Call or text 988"><span aria-hidden="true">&#9679;</span> In crisis? Call 988</a>
+<script src="ui.js?v=1" defer></script>
 </body>
 </html>

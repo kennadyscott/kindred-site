@@ -1735,3 +1735,52 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
    next. */
 .app-band + section, .moments + section { border-top: 1px solid var(--line); }
 .app-note { margin-top: .8rem; font-size: .84rem; color: var(--ink-soft); max-width: 42ch; }
+
+/* ---------------------------------------------------------------------------
+   Accessibility plumbing. The footer links to an accessibility statement, so
+   these are the minimum that makes it true.
+--------------------------------------------------------------------------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Nothing let a keyboard user past five nav links to reach the page. */
+.skip-link {
+  position: absolute; left: 12px; top: -60px; z-index: 100;
+  background: var(--aubergine); color: #fff; padding: .7rem 1.1rem;
+  border-radius: 0 0 10px 10px; font-weight: 600; font-size: .9rem;
+  transition: top .15s ease;
+}
+.skip-link:focus { top: 0; }
+main:focus { outline: none; }
+#top:focus { outline: none; }
+
+/* ---------- back to top ---------- */
+.to-top {
+  position: fixed; right: 14px; bottom: 62px; z-index: 55;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--paper); color: var(--aubergine);
+  border: 1px solid var(--line); box-shadow: 0 8px 20px rgba(43,34,51,.16);
+  cursor: pointer; font-size: 1.05rem; line-height: 1;
+  display: grid; place-items: center;
+  opacity: 0; visibility: hidden; transform: translateY(6px);
+  transition: opacity .2s ease, transform .2s ease, visibility .2s;
+}
+.to-top.is-on { opacity: 1; visibility: visible; transform: none; }
+.to-top:hover { border-color: var(--aubergine); background: var(--cream-2); }
+.to-top:focus-visible { outline: 2px solid var(--aubergine); outline-offset: 3px; }
+
+/* ---------- expectations + vetting at the point of action ---------- */
+.match-expect { margin-top: .9rem; font-size: .86rem; color: var(--ink-soft); }
+.match-vetting { list-style: none; margin: 1.1rem 0 0; padding: 0; display: grid; gap: .55rem; max-width: 46ch; }
+.match-vetting li { position: relative; padding-left: 1.5rem; font-size: .87rem; line-height: 1.55; color: var(--ink-soft); }
+.match-vetting li::before {
+  content: '\2713'; position: absolute; left: 0; top: -1px;
+  color: var(--moss); font-weight: 700;
+}
+.match-vetting strong { color: var(--ink); font-weight: 600; }
+.mkt-benefit { margin-top: .7rem; font-size: .88rem; color: var(--ink-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
