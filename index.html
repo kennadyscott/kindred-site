@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=38">
+<link rel="stylesheet" href="style.css?v=40">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
 <body>
@@ -34,7 +34,7 @@
     <a href="feel-better.html">Feel Better</a>
     <a href="life-relationships.html">Life &amp; Relationships</a>
     <a href="therapy.html">Therapy</a>
-    <a class="nav-cta nav-cta-dark" href="index.html#find-therapist">Find a Therapist</a>
+    <a class="nav-cta nav-cta-dark" data-app-link="match" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
   </nav>
 
   <div class="header-actions">
@@ -42,7 +42,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     </button>
     
-    <a class="btn btn-dark btn-sm" href="#find-therapist">Find a Therapist</a>
+    <a class="btn btn-dark btn-sm" data-app-link="match" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
     <span class="header-sep" aria-hidden="true"></span>
     <a class="nav-pro" href="therapists.html">For Therapists</a>
   </div>
@@ -65,7 +65,7 @@
       </h1>
       <p class="hero-sub">Articles, tools, and real support for your mind, your daily life, and your relationships.</p>
       <div class="hero-ctas">
-        <a data-app-link="match" class="btn btn-dark" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Match with a Therapist</a>
+        <a data-app-link="match" class="btn btn-dark" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
         <a class="btn btn-outline" href="start-here.html">Start Where You Are</a>
       </div>
       <p class="hero-trust">
@@ -162,35 +162,35 @@
 
   <div class="mood-grid" role="group" aria-label="How are you feeling today?">
     <button class="mood" data-mood="Overwhelmed" style="--chip:#F2DFD6">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 26c3-9 8-14 14-13s9 6 7 11-8 7-12 4 0-10 6-10 10 4 9 9-6 8-11 7"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 26c3-9 8-14 14-13s9 6 7 11-8 7-12 4 0-10 6-10 10 4 9 9-6 8-11 7"/></svg>
       <span>Overwhelmed</span>
     </button>
     <button class="mood" data-mood="Anxious" style="--chip:#E9E1EE">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 18c4-4 8-4 12 0s8 4 12 0 6-3 8-1M8 26c4-4 8-4 12 0s8 4 12 0 6-3 8-1M8 34c4-4 8-4 12 0s8 4 12 0 6-3 8-1"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 18c4-4 8-4 12 0s8 4 12 0 6-3 8-1M8 26c4-4 8-4 12 0s8 4 12 0 6-3 8-1M8 34c4-4 8-4 12 0s8 4 12 0 6-3 8-1"/></svg>
       <span>Anxious</span>
     </button>
     <button class="mood" data-mood="Low" style="--chip:#E6E4EC">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30a8 8 0 1 1 2-15.8A10 10 0 0 1 35 17a7 7 0 0 1-1 13.9z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30a8 8 0 1 1 2-15.8A10 10 0 0 1 35 17a7 7 0 0 1-1 13.9z"/></svg>
       <span>Low</span>
     </button>
     <button class="mood" data-mood="Stuck" style="--chip:#E3E8E1">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="24" cy="24" r="4"/><circle cx="24" cy="24" r="10"/><circle cx="24" cy="24" r="16"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="24" cy="24" r="4"/><circle cx="24" cy="24" r="10"/><circle cx="24" cy="24" r="16"/></svg>
       <span>Stuck</span>
     </button>
     <button class="mood" data-mood="Disconnected" style="--chip:#F6EBD8">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="15" r="6"/><path d="M12 38c1-8 6-12 12-12s11 4 12 12"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="15" r="6"/><path d="M12 38c1-8 6-12 12-12s11 4 12 12"/></svg>
       <span>Disconnected</span>
     </button>
     <button class="mood" data-mood="Exhausted" style="--chip:#F3E4C9">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="16" width="28" height="16" rx="4"/><path d="M36 21h4v6h-4"/><rect x="13" y="21" width="7" height="6" rx="1.5" fill="currentColor" stroke="none" opacity=".8"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="16" width="28" height="16" rx="4"/><path d="M36 21h4v6h-4"/><rect x="13" y="21" width="7" height="6" rx="1.5" fill="currentColor" stroke="none" opacity=".8"/></svg>
       <span>Exhausted</span>
     </button>
     <button class="mood" data-mood="Hurting" style="--chip:#F0DBD9">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 39C15 32 9 26.5 9 20.4 9 16 12.4 13 16.5 13c3 0 5.7 1.5 7.5 3.9 1.8-2.4 4.5-3.9 7.5-3.9 4.1 0 7.5 3 7.5 7.4C39 26.5 33 32 24 39z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 39C15 32 9 26.5 9 20.4 9 16 12.4 13 16.5 13c3 0 5.7 1.5 7.5 3.9 1.8-2.4 4.5-3.9 7.5-3.9 4.1 0 7.5 3 7.5 7.4C39 26.5 33 32 24 39z"/></svg>
       <span>Hurting</span>
     </button>
     <button class="mood" data-mood="Not sure" style="--chip:#ECE5EF">
-      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="16"/><path d="M19 19a5 5 0 0 1 9.6 2c0 3-4.6 3.4-4.6 6.5"/><circle cx="24" cy="32.5" r=".5" fill="currentColor"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="16"/><path d="M19 19a5 5 0 0 1 9.6 2c0 3-4.6 3.4-4.6 6.5"/><circle cx="24" cy="32.5" r=".5" fill="currentColor"/></svg>
       <span>Not sure</span>
     </button>
   </div>
@@ -223,7 +223,7 @@
     <h3 class="pillar-title t-moss">Understand Yourself</h3>
     <p class="pillar-desc">Explore what you're feeling and why. Learn with articles, guides, and expert answers.</p>
     <ul class="pillar-list">
-      <li>Anxiety</li><li>Burnout</li><li>Self-esteem</li><li>Trauma</li><li>And more</li>
+      <li>Anxiety</li><li>Burnout</li><li>Self-esteem</li><li>Trauma</li><li>People pleasing</li>
     </ul>
     <a class="pillar-link" href="understand-yourself.html">Explore topics <span aria-hidden="true">→</span></a>
   </article>
@@ -250,7 +250,7 @@
     <h3 class="pillar-title t-lilac">Feel Better</h3>
     <p class="pillar-desc">Tools and exercises to support your mind in the moments that matter.</p>
     <ul class="pillar-list">
-      <li>Calm your mind</li><li>Manage stress</li><li>Sleep better</li><li>Build confidence</li><li>And more</li>
+      <li>Calm your mind</li><li>Manage stress</li><li>Sleep better</li><li>Build confidence</li><li>Stop a spiral</li>
     </ul>
     <a class="pillar-link" href="feel-better.html">Find what helps <span aria-hidden="true">→</span></a>
   </article>
@@ -273,7 +273,7 @@
     <h3 class="pillar-title t-clay">Life &amp; Relationships</h3>
     <p class="pillar-desc">Support for the relationships and real life you're navigating.</p>
     <ul class="pillar-list">
-      <li>Relationships</li><li>Family</li><li>Work &amp; life</li><li>Transitions</li><li>And more</li>
+      <li>Relationships</li><li>Family</li><li>Work &amp; life</li><li>Transitions</li><li>Boundaries</li>
     </ul>
     <a class="pillar-link" href="life-relationships.html">Get support <span aria-hidden="true">→</span></a>
   </article>
@@ -299,7 +299,7 @@
     <h3 class="pillar-title t-aubergine">Therapy</h3>
     <p class="pillar-desc">Learn about therapy, approaches, and how to find the right fit.</p>
     <ul class="pillar-list">
-      <li>Do I need therapy?</li><li>How it works</li><li>Types of therapy</li><li>FAQs</li><li>And more</li>
+      <li>Do I need therapy?</li><li>How it works</li><li>Types of therapy</li><li>What it costs</li><li>The quiet worries</li>
     </ul>
     <a class="pillar-link" href="therapy.html">Learn more <span aria-hidden="true">→</span></a>
   </article>
@@ -423,7 +423,7 @@
 
     <nav class="footer-col" aria-label="About">
       <h4>About</h4>
-      <a href="about.html">About Us</a><a href="about.html#values">Our Values</a><a href="find-a-therapist.html">Find a therapist</a><a href="therapists.html">For Therapists</a><a href="about.html#careers">Careers</a>
+      <a href="about.html">About Us</a><a href="about.html#values">Our Values</a><a href="find-a-therapist.html">For Clients</a><a href="therapists.html">For Therapists</a><a href="about.html#careers">Careers</a>
     </nav>
     <nav class="footer-col" aria-label="Support">
       <h4>Support</h4>
@@ -557,8 +557,14 @@
         with no way back to the buttons.
      2. `inert` on everything else, which also hides the page behind from
         screen readers. Browsers without `inert` fall back to the manual trap. */
-  const outside = [...document.body.children].filter(el => el !== overlay);
   const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  /* Collected when the modal opens, not when this script parses. ui.js is
+     deferred and appends the back-to-top button after this runs, and the
+     crisis link and search overlay land later too -- computing the list early
+     left three focusable things behind an overlay that cannot be closed.
+     Tab could not reach them (the trap below holds), but a screen reader
+     browsing by virtual cursor still could. */
+  let outside = [];
 
   const trap = e => {
     if (e.key === 'Tab') {
@@ -575,6 +581,7 @@
 
   const open = () => {
     overlay.hidden = false;
+    outside = [...document.body.children].filter(el => el !== overlay);
     document.body.classList.add('kaud-locked');
     document.documentElement.classList.add('kaud-locked');
     outside.forEach(el => el.setAttribute('inert', ''));
@@ -606,7 +613,7 @@
 })();
 </script>
 
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 <!-- ======================= SITE SEARCH ======================= -->
 <style>
   .ksearch-overlay {
@@ -711,8 +718,8 @@
 })();
 </script>
 
-<script src="site.js?v=8"></script>
-<script src="analytics.js?v=10"></script>
+<script src="site.js?v=9"></script>
+<script src="analytics.js?v=12"></script>
 <!-- Persistent route to help. Someone in crisis should not have to reach the
      footer to find 988. Quiet by default so it never nags. -->
 <a class="crisis-mini" href="tel:988" aria-label="In crisis? Call or text 988"><span aria-hidden="true">&#9679;</span> In crisis? Call 988</a>

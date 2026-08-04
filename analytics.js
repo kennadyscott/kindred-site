@@ -66,8 +66,11 @@
     ['#checkin-cta', 'home_checkin'],
     ['.flow-match-cta .btn', 'checkin_match_cta'],
     ['.sh-close-ctas a[target="_blank"]', 'starthere_close_match'],
-    ['.header-actions a[href$="#find-therapist"]', 'header_find_therapist'],
-    ['.main-nav .nav-cta-dark[href$="#find-therapist"]', 'header_find_therapist'], /* same CTA, drawer position */
+    /* Keyed on data-app-link, not the href: these used to end in
+       #find-therapist and now point at the app, so an href selector would
+       silently stop counting the site's most-clicked button. */
+    ['.header-actions a[data-app-link]', 'header_find_therapist'],
+    ['.main-nav .nav-cta-dark', 'header_find_therapist'], /* same CTA, drawer position */
     ['.match-onramp .btn', 'content_match_cta'],
     ['.uy-nudge-link', 'uy_midpage_match'],
     ['.match-copy .btn-dark', 'home_find_matches'],
