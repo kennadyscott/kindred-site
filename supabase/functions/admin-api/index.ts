@@ -96,15 +96,18 @@ Deno.serve(async (req) => {
         return json({ ok: true, counts: await rpc('admin_review_counts', {}) });
 
       case 'queue': {
-        const filter = ['pending', 'verified', 'all'].includes(body.filter) ? body.filter : 'pending';
+        const filter = ['pending', 'verified', 'rejected', 'all'].includes(body.filter) ? body.filter : 'pending';
         return json({ ok: true, rows: await rpc('admin_review_queue', { p_filter: filter }) });
       }
 
       case 'verify_license': {
         if (!body.email) return json({ error: 'email_required' }, 400);
+        if (!body.state) return json({ error: 'state_required' }, 400);
+        // Per state: a therapist licensed in TX and CA holds two licences, and
+        // verifying one must never vouch for the other.
         const result = await rpc('verify_therapist_license', {
           p_email: String(body.email),
-          p_license: body.license ? String(body.license) : null,
+          p_state: String(body.state),
           p_verifier: email,          // recorded as who approved it
         });
         console.log('license verified', { by: email, subject: body.email, result });
@@ -113,23 +116,15 @@ Deno.serve(async (req) => {
 
       case 'reject_license': {
         if (!body.email) return json({ error: 'email_required' }, 400);
+        if (!body.state) return json({ error: 'state_required' }, 400);
         if (!body.reason || !String(body.reason).trim()) return json({ error: 'reason_required' }, 400);
         const result = await rpc('reject_therapist_license', {
           p_email: String(body.email),
+          p_state: String(body.state),
           p_reason: String(body.reason),
           p_verifier: email,
         });
         console.log('license REJECTED', { by: email, subject: body.email, result });
-        return json({ ok: true, result });
-      }
-
-      case 'unverify_license': {
-        if (!body.email) return json({ error: 'email_required' }, 400);
-        const result = await rpc('unverify_therapist_license', {
-          p_email: String(body.email),
-          p_reason: body.reason ? String(body.reason) : `unverified by ${email}`,
-        });
-        console.log('license UNverified', { by: email, subject: body.email, result });
         return json({ ok: true, result });
       }
 

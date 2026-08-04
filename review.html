@@ -115,6 +115,16 @@
   .btn-verify { background:#422448; color:#fff; border:none; }
   .btn-unverify { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
   .btn-deny { background:#fff; color:#a8443a; border:1px solid #e3c4bd; }
+  .rev-lics { margin-top: 10px; }
+  .rev-lic { display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+             padding: 9px 11px; border: 1px solid #F2E7DA; border-radius: 11px; margin-bottom: 7px; }
+  .rev-lic.is-ok      { border-color:#A8C79E; background:#F7FBF6; }
+  .rev-lic.is-denied  { border-color:#C0392B; background:#FDF3F2; }
+  .rev-lic-state { font-weight:700; font-size:12.5px; color:#422448;
+                   background:#EDE5EF; border-radius:6px; padding:2px 9px; }
+  .rev-lic-num { font-size:13.5px; color:#3a2c40; font-variant-numeric: tabular-nums; }
+  .rev-lic-actions { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  .rev-lic .rev-rejected { flex-basis:100%; margin:6px 0 0; }
   .rev-rejected { font-size:13px; color:#912B21; background:#FAE6E3; border-radius:10px;
                   padding:8px 12px; margin:10px 0 0; border-left:3px solid #C0392B; }
   .btn-board { background:#F6EFE6; color:#422448; border:1px solid #EBDAC9; }
@@ -411,62 +421,58 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
       return;
     }
     rowsEl.innerHTML = rows.map(r => {
-      const lic = r.license_verified
-        ? '<span class="rev-chip chip-ok">&#10003; licence verified</span>'
-        : r.rejected_at
-          ? '<span class="rev-chip chip-denied">&#10007; licence denied</span>'
-          : '<span class="rev-chip chip-wait">licence pending</span>';
+      const lics = Array.isArray(r.licenses) ? r.licenses : [];
+      const anyDenied  = lics.some(l => l.rejected_at);
+      const anyPending = lics.some(l => !l.verified_at && !l.rejected_at);
       const id = r.identity_verified
         ? '<span class="rev-chip chip-ok">&#10003; ID verified</span>'
         : '<span class="rev-chip chip-wait">ID pending</span>';
       const hidden = r.published && !(r.license_verified && r.identity_verified);
-      const denied = !!r.rejected_at;
       const live = r.license_verified && r.identity_verified;
+
+      /* One line per state. A therapist licensed in TX and CA holds two
+         different licences, and verifying one must never vouch for the other. */
+      const licRows = lics.length ? lics.map(l => {
+        const state = l.verified_at ? 'ok' : l.rejected_at ? 'denied' : 'pending';
+        const label = l.verified_at ? '&#10003; verified' : l.rejected_at ? '&#10007; denied' : 'pending';
+        const board = BOARDS[l.state]
+          ? `<a class="btn-board" target="_blank" rel="noopener" href="${BOARDS[l.state]}">${l.state} board &#8599;</a>` : '';
+        return `<div class="rev-lic is-${state}">
+          <span class="rev-lic-state">${esc(l.state)}</span>
+          <span class="rev-lic-num">${esc(l.number)}</span>
+          <span class="rev-chip chip-${state === 'ok' ? 'ok' : state === 'denied' ? 'denied' : 'wait'}">${label}</span>
+          <span class="rev-lic-actions">
+            ${board}
+            ${l.verified_at ? '' : `<button class="btn-verify" data-verify="${esc(r.email)}" data-state="${esc(l.state)}">Verify</button>`}
+            ${l.verified_at ? '' : `<button class="btn-deny" data-deny="${esc(r.email)}" data-state="${esc(l.state)}">Deny</button>`}
+          </span>
+          ${l.rejected_at && l.rejected_reason ? `<p class="rev-rejected">${esc(l.rejected_reason)}</p>` : ''}
+        </div>`;
+      }).join('') : '<p class="rev-empty">No licenses added yet.</p>';
+
       return `
-        <div class="rev-row ${denied ? 'is-denied' : live ? 'is-live' : hidden ? 'is-urgent' : ''}">
+        <div class="rev-row ${anyDenied ? 'is-denied' : live ? 'is-live' : hidden ? 'is-urgent' : ''}">
           <div class="rev-top">
             <div><span class="rev-name">${esc(r.name) || '(no name)'}</span>
                  <span class="rev-email">${esc(r.email)}</span></div>
-            <div>${lic}${id}${hidden ? '<span class="rev-chip chip-alert">paying, hidden</span>' : ''}</div>
+            <div>${id}${hidden ? '<span class="rev-chip chip-alert">paying, hidden</span>' : ''}</div>
           </div>
-          <p class="rev-meta">Licence <strong>${esc(r.license_number) || '(none)'}</strong>
-             &middot; states ${esc((r.license_states || []).join(', ')) || '(none)'}
-             ${r.license_verified_at ? `&middot; verified ${esc(String(r.license_verified_at).slice(0, 10))}` : ''}</p>
-          ${r.rejected_at ? `<p class="rev-rejected">Rejected ${esc(String(r.rejected_at).slice(0,10))} &middot; ${esc(r.rejected_reason)}</p>` : ''}
-          <div class="rev-actions">
-            ${boardLink(r.license_states)}
-            ${r.license_verified
-              ? `<button class="btn-unverify" data-unverify="${esc(r.email)}">Un-verify licence</button>`
-              : `<button class="btn-verify" data-verify="${esc(r.email)}" data-lic="${esc(r.license_number)}">Mark licence verified</button>
-                 <button class="btn-deny" data-deny="${esc(r.email)}">Deny</button>`}
-          </div>
+          <div class="rev-lics">${licRows}</div>
         </div>`;
     }).join('');
 
-    rowsEl.querySelectorAll('[data-verify]').forEach(b => b.addEventListener('click', async () => {
-      b.disabled = true; b.textContent = 'Verifying...';
-      const out = await adminApi({ action: 'verify_license', email: b.dataset.verify, license: b.dataset.lic });
-      if (out.error) { b.disabled = false; b.textContent = 'Failed - retry'; return; }
-      loadReview();
-    }));
     rowsEl.querySelectorAll('[data-deny]').forEach(b => b.addEventListener('click', async () => {
       /* A reason is required, and the therapist sees it -- they have paid, and
          "denied, no explanation" is the worst version of this. */
-      const reason = prompt('Why is this licence being denied?\n\nThe therapist will see this, so write something they can act on.');
+      const reason = prompt(`Why is the ${b.dataset.state} licence being denied?\n\nThe therapist will see this, so write something they can act on.`);
       if (reason === null) return;
       if (!reason.trim()) { alert('A reason is required.'); return; }
       b.disabled = true; b.textContent = 'Denying...';
-      const out = await adminApi({ action: 'reject_license', email: b.dataset.deny, reason });
+      const out = await adminApi({ action: 'reject_license', email: b.dataset.deny, state: b.dataset.state, reason });
       if (out.error) { b.disabled = false; b.textContent = 'Failed - retry'; return; }
       loadReview();
     }));
-    rowsEl.querySelectorAll('[data-unverify]').forEach(b => b.addEventListener('click', async () => {
-      if (!confirm('Un-verify this licence? They will stop appearing to clients immediately.')) return;
-      b.disabled = true;
-      const out = await adminApi({ action: 'unverify_license', email: b.dataset.unverify });
-      if (out.error) { b.disabled = false; return; }
-      loadReview();
-    }));
+
   }
 
   document.querySelectorAll('.adm-tab').forEach(t => t.addEventListener('click', () => {
