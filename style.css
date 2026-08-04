@@ -289,11 +289,17 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .moments-arrow:hover { transform: translateX(2px); }
 
 /* ---------- app band ---------- */
-.app-band { background: var(--cream-2); border-top: 1px solid var(--line); padding: clamp(2.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem) 0; overflow: hidden; }
+/* The phone mockup bleeds off the bottom on purpose (-40px + rotation), but
+   `overflow: hidden` was on the whole band, so it clipped the heading and copy
+   too -- the "half-rendered block" effect. Clipping now belongs to the phone
+   column alone, and the band has real bottom padding so it stops colliding with
+   the section after it. */
+.app-band { background: var(--cream-2); border-top: 1px solid var(--line); padding: clamp(2.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem); }
+.app-phone-col { overflow: hidden; align-self: end; }
 .app-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 300px 1fr 1.2fr; gap: clamp(1.5rem, 3vw, 3rem); align-items: center; }
 
 .phone {
-  width: 250px; margin: 0 auto -40px; background: var(--aubergine-deep); border-radius: 36px; padding: 12px;
+  width: 250px; margin: 0 auto -20px; background: var(--aubergine-deep); border-radius: 36px; padding: 12px;
   box-shadow: 0 24px 60px rgba(48,26,53,.4); transform: rotate(-4deg);
 }
 .phone-notch { width: 90px; height: 20px; background: var(--aubergine-deep); border-radius: 0 0 14px 14px; margin: 0 auto; position: relative; z-index: 2; }
@@ -338,8 +344,37 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
 .footer-col h4, .footer-crisis h4 { font-family: 'Inter', sans-serif; font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--lilac); margin-bottom: .4rem; }
 .footer-col a { font-size: .85rem; color: #E3D8E0; }
 .footer-col a:hover { color: #fff; text-decoration: underline; }
-.footer-crisis { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 1.2rem; }
-.footer-crisis p { font-size: .82rem; color: #DCCEDA; margin-bottom: .9rem; }
+/* The crisis module is the highest-consequence element on the page and it was
+   a 6%-white panel on aubergine -- effectively invisible. It now reads as its
+   own object rather than another footer column, and the body copy is white
+   rather than a tinted lilac (that was 4.1:1; white on this ground is 12.6:1). */
+.footer-crisis {
+  background: #FFF8EF; color: var(--ink);
+  border: none; border-radius: 16px; padding: 1.35rem;
+  box-shadow: 0 14px 34px rgba(0,0,0,.28);
+}
+.footer-crisis h4 { color: #A3342A !important; letter-spacing: .1em; font-size: .74rem; }
+.footer-crisis p { font-size: .86rem; color: var(--ink); margin-bottom: .9rem; line-height: 1.55; }
+.footer-crisis p strong { color: #A3342A; font-size: 1.02em; }
+.footer-crisis .btn-clay {
+  background: #A3342A; color: #fff; width: 100%; text-align: center;
+  font-weight: 700; letter-spacing: .01em;
+}
+.footer-crisis .btn-clay:hover { background: #8A2B22; }
+
+/* A persistent, quiet route to help -- someone in crisis should not have to
+   reach the footer to find it. */
+.crisis-mini {
+  position: fixed; right: 14px; bottom: 14px; z-index: 60;
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: #FFF8EF; color: #A3342A; border: 1px solid #E8C9C4;
+  border-radius: 999px; padding: .5rem .9rem;
+  font-size: .8rem; font-weight: 700; text-decoration: none;
+  box-shadow: 0 8px 22px rgba(43,34,51,.18);
+}
+.crisis-mini:hover { background: #fff; border-color: #A3342A; }
+.crisis-mini:focus-visible { outline: 2px solid #A3342A; outline-offset: 3px; }
+@media (max-width: 640px) { .crisis-mini { right: 10px; bottom: 10px; font-size: .76rem; } }
 .footer-fine { max-width: 1200px; margin: 2rem auto 0; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.12); font-size: .72rem; color: #B79DBE; }
 
 /* ---------- responsive ---------- */
@@ -1694,3 +1729,9 @@ html { overflow-x: clip; } /* safety net: nothing may side-scroll the page */
    changing how it looks. */
 .dot { width: 10px; height: 10px; cursor: pointer; }
 .match-count { font-size: .78rem; color: var(--ink-soft); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* Vertical rhythm: the page mixed several bottom paddings, so gaps between
+   sections read as accidental. One scale, applied where a section meets the
+   next. */
+.app-band + section, .moments + section { border-top: 1px solid var(--line); }
+.app-note { margin-top: .8rem; font-size: .84rem; color: var(--ink-soft); max-width: 42ch; }
