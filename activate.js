@@ -18,13 +18,26 @@
         founding discounts ride on top of it, which is what makes the step-up
         to $29.99 automatic.)
      2. Product catalog → Coupons → New coupon. Make FOUR, each with
-        Duration = "Multiple months" = 12, and a "Redeem by" date:
+        Duration = "Multiple months" = 13, and a "Redeem by" date:
              $20.00 off → $9.99/mo   · redeem by Sep 1
              $15.00 off → $14.99/mo  · redeem by Oct 1
              $13.00 off → $16.99/mo  · redeem by Nov 1
              $10.00 off → $19.99/mo  · redeem by Dec 1
         The Redeem-by dates are what actually enforce the ladder, since the
         promo-code box is visible at checkout.
+
+        WHY 13 AND NOT 12. Stripe starts the coupon clock when the
+        subscription is CREATED, not at the first payment. On the 30-day
+        trial link that is day 0 of the trial, so a 12-month coupon runs out
+        after only 11 paid invoices. 13 gives the trial cohort a full 12
+        months of paying the founding rate, and gives everyone else 13 --
+        which is why the page still promises 12. Under-promise.
+
+        COUPONS ARE IMMUTABLE. Stripe lets you edit a coupon's name and
+        metadata and nothing else -- not duration, not amount. Changing 12 to
+        13 means NEW coupons and NEW promotion codes; the old ones stay valid
+        for anyone already on them, which is correct, since a live discount
+        should never be shortened underneath someone.
      3. Create a PROMOTION CODE for each coupon (FOUNDINGSEPT, FOUNDINGOCT,
         FOUNDINGNOV, FOUNDINGDEC) and put them in PRICING_TIERS below.
      4. Payment links → New → the $29.99/month price → tick "Allow promotion
