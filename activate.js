@@ -67,7 +67,7 @@ const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
      4. Leave "collect payment method" ON, or nothing charges at day 31
      5. Paste the link here. Until then the offer falls back to the normal
         founding flow rather than showing a dead button. */
-const PAYMENT_LINK_TRIAL = '';
+const PAYMENT_LINK_TRIAL = 'https://buy.stripe.com/fZu6oH1B8cyP4pZ6hNfjG01';
 const TRIAL_DAYS = 30;
 
 /* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
