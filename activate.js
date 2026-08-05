@@ -44,6 +44,32 @@
    done with promo codes rather than five separate links. */
 const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
 
+/* ---- 30 days free, for outreach -------------------------------------------
+   Stripe applies ONE promotion code per checkout, and the founding tier
+   already uses it. So a "first month free" coupon cannot be stacked on top of
+   FOUNDINGSEPT -- one would replace the other.
+
+   A free trial is not a promotion code, it is a property of the payment link,
+   so the two compose. This is the SAME $29.99 price and the SAME tier promo
+   code, on a second link that carries a 30-day trial:
+
+       days 1-30    free
+       months 1-12  the founding rate they'd have got anyway
+       month 13+    $29.99
+
+   Reached by ?offer=trial30, so it is only ever what you send in outreach --
+   the public activate page is untouched.
+
+   SETUP (Stripe -> Payment links -> New):
+     1. Same $29.99/month price as the link above
+     2. Tick "Allow promotion codes"  (the founding code still has to apply)
+     3. Under Subscription options, set a free trial of 30 days
+     4. Leave "collect payment method" ON, or nothing charges at day 31
+     5. Paste the link here. Until then the offer falls back to the normal
+        founding flow rather than showing a dead button. */
+const PAYMENT_LINK_TRIAL = '';
+const TRIAL_DAYS = 30;
+
 /* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
    at a coupon set to "Multiple months / 12" so the rate is locked for a year
    and then steps up to $29.99 automatically.
@@ -59,6 +85,10 @@ const FOUNDING_LOCK_MONTHS = 12;
 
 (function initActivate() {
   const now = new Date();
+  /* Outreach offer. Falls back silently if the trial link isn't configured
+     yet, so a half-finished setup can never produce a broken checkout. */
+  const wantsTrial = new URLSearchParams(location.search).get('offer') === 'trial30';
+  const trial = wantsTrial && !!PAYMENT_LINK_TRIAL;
   const idx = PRICING_TIERS.findIndex(t => now < t.until);
   const founding = idx !== -1;
   const tier = founding ? PRICING_TIERS[idx] : null;
@@ -74,7 +104,28 @@ const FOUNDING_LOCK_MONTHS = 12;
   const price = document.getElementById('kt-offer-price');
   const terms = document.getElementById('kt-offer-terms');
 
-  if (founding) {
+  if (trial) {
+    /* Lead with the free month, but never hide what happens after it -- the
+       whole point of the offer is that the price afterwards is already good. */
+    badge.textContent = `★ ${TRIAL_DAYS} days free`;
+    /* The span is inline with no margin -- it works for `$9.99<span>/month`
+       because a slash needs no space, and renders "Freefor 30 days" here. */
+    price.innerHTML = `Free<span>&nbsp;for ${TRIAL_DAYS} days</span>`;
+    terms.textContent = founding
+      ? `then $${rate.toFixed(2)}/month, locked in for ${FOUNDING_LOCK_MONTHS} months · cancel anytime`
+      : `then $${STANDARD_RATE.toFixed(2)}/month · cancel anytime`;
+    const was = document.getElementById('kt-offer-was');
+    if (was) was.hidden = true;
+    /* Stated rather than calculated: the trial shifts every subsequent billing
+       date, so any "you save $X in year one" figure here would be off by a
+       month and wrong in a way nobody would catch. */
+    const save = document.getElementById('kt-offer-save');
+    if (save) {
+      save.textContent = founding
+        ? `Nothing to pay today. After ${TRIAL_DAYS} days it's $${rate.toFixed(2)}/month instead of $${STANDARD_RATE.toFixed(2)}.`
+        : `Nothing to pay today. Cancel before day ${TRIAL_DAYS + 1} and you're never charged.`;
+    }
+  } else if (founding) {
     badge.textContent = '★ Founding Therapist offer';
     price.innerHTML = `$${rate.toFixed(2)}<span>/month</span>`;
     terms.textContent = `locked in for your first ${FOUNDING_LOCK_MONTHS} months`;
@@ -95,14 +146,15 @@ const FOUNDING_LOCK_MONTHS = 12;
   const wrap = document.getElementById('kt-checkout-wrap');
   const notReady = document.getElementById('kt-notready');
 
-  if (!PAYMENT_LINK) {
+  const link = trial ? PAYMENT_LINK_TRIAL : PAYMENT_LINK;
+  if (!link) {
     // Stripe link not configured yet — never show a dead checkout button.
     wrap.hidden = true;
     notReady.hidden = false;
     return;
   }
 
-  const url = new URL(PAYMENT_LINK);
+  const url = new URL(link);
   // Pre-apply this tier's promotion code so the founding rate is already on the
   // invoice when checkout opens — the therapist never has to type a code.
   if (founding && tier.promo) url.searchParams.set('prefilled_promo_code', tier.promo);

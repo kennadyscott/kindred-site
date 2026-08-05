@@ -90,11 +90,30 @@ Deno.serve(async (req) => {
         // activate.js sets client_reference_id to the therapist's email; fall
         // back to whatever they typed into Stripe.
         const email = s.client_reference_id || s.customer_details?.email || null;
+        const subId = typeof s.subscription === 'string' ? s.subscription : s.subscription?.id ?? null;
+
+        // Was 'active', hardcoded. With a free-trial payment link the real
+        // status is 'trialing', and a therapist on a trial would have been
+        // counted as a paying customer until some later subscription.updated
+        // happened to correct it. Both statuses publish the listing (0008
+        // treats them the same), so this is about the number being true, not
+        // about access. Falls back to 'active' if the lookup fails -- never
+        // leave someone who just paid unpublished over a reporting detail.
+        let status = 'active';
+        if (subId) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(subId);
+            if (sub?.status) status = sub.status;
+          } catch (err) {
+            console.error('could not read subscription status, assuming active', (err as Error).message);
+          }
+        }
+
         const result = await rpc('stripe_activate_listing', {
           p_email: email,
           p_customer_id: typeof s.customer === 'string' ? s.customer : s.customer?.id ?? null,
-          p_subscription_id: typeof s.subscription === 'string' ? s.subscription : s.subscription?.id ?? null,
-          p_status: 'active',
+          p_subscription_id: subId,
+          p_status: status,
         });
         if (!result?.ok) {
           // Paid but unmatched (e.g. checked out with a different email).
