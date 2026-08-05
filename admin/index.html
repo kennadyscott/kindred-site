@@ -56,9 +56,13 @@
 (async () => {
   const URL_ = "https://izukppxgoerqtustfbnk.supabase.co", ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk";
   const err = document.getElementById('err');
+  /* One client for the whole page. hq-cloud picks this up rather than making a
+     second one on the same storage key, which GoTrue warns about because two
+     instances sharing a key can fight over the refresh token. */
   const client = window.supabase.createClient(URL_, ANON, {
     auth: { persistSession: true, autoRefreshToken: true, storageKey: 'khq-auth' }
   });
+  window.__khqClient = client;
 
   /* The app never sits on a public URL. Signing in earns a 60-second signed
      link to it; the bucket policy refuses to issue one to anyone outside
