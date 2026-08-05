@@ -80,7 +80,10 @@
     if (!rel) return null;
     /* storage returns this relative in some versions, absolute in others */
     const href = /^https?:/.test(rel) ? rel : URL_ + '/storage/v1' + (rel[0] === '/' ? '' : '/') + rel;
-    const app = await fetch(href).then(x => x.json()).catch(() => null);
+    /* the signed token already varies per load, but the CDN keys on the path —
+       so ask for a fresh copy explicitly rather than trusting that */
+    const app = await fetch(href + (href.includes('?') ? '&' : '?') + 'r=' + Date.now(),
+      { cache: 'no-store' }).then(x => x.json()).catch(() => null);
     /* never hand boot() something half-formed: it replaces the whole page, so
        a truncated or unexpected response would blank the screen with no clue */
     if (!app || typeof app.js !== 'string' || typeof app.html !== 'string' || typeof app.css !== 'string') return null;
