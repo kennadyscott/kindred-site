@@ -95,6 +95,12 @@ Deno.serve(async (req) => {
       case 'counts':
         return json({ ok: true, counts: await rpc('admin_review_counts', {}) });
 
+      // Aggregate supply for HQ's Coverage tab. Counts only — this returns no
+      // names, emails or licence numbers, so it is safe for a marketing view
+      // in a way the review queue is not.
+      case 'supply':
+        return json({ ok: true, states: await rpc('admin_supply_by_state', {}) });
+
       case 'queue': {
         const filter = ['pending', 'verified', 'rejected', 'all'].includes(body.filter) ? body.filter : 'pending';
         return json({ ok: true, rows: await rpc('admin_review_queue', { p_filter: filter }) });
