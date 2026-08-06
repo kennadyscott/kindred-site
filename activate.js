@@ -262,6 +262,7 @@ async function authPost(path, body) {
                                ties the subscription to the Kindred account.
        Setting only prefilled_email meant a first live test attached the
        membership to a different account than the one just created. */
+    if (window.kTrack) window.kTrack('therapist_reached_checkout');
     const btn = document.getElementById('kt-checkout-btn');
     if (btn && btn.href && btn.href.indexOf('buy.stripe.com') !== -1) {
       const u = new URL(btn.href);
@@ -305,12 +306,17 @@ async function authPost(path, body) {
       if (mode === 'signup') {
         const data = await authPost('/signup', { email, password: pass });
         saveSession(data);   /* null-safe: returns null when confirmation is required */
+        /* The number that matters: a therapist account actually exists now.
+           Counted here rather than on the button, so an attempt that failed
+           validation or hit "already registered" is not counted as a signup. */
+        if (window.kTrack) window.kTrack('therapist_account_created');
         /* Whether or not Supabase requires email confirmation, the account now
            exists — so we let them continue to payment rather than stranding
            them at a "check your inbox" wall with their card already out. */
       } else {
         const data = await authPost('/token?grant_type=password', { email, password: pass });
         saveSession(data);
+        if (window.kTrack) window.kTrack('therapist_signed_in');
       }
       revealStep2(email);
     } catch (ex) {

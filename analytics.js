@@ -6,7 +6,31 @@
 ============================================================================= */
 (() => {
   const STORE_KEY = 'kindred-metrics';
-  const CONFIG_KEY = 'kindred-analytics-config'; /* optional {url, key} → Supabase live mode */
+  const CONFIG_KEY = 'kindred-analytics-config'; /* legacy per-browser override */
+  /* The project the rest of the site already talks to. This used to live only
+     in a per-browser localStorage key, which meant a visitor's browser never
+     had it and nothing was ever collected — the counts sat on their device and
+     died there. The URL and anon key are public by design; the events table is
+     insert-only to anon and readable only by hq_members. */
+  const SITE = {
+    url: 'https://izukppxgoerqtustfbnk.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk'
+  };
+  function endpoint() {
+    try {
+      const override = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null');
+      if (override && override.url && override.key) return override;
+    } catch (e) {}
+    return SITE;
+  }
+  /* Honour the browser's own preference. Nothing here identifies anyone, but a
+     visitor who has asked not to be measured has asked. */
+  const optedOut = () => {
+    try {
+      return navigator.doNotTrack === '1' || window.doNotTrack === '1'
+        || localStorage.getItem('kindred-no-analytics') === '1';
+    } catch (e) { return false; }
+  };
   const PROP_WHITELIST = ['plan', 'bill', 'tool', 'path']; /* the ONLY properties ever recorded */
 
   function load() {
@@ -30,9 +54,9 @@
     }
     localStorage.setItem(STORE_KEY, JSON.stringify(m));
 
-    /* optional live mode: fire-and-forget insert of {event, props} — nothing else */
+    /* fire-and-forget insert of {event, props} — nothing else */
     try {
-      const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null');
+      const cfg = optedOut() ? null : endpoint();
       if (cfg && cfg.url && cfg.key) {
         fetch(cfg.url.replace(/\/$/, '') + '/rest/v1/events', {
           method: 'POST',
