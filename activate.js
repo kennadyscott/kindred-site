@@ -188,7 +188,20 @@ const FOUNDING_LOCK_MONTHS = 12;
     url.searchParams.set('client_reference_id', email); // ties the Stripe session to the account
   }
   btn.href = url.toString();
-  btn.textContent = `Continue to secure checkout — $${rate.toFixed(2)}/mo`;
+  /* On the trial the price on the button contradicted the whole card above it:
+     "Free for 30 days / nothing to pay today", then a button asking for $9.99.
+     The trial version names what the click actually does instead. */
+  btn.textContent = trial
+    ? 'Secure my spot and build my profile'
+    : `Continue to secure checkout — $${rate.toFixed(2)}/mo`;
+
+  /* "You'll be billed monthly" is also wrong on the trial, and the card IS
+     collected at checkout -- saying so here is better than letting them meet
+     a card form they were not expecting one screen later. */
+  const fine = document.getElementById('kt-checkout-fine');
+  if (fine && trial) {
+    fine.textContent = `Payments are processed securely by Stripe. Your card is saved now and nothing is charged for ${TRIAL_DAYS} days — cancel before then from your therapist portal and you're never billed.`;
+  }
 })();
 
 /* ===========================================================================
