@@ -138,7 +138,36 @@
     }
   }, true);
 
-  /* one page-view count per load (path only — no referrer, no query, no identifiers) */
+  /* One page-view per load — path only, no referrer, no query, no identifiers.
+     Deliberately NOT counted the instant the script runs. A crawler or an email
+     link-scanner fetches the page, executes the JS and leaves in milliseconds;
+     a person stays. Waiting for the page to be genuinely visible for a few
+     seconds, or for any real interaction, drops most automated traffic without
+     needing to guess at user agents.
+
+     Without this, activate.html — the URL in every outreach email, and so the
+     most crawled page on the site — read as 70 visits and zero interactions,
+     which looked like a catastrophic conversion problem and was not one. */
   const page = (location.pathname.split('/').pop() || 'index.html').replace('.html', '') || 'index';
-  track('view_' + page);
+  let counted = false;
+  function countView() {
+    if (counted) return;
+    counted = true;
+    track('view_' + page);
+  }
+  const HUMAN_MS = 3000;
+  let timer = null;
+  function startTimer() {
+    if (timer || counted) return;
+    timer = setTimeout(countView, HUMAN_MS);
+  }
+  function stopTimer() { clearTimeout(timer); timer = null; }
+
+  if (document.visibilityState === 'visible') startTimer();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') startTimer(); else stopTimer();
+  });
+  /* Any of these means a person is here, so stop waiting. */
+  ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(ev =>
+    window.addEventListener(ev, countView, { once: true, passive: true }));
 })();
