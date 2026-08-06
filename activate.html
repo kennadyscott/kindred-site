@@ -91,8 +91,56 @@
 
 <main class="kt-activate">
 
-  <div class="kt-activate-head">
-    <h1>Join Kindred</h1>
+  <!-- Ported from therapists.html so the two pages make the same promise in
+       the same words. Someone landing straight on activate.html -- from an
+       outreach link, say -- previously met a signup form with no idea what
+       they were joining. The CTA scrolls rather than navigates: the thing it
+       points at is already on this page. -->
+<!-- ======================= HERO ======================= -->
+<section class="kt-hero kt-hero-activate">
+  <div class="kt-hero-inner">
+    <div class="kt-hero-copy">
+      <p class="eyebrow">For therapists</p>
+      <h1>Help clients search for more than a specialty.</h1>
+      <p class="kt-sub">Kindred is a therapist discovery platform built around fit, not just filters.</p>
+
+      <div class="kt-offercard">
+        <span class="kt-offer-star" aria-hidden="true">✦</span>
+        <div>
+          <p class="kt-offer-name">Founding Therapist offer</p>
+          <p class="kt-offer-rate" id="kt-hero-offer"><s class="kt-was">$29.99</s> <b id="kt-hero-rate">$9.99</b>/month for your first 12 months</p>
+        </div>
+      </div>
+
+      <div class="hero-ctas">
+        <a class="btn btn-dark btn-arrow" href="#kt-start">Secure my spot <span aria-hidden="true">↓</span></a>
+      </div>
+      <p class="kt-hero-fine">Cancel anytime. No long-term contract.</p>
+    </div>
+
+    <div class="kt-profilescene">
+      <i class="kt-blob kt-blob-lilac" aria-hidden="true"></i>
+      <i class="kt-blob kt-blob-blue" aria-hidden="true"></i>
+      <article class="kt-fittag-card kt-hero-card">
+        <img class="kt-fittag-photo" src="assets/therapist-example.jpg" alt="" loading="lazy">
+        <span class="kt-pc-save" aria-hidden="true">&#9825;</span>
+        <h3 class="match-name">Aiyana Moore, <span class="kt-cred">LCSW</span></h3>
+        <p class="match-meta">Oakland, CA &middot; In-person &amp; online</p>
+        <p class="match-prompt-label">My therapy style</p>
+        <p class="kt-demo-body">I blend warmth and curiosity with evidence-based approaches. We&rsquo;ll explore what&rsquo;s underneath and build tools that fit your real life.</p>
+      </article>
+      <div class="kt-tagcloud kt-hero-tagcloud">
+        <span>Warm and affirming</span><span>Direct and honest</span><span>Structured</span>
+        <span>Gentle and reflective</span><span>Collaborative</span><span>Uses humor</span>
+        <span>Identity-affirming</span>
+      </div>
+      <p class="kt-hero-card-fine">Example profile — your profile leads with how you work, not the letters after your name.</p>
+    </div>
+  </div>
+</section>
+
+  <div class="kt-activate-head" id="kt-start">
+    <h2>Join Kindred</h2>
     <p>Three steps: make your account, start your membership, then build your profile. Once we’ve verified your identity and licence you go live and begin being matched.</p>
   </div>
 
@@ -209,7 +257,7 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=6"></script>
+<script src="activate.js?v=7"></script>
 <script src="site.js?v=9"></script>
 <script src="analytics.js?v=13"></script>
 </body>

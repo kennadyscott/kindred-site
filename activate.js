@@ -198,6 +198,21 @@ const FOUNDING_LOCK_MONTHS = 12;
   /* "You'll be billed monthly" is also wrong on the trial, and the card IS
      collected at checkout -- saying so here is better than letting them meet
      a card form they were not expecting one screen later. */
+  /* The hero carries the same offer, so it has to tell the same story -- a
+     hero promising "$9.99/month" above a card promising 30 days free is the
+     mismatch we just removed from the button, one section higher. */
+  const heroRate = document.getElementById('kt-hero-rate');
+  const heroOffer = document.getElementById('kt-hero-offer');
+  const heroName = document.querySelector('.kt-offer-name');
+  if (heroRate) heroRate.textContent = `$${rate.toFixed(2)}`;
+  if (trial && heroOffer) {
+    heroOffer.innerHTML = `<b>Free for ${TRIAL_DAYS} days</b>, then $${rate.toFixed(2)}/month for your first ${FOUNDING_LOCK_MONTHS} months`;
+    if (heroName) heroName.textContent = `${TRIAL_DAYS} days free \u00b7 Founding Therapist offer`;
+  } else if (!founding && heroOffer) {
+    heroOffer.innerHTML = `<b>$${STANDARD_RATE.toFixed(2)}</b>/month &middot; cancel anytime`;
+    if (heroName) heroName.textContent = 'Kindred Membership';
+  }
+
   const fine = document.getElementById('kt-checkout-fine');
   if (fine && trial) {
     fine.textContent = `Payments are processed securely by Stripe. Your card is saved now and nothing is charged for ${TRIAL_DAYS} days — cancel before then from your therapist portal and you're never billed.`;
