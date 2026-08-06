@@ -108,6 +108,9 @@
   .chip-wait { background:#F6E9DE; color:#8a5a3c; }
   .chip-alert { background:#BE765F; color:#fff; }
   .chip-denied { background:#C0392B; color:#fff; letter-spacing:.01em; }
+  /* Distinct from both 'paying' green and 'pending' amber: a trial is
+     neither settled nor stuck, and reads as its own state. */
+  .chip-trial { background:#E8E2F0; color:#4A3560; }
   .chip-ok { background:#DCEBD8; color:#33562D; }
   .rev-actions { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
   .rev-actions button, .rev-actions a { font-size:13px; font-weight:600; border-radius:999px;
@@ -420,11 +423,17 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
       : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting licence &middot; ${c.awaiting_identity || 0} awaiting ID${c.rejected ? ` &middot; ${c.rejected} denied` : ''} &middot; ${c.total || 0} total.`;
 
     const res = await adminApi({ action: 'queue', filter: revFilter });
-    const rows = (res && res.rows) || [];
+    let rows = (res && res.rows) || [];   // reassigned by the trial filter below
     if (!rows.length) {
       rowsEl.innerHTML = '<p class="rev-empty">Nothing here.</p>';
       return;
     }
+    /* ?filter=trial narrows to the trial cohort. Reading it from the URL keeps
+       it a bookmarkable link rather than another control to maintain. */
+    const wantTrial = new URLSearchParams(location.search).get('filter') === 'trial';
+    if (wantTrial) rows = rows.filter(r => r.subscription_status === 'trialing');
+    if (wantTrial && !rows.length) { rowsEl.innerHTML = '<p class="rev-empty">Nobody is on a free trial right now.</p>'; return; }
+
     rowsEl.innerHTML = rows.map(r => {
       const lics = Array.isArray(r.licenses) ? r.licenses : [];
       const anyDenied  = lics.some(l => l.rejected_at);
@@ -434,6 +443,17 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
         : '<span class="rev-chip chip-wait">ID pending</span>';
       const hidden = r.published && !(r.license_verified && r.identity_verified);
       const live = r.license_verified && r.identity_verified;
+
+      /* Billing state, straight from Stripe via the webhook. 'trialing' means
+         they came through the 30-day outreach link and have not been charged
+         yet -- worth seeing at a glance, since a trial that lapses looks
+         exactly like a cancellation from every other angle. */
+      const st = r.subscription_status || '';
+      const billing =
+        st === 'trialing'  ? '<span class="rev-chip chip-trial">free trial</span>' :
+        st === 'past_due'  ? '<span class="rev-chip chip-alert">past due</span>' :
+        st === 'canceled'  ? '<span class="rev-chip chip-denied">canceled</span>' :
+        st === 'active'    ? '<span class="rev-chip chip-ok">paying</span>' : '';
 
       /* One line per state. A therapist licensed in TX and CA holds two
          different licences, and verifying one must never vouch for the other. */
@@ -460,7 +480,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
           <div class="rev-top">
             <div><span class="rev-name">${esc(r.name) || '(no name)'}</span>
                  <span class="rev-email">${esc(r.email)}</span></div>
-            <div>${id}${hidden ? '<span class="rev-chip chip-alert">paying, hidden</span>' : ''}</div>
+            <div>${billing}${id}${hidden ? '<span class="rev-chip chip-alert">paying, hidden</span>' : ''}</div>
           </div>
           <div class="rev-lics">${licRows}</div>
         </div>`;
