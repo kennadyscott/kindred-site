@@ -1,124 +1,220 @@
 -- ============================================================================
--- KINDRED — PENDING MIGRATION (run once)
--- 0003 / 0006 / 0007 are now APPLIED (verified live). This is what's left.
--- Safe to re-run (idempotent).
--- ============================================================================
-
--- ============================================================================
--- 0008 — Stripe billing link-up + automatic listing activation
+-- KINDRED — PENDING MIGRATIONS (run once, in this order)
 --
--- WHY THIS EXISTS
--- Therapists pay on the website (Stripe web checkout, never in-app so Apple
--- takes no cut). Something has to turn that payment into a live listing, or
--- someone has to do it by hand for every therapist. This adds:
---   1. the columns that tie a therapist row to their Stripe customer/subscription
---   2. two SECURITY DEFINER functions the webhook calls to flip `published`
+-- Regenerated 2026-08-04. Everything up to and including 0020 is APPLIED and
+-- verified live. This file is exactly what is left:
 --
--- SECURITY
--- Both functions are explicitly REVOKED from anon/authenticated. They can only
--- be called with the service_role key, which lives in the Edge Function's env
--- and never touches a browser. Without that revoke, any signed-in user could
--- publish their own listing without paying.
+--   0021  newsletter_signups   — the footer signup form on every page.
+--                                Until this runs, signups queue in the
+--                                visitor's browser and never reach you.
+--   0022  marketing_opt_in     — therapist marketing consent + timestamp.
+--                                Until this runs, the app saves profiles
+--                                without the column and logs a warning.
+--
+-- Both are idempotent (if not exists / or replace), so re-running is safe.
+-- 0022 redefines admin_review_counts() a second time on purpose — run them in
+-- order and the final version carries both new counts.
+--
+-- HOW: Supabase → SQL Editor → New query → paste all of this → Run.
 -- ============================================================================
 
-alter table therapists add column if not exists stripe_customer_id     text;
-alter table therapists add column if not exists stripe_subscription_id text;
-alter table therapists add column if not exists subscription_status    text;
 
-create index if not exists therapists_stripe_customer_idx
-  on therapists (stripe_customer_id) where stripe_customer_id is not null;
+-- ==========================================================================
+-- ▼▼▼  0021_newsletter.sql
+-- ==========================================================================
+
+-- ============================================================================
+-- 0021 -- Newsletter signups
+--
+-- A footer form on every page, so the list has to be safe to fill from an
+-- anonymous browser on any page of the site.
+--
+-- WHAT THIS DELIBERATELY DOES NOT HOLD
+-- An email address and nothing else. No user_id, no page they signed up from,
+-- no intake answers, no state, no reason. Exactly the reasoning 0020 makes for
+-- client_notify: an email stored beside "seeking help with trauma" is health
+-- information, an email on its own is contact information. That is what makes
+-- this safe to collect before the BAA is signed.
+--
+-- Kept SEPARATE from client_notify on purpose. That list is people waiting for
+-- a therapist in their state -- an operational queue someone has to work
+-- through. This is a marketing list. Merging them would mean either mailing a
+-- newsletter to people waiting on a match, or losing the waiting list inside
+-- the mailing list. Two different promises, two different tables.
+--
+-- Insert-only for anon, like events, therapist_leads and client_notify: a
+-- visitor can add their address and nobody anonymous can read the list back.
+-- ============================================================================
+
+create table if not exists newsletter_signups (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null,
+  source     text,                   -- which page's footer, for nothing more than knowing what works
+  created_at timestamptz not null default now()
+);
+
+alter table newsletter_signups enable row level security;
+
+drop policy if exists "insert only" on newsletter_signups;
+create policy "insert only" on newsletter_signups
+  for insert to anon, authenticated with check (true);
+
+grant insert                          on newsletter_signups to anon, authenticated;
+grant select, insert, update, delete  on newsletter_signups to service_role;
+
+-- No unique index on email, same reasoning as 0020: an upsert behaves
+-- differently for an address already on the list, which turns the form into a
+-- way to test whether a given person subscribed. Duplicates are deduped on read.
+create index if not exists newsletter_created_idx on newsletter_signups (created_at desc);
 
 -- ---------------------------------------------------------------------------
--- Called on checkout.session.completed, where we know the therapist's EMAIL
--- (we pass it through as client_reference_id / customer_details.email).
--- Resolves that to their auth user, then activates their listing.
+-- The list, for the admin queue. Deduped, newest first.
 -- ---------------------------------------------------------------------------
-create or replace function stripe_activate_listing(
-  p_email           text,
-  p_customer_id     text default null,
-  p_subscription_id text default null,
-  p_status          text default 'active'
-) returns jsonb
-language plpgsql
+create or replace function admin_newsletter_list()
+returns table (email text, first_signed timestamptz, times_signed bigint, sources text[])
+language sql
 security definer
 set search_path = public
 as $$
-declare
-  v_user_id uuid;
-  v_active  boolean;
-begin
-  if p_email is null or p_email = '' then
-    return jsonb_build_object('ok', false, 'reason', 'no_email');
-  end if;
-
-  select id into v_user_id
-    from auth.users
-   where lower(email) = lower(p_email)
-   limit 1;
-
-  if v_user_id is null then
-    -- They paid but we can't match an account (e.g. they checked out with a
-    -- different email). Surfaced so the webhook can log it for manual follow-up.
-    return jsonb_build_object('ok', false, 'reason', 'no_user_for_email', 'email', p_email);
-  end if;
-
-  v_active := p_status in ('active', 'trialing');
-
-  update therapists
-     set published              = v_active,
-         accepting              = case when v_active then true else accepting end,
-         stripe_customer_id     = coalesce(p_customer_id, stripe_customer_id),
-         stripe_subscription_id = coalesce(p_subscription_id, stripe_subscription_id),
-         subscription_status    = p_status
-   where user_id = v_user_id;
-
-  if not found then
-    return jsonb_build_object('ok', false, 'reason', 'no_therapist_row', 'user_id', v_user_id);
-  end if;
-
-  return jsonb_build_object('ok', true, 'user_id', v_user_id, 'published', v_active);
-end;
+  select lower(btrim(n.email))                     as email,
+         min(n.created_at)                         as first_signed,
+         count(*)                                  as times_signed,
+         array_agg(distinct n.source) filter (where n.source is not null) as sources
+  from newsletter_signups n
+  group by lower(btrim(n.email))
+  order by min(n.created_at) desc;
 $$;
 
--- ---------------------------------------------------------------------------
--- Called on subscription lifecycle events (updated / deleted / payment failed),
--- where Stripe gives us the CUSTOMER id rather than an email. Keeps the listing
--- in sync: lapsed or cancelled subscriptions unlist the profile without
--- deleting anything.
--- ---------------------------------------------------------------------------
-create or replace function stripe_sync_subscription(
-  p_customer_id     text,
-  p_subscription_id text default null,
-  p_status          text default null
-) returns jsonb
-language plpgsql
+revoke all     on function admin_newsletter_list() from public, anon, authenticated;
+grant  execute on function admin_newsletter_list() to service_role;
+
+-- Surface the count alongside the therapist review numbers and clients_waiting.
+create or replace function admin_review_counts()
+returns jsonb
+language sql
 security definer
 set search_path = public
 as $$
-declare
-  v_active boolean;
+  select jsonb_build_object(
+    'total',             (select count(*) from therapists),
+    'awaiting_license',  (select count(distinct user_id) from therapist_licenses
+                          where verified_at is null and rejected_at is null),
+    'awaiting_identity', (select count(*) from therapists where not identity_verified),
+    'rejected',          (select count(distinct user_id) from therapist_licenses where rejected_at is not null),
+    'paying_but_hidden', (select count(*) from therapists
+                          where published and not (license_verified and identity_verified)),
+    'live',              (select count(*) from therapists
+                          where published and license_verified and identity_verified),
+    'clients_waiting',   (select count(distinct coalesce(nullif(btrim(email), ''), phone)) from client_notify),
+    'newsletter',        (select count(distinct lower(btrim(email))) from newsletter_signups)
+  );
+$$;
+
+revoke all     on function admin_review_counts() from public, anon, authenticated;
+grant  execute on function admin_review_counts() to service_role;
+
+
+-- ==========================================================================
+-- ▼▼▼  0022_marketing_opt_in.sql
+-- ==========================================================================
+
+-- ============================================================================
+-- 0022 -- Marketing consent for therapists
+--
+-- A therapist's email has always been captured -- it is how they sign in. But
+-- that is a TRANSACTIONAL address: account, billing, licence verdicts, identity
+-- results. Those send regardless of anything here and always will; you cannot
+-- opt out of being told your licence was rejected.
+--
+-- What did not exist was permission to send anything ELSE. This is that
+-- permission, recorded as its own fact with the moment it was given.
+--
+-- WHY A TIMESTAMP AND NOT JUST A BOOLEAN
+-- "They agreed" is not defensible on its own. The question that gets asked
+-- later is always "when, and to what?" -- so the moment is stored beside the
+-- answer. Cleared when they opt back out, so the column never claims a consent
+-- that has since been withdrawn.
+--
+-- DEFAULT IS FALSE, DELIBERATELY
+-- A pre-ticked box is not consent under GDPR, and a therapist who finds
+-- themselves on a mailing list they never joined is the fastest way to lose one.
+-- Anyone who signed up before this migration gets false, which is correct: they
+-- were never asked.
+-- ============================================================================
+
+alter table therapists add column if not exists marketing_opt_in    boolean not null default false;
+alter table therapists add column if not exists marketing_opt_in_at timestamptz;
+
+comment on column therapists.marketing_opt_in is
+  'Permission for MARKETING email only. Transactional mail (billing, licence, identity) is unaffected and always sends.';
+comment on column therapists.marketing_opt_in_at is
+  'When consent was given. Null whenever marketing_opt_in is false.';
+
+-- Keep the two honest with each other rather than trusting every writer to.
+create or replace function therapists_sync_optin_ts()
+returns trigger
+language plpgsql
+as $$
 begin
-  if p_customer_id is null or p_customer_id = '' then
-    return jsonb_build_object('ok', false, 'reason', 'no_customer_id');
+  if new.marketing_opt_in and not coalesce(old.marketing_opt_in, false) then
+    new.marketing_opt_in_at := now();          -- newly granted
+  elsif not new.marketing_opt_in then
+    new.marketing_opt_in_at := null;           -- withdrawn, or never given
   end if;
-
-  v_active := p_status in ('active', 'trialing');
-
-  update therapists
-     set published              = v_active,
-         stripe_subscription_id = coalesce(p_subscription_id, stripe_subscription_id),
-         subscription_status    = p_status
-   where stripe_customer_id = p_customer_id;
-
-  if not found then
-    return jsonb_build_object('ok', false, 'reason', 'no_therapist_for_customer', 'customer', p_customer_id);
-  end if;
-
-  return jsonb_build_object('ok', true, 'published', v_active, 'status', p_status);
+  return new;
 end;
 $$;
 
--- Service-role only. A signed-in therapist must NOT be able to publish
--- themselves without paying.
-revoke all on function stripe_activate_listing(text, text, text, text) from public, anon, authenticated;
-revoke all on function stripe_sync_subscription(text, text, text)      from public, anon, authenticated;
+drop trigger if exists therapists_optin_ts on therapists;
+create trigger therapists_optin_ts
+  before insert or update of marketing_opt_in on therapists
+  for each row execute function therapists_sync_optin_ts();
+
+-- ---------------------------------------------------------------------------
+-- The list, for whoever sends the mail. Opted-in only, newest consent first.
+-- Service-role only: a marketing list is not something anon should be able to
+-- read back, same rule as every other admin function here.
+-- ---------------------------------------------------------------------------
+create or replace function admin_marketing_list()
+returns table (email text, name text, opted_in_at timestamptz)
+language sql
+security definer
+set search_path = public, auth
+as $$
+  select u.email::text, t.name, t.marketing_opt_in_at
+  from therapists t
+  join auth.users u on u.id = t.user_id
+  where t.marketing_opt_in
+  order by t.marketing_opt_in_at desc nulls last;
+$$;
+
+revoke all     on function admin_marketing_list() from public, anon, authenticated;
+grant  execute on function admin_marketing_list() to service_role;
+
+-- Surface the count beside the other review numbers.
+create or replace function admin_review_counts()
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'total',             (select count(*) from therapists),
+    'awaiting_license',  (select count(distinct user_id) from therapist_licenses
+                          where verified_at is null and rejected_at is null),
+    'awaiting_identity', (select count(*) from therapists where not identity_verified),
+    'rejected',          (select count(distinct user_id) from therapist_licenses where rejected_at is not null),
+    'paying_but_hidden', (select count(*) from therapists
+                          where published and not (license_verified and identity_verified)),
+    'live',              (select count(*) from therapists
+                          where published and license_verified and identity_verified),
+    'clients_waiting',   (select count(distinct coalesce(nullif(btrim(email), ''), phone)) from client_notify),
+    'newsletter',        (select count(distinct lower(btrim(email))) from newsletter_signups),
+    'therapist_optin',   (select count(*) from therapists where marketing_opt_in)
+  );
+$$;
+
+revoke all     on function admin_review_counts() from public, anon, authenticated;
+grant  execute on function admin_review_counts() to service_role;
+
+
