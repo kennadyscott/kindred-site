@@ -185,6 +185,12 @@
     <div class="adm-tile"><h3>Founding signups</h3><strong id="t-subs">0</strong><span>therapists who claimed a spot</span></div>
     <div class="adm-tile"><h3>Founding members</h3><strong id="t-founding">&mdash;</strong><span>therapists paying, from the database</span></div>
     <div class="adm-tile"><h3>Cancellations</h3><strong id="t-cancels">0</strong><span>memberships canceled</span></div>
+    <!-- These three come from admin_review_counts(), i.e. the database -- unlike
+         "Front door answered" and "Founding signups" above, which read this
+         browser's localStorage and count only your own clicks. -->
+    <div class="adm-tile"><h3>Newsletter</h3><strong id="t-newsletter">&mdash;</strong><span>unique addresses, from the database</span></div>
+    <div class="adm-tile"><h3>Clients waiting</h3><strong id="t-waiting">&mdash;</strong><span>asked to be told when a therapist joins</span></div>
+    <div class="adm-tile"><h3>Therapist opt-ins</h3><strong id="t-optin">&mdash;</strong><span>consented to marketing email</span></div>
   </div>
 
   <div class="adm-card">
@@ -414,6 +420,12 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
        is date-based -- there is no quantity to run out of. */
     const foundingEl = document.getElementById('t-founding');
     if (foundingEl) foundingEl.textContent = (c.live || 0) + (c.paying_but_hidden || 0);
+    /* 0 is a real answer and has to look different from "not loaded" -- an
+       em-dash where a zero belongs reads as a broken tile. */
+    const setCount = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = (v == null ? '\u2014' : v); };
+    setCount('t-newsletter', c.newsletter);
+    setCount('t-waiting',    c.clients_waiting);
+    setCount('t-optin',      c.therapist_optin);
     const pending = (c.awaiting_license || 0) + (c.awaiting_identity || 0);
     badge.hidden = !pending; badge.textContent = pending;
     const rejTab = document.querySelector('.adm-tab[data-filter="rejected"]');
