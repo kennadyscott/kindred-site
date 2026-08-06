@@ -213,6 +213,19 @@ const FOUNDING_LOCK_MONTHS = 12;
     if (heroName) heroName.textContent = 'Kindred Membership';
   }
 
+  /* The heading names the offer they actually clicked, so the page they land
+     on matches the link that brought them. */
+  const headTitle = document.getElementById('kt-head-title');
+  const headSub   = document.getElementById('kt-head-sub');
+  if (headTitle) {
+    headTitle.textContent = trial ? `Start your ${TRIAL_DAYS} days free`
+                          : founding ? 'Claim your founding rate'
+                          : 'Join Kindred';
+  }
+  if (headSub && trial) {
+    headSub.textContent = `A sign-in, then your card — about two minutes, and nothing is charged for ${TRIAL_DAYS} days. Your profile comes next, and you go live once we've checked your licence and identity.`;
+  }
+
   const fine = document.getElementById('kt-checkout-fine');
   if (fine && trial) {
     fine.textContent = `Payments are processed securely by Stripe. Your card is saved now and nothing is charged for ${TRIAL_DAYS} days — cancel before then from your therapist portal and you're never billed.`;

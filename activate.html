@@ -139,21 +139,28 @@
 
 <main class="kt-activate">
 
-    <div class="kt-activate-head" id="kt-start">
-    <h2>Join Kindred</h2>
-    <p>Three steps: make your account, start your membership, then build your profile. Once we’ve verified your identity and licence you go live and begin being matched.</p>
+    <!-- Was "Join Kindred / Three steps: make your account, start your
+       membership, then build your profile" over a 1-2-3 tracker. That
+       announces three chores to someone who came here to accept an offer.
+       The heading now names the offer they clicked, the tracker says what
+       they get rather than what they must do, and the form asks for one
+       thing and says why. Same steps, same order -- it just stops reading
+       like paperwork. -->
+  <div class="kt-activate-head" id="kt-start">
+    <h2 id="kt-head-title">Claim your founding spot</h2>
+    <p id="kt-head-sub">A sign-in, then your membership — about two minutes. Your profile comes next, and you go live once we've checked your licence and identity.</p>
   </div>
 
   <ol class="kt-track" id="kt-track">
-    <li class="kt-track-step on" data-step="1"><span>1</span>Account</li>
+    <li class="kt-track-step on" data-step="1"><span>1</span>Sign-in</li>
     <li class="kt-track-step" data-step="2"><span>2</span>Membership</li>
-    <li class="kt-track-step" data-step="3"><span>3</span>Profile</li>
+    <li class="kt-track-step" data-step="3"><span>3</span>Your profile</li>
   </ol>
 
   <!-- ===== STEP 1 — create the account ===== -->
   <section class="kt-acct" id="kt-acct">
-    <h2>Create your Kindred account</h2>
-    <p class="kt-acct-sub">One account for the website and the app. You’ll use this to build your profile and manage your membership.</p>
+    <h2>First, a way to sign back in</h2>
+    <p class="kt-acct-sub">So your profile and membership stay yours. One account covers the website and the app — nothing else is needed yet.</p>
     <form id="kt-acct-form" novalidate>
       <div class="kt-field">
         <label for="ka-email">Email</label>
@@ -257,7 +264,7 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=7"></script>
+<script src="activate.js?v=8"></script>
 <script src="site.js?v=9"></script>
 <script src="analytics.js?v=14"></script>
 </body>
