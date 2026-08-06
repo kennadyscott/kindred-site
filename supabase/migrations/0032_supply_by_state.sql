@@ -14,6 +14,8 @@
 -- is a per-state question — someone licensed in CO and NM is real coverage in
 -- both. The distinct-therapist total is therefore lower than the sum of the
 -- rows, which is correct rather than a bug.
+--
+-- Anyone with no licence state at all lands in '??' so the gap is visible.
 -- =============================================================================
 
 create or replace function admin_supply_by_state()
@@ -41,12 +43,12 @@ as $$
       t.created_at
     from public.therapists t
     cross join lateral unnest(
-      -- license_states is the multi-state array; license_state is the older
-      -- single value. Prefer the array, fall back, so nobody is missed by
-      -- whichever the signup flow happened to write.
+      -- license_states is the only source: 0002_scale copied the old singular
+      -- license_state into it and dropped that column. '??' keeps a therapist
+      -- with no state on the books rather than silently dropping them — an
+      -- unassigned profile is a data problem worth seeing, not hiding.
       case
         when coalesce(array_length(t.license_states, 1), 0) > 0 then t.license_states
-        when nullif(trim(coalesce(t.license_state, '')), '') is not null then array[t.license_state]
         else array['??']
       end
     ) as s
