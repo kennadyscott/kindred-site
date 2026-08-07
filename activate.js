@@ -318,13 +318,31 @@ async function authPost(path, body) {
   const existing = loadSession();
   if (existing && existing.user && existing.user.email) {
     revealStep2(existing.user.email);
+  } else {
+    /* Arriving from the APP with ?email= means they built a profile there and
+       pressed Activate. They have an account -- they just cannot prove it
+       here, because the app and the site are different origins and the
+       session does not cross. Opening on "create account" would offer them a
+       second one and fail with "already registered". Default to sign-in. */
+    const fromApp = new URLSearchParams(location.search).get('email');
+    if (fromApp) {
+      const f = document.getElementById('ka-email');
+      if (f) f.value = fromApp;
+      mode = 'signin';
+      submit.innerHTML = 'Sign in &amp; continue <span aria-hidden="true">→</span>';
+      toggle.textContent = 'Create an account instead';
+      document.querySelector('#kt-acct h2').textContent = 'Sign in to activate';
+      document.querySelector('.kt-acct-sub').textContent =
+        'Your profile is saved. Sign in with the password you chose in the app and we\u2019ll start your membership.';
+      document.getElementById('ka-pass').setAttribute('autocomplete', 'current-password');
+    }
   }
 
   toggle.addEventListener('click', () => {
     mode = mode === 'signup' ? 'signin' : 'signup';
     submit.innerHTML = (mode === 'signup' ? 'Create account &amp; continue' : 'Sign in &amp; continue') + ' <span aria-hidden="true">→</span>';
     toggle.textContent = mode === 'signup' ? 'Sign in instead' : 'Create an account instead';
-    document.querySelector('#kt-acct h2').textContent = mode === 'signup' ? 'Create your Kindred account' : 'Sign in to Kindred';
+    document.querySelector('#kt-acct h2').textContent = mode === 'signup' ? 'First, a way to sign back in' : 'Sign in to Kindred';
     document.getElementById('ka-pass').setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
     err.hidden = true;
   });
