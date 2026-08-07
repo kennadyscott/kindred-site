@@ -33,6 +33,17 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* The browser's own rule for [hidden] is `display: none` at the UA level, so
+   ANY class rule setting display -- flex, grid, block -- silently outranks it.
+   `el.hidden = true` then sets the attribute, reads back as true, and changes
+   nothing on screen: the element is still there, and only a screenshot shows
+   it. This file already carried five one-off patches for exactly that
+   (.uy-feeling[hidden], .mk-overlay[hidden], .fb-tool[hidden] and friends),
+   each written after the same bug was found somewhere new. Once, globally,
+   instead -- most recently it left the 1-2-3 tracker on the activate page
+   sitting under a section that had been switched off. */
+[hidden] { display: none !important; }
+
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--cream);

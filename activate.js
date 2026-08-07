@@ -376,17 +376,20 @@ async function authPost(path, body) {
     step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /* already signed in on this browser? skip straight to membership */
-  /* No profile yet, however they arrived: send them straight into building
-     one. This page is the checkout counter -- standing them in front of it
-     with a "build a profile first" button was an extra click on the way to
-     the only thing they can actually do, and the pitch already happened on
-     the landing page or in the email that brought them.
+  /* No profile yet, however they arrived: show them the offer, with a button
+     that starts the free build.
 
-     replace() rather than assign() so Back returns them to wherever they came
-     from rather than bouncing them through here again. */
+     This used to location.replace() straight to /app/#therapist-signup on the
+     theory that "the pitch already happened in the email that brought them".
+     It hadn't. ?offer=trial30 IS the pitch -- it is the page the outreach link
+     points AT -- so redirecting away from it before it painted meant the offer
+     was never read by anyone who clicked. A link that bounces you somewhere
+     else the instant you open it also reads like a broken link, which is the
+     opposite of what an outreach click should feel like.
+
+     The page now stays put and #kt-coldstart carries the ask. */
   function ktGoBuildProfile() {
-    location.replace('/app/#therapist-signup');
+    window.__ktShowColdStart();
   }
 
   window.__ktShowColdStart = function () {
@@ -397,8 +400,18 @@ async function authPost(path, body) {
          card" -- which is now the opposite of what happens next. */
       const ht = document.getElementById('kt-head-title');
       const hs = document.getElementById('kt-head-sub');
-      if (ht) ht.textContent = 'Start with your profile';
-      if (hs) hs.textContent = "Build it free — about ten minutes, no card. When it's ready you activate with 30 days free, and we check your licence and identity from there.";
+      const onTrial = !!PAYMENT_LINK_TRIAL;
+      if (ht) ht.textContent = onTrial ? `Start your ${TRIAL_DAYS} days free` : 'Start with your profile';
+      if (hs) hs.textContent = onTrial
+        ? `Build your profile first — about ten minutes, free, no card. When it's ready you activate with ${TRIAL_DAYS} days free, and we check your licence and identity from there.`
+        : "Build it free — about ten minutes, no card. When it's ready you activate, and we check your licence and identity from there.";
+      /* Named for what the click does, not for the work behind it. "Build my
+         profile — free" describes a chore; this is the button on an offer
+         page, and the offer is the spot. */
+      const ctaBtn = document.getElementById('kt-coldstart-cta');
+      if (ctaBtn && onTrial) ctaBtn.innerHTML = 'Secure my spot <span aria-hidden="true">&rarr;</span>';
+      /* The account form and its 1-2-3 tracker belong to the pay-now path.
+         A cold visitor makes their account in the app, one screen along. */
       ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
       const signin = document.getElementById('kt-coldstart-signin');
       if (signin) signin.addEventListener('click', () => {
