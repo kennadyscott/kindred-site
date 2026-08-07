@@ -4157,6 +4157,14 @@ function openLogin() {
   const create = document.getElementById('login-create-btn');
   const login  = document.getElementById('login-submit-btn');
   if (create && login) {
+    /* Both buttons disable themselves on submit so nobody double-fires a sign
+       in, and the SUCCESS paths never re-enable them -- they navigate away, so
+       there was nothing to re-enable. Except signing out comes straight back
+       here to the same two DOM nodes, still disabled, and the label reset below
+       made it worse: it read "Log In" in full, just greyed at 40% and dead to
+       every click. Reset the state as well as the words. */
+    create.disabled = false;
+    login.disabled  = false;
     create.hidden = false;
     create.textContent = 'New here? Create an Account';
     create.style.cssText = 'background:white;border:1.5px solid var(--coral);color:var(--coral-dark);';
