@@ -52,14 +52,14 @@ moods.forEach(btn => {
 
 /* ---------- therapist carousel ---------- */
 /* Prompt framing from the brand deck's therapist-profile prompts:
-   "My therapy style is… / You may be a fit if… / First sessions feel like…" */
+   "My therapy style is… / You may be right for each other if… / First sessions feel like…" */
 const THERAPISTS = [
   {
     name: 'Maya Chen, LMFT',
     meta: 'She/Her • Licensed in CA',
     match: 94,
     pills: ['Warm', 'Direct', 'Collaborative'],
-    promptLabel: 'You may be a fit if…',
+    promptLabel: 'You may be right for each other if…',
     quote: '“You look fine on paper but feel exhausted from being the strong one.”',
     specs: ['Anxiety', 'Life Transitions', 'Relationship issues', 'Burnout', 'Self-Esteem'],
     photo: 'assets/therapist-maya.jpg',
@@ -116,7 +116,7 @@ function showTherapist(i) {
   matchMeta.textContent = t.meta;
   /* No percentage: a score that could not fall below 62 was reassurance
      dressed as measurement, and it argued against the filter-not-score
-     thesis. The fit tags carry it. */
+     thesis. The style tags carry it. */
   matchBadge.textContent = 'Kindred Match';
   matchPills.innerHTML = t.pills.map(p => `<span>${p}</span>`).join('');
   matchPromptLabel.textContent = t.promptLabel;

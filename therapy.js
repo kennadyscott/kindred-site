@@ -57,10 +57,10 @@ readyBtn.addEventListener('click', () => {
       <ul class="therapy-truths">
         <li><strong>Milder, short-lived rough patches</strong> often respond to rest, connection, and small tools — and therapy can still speed that up.</li>
         <li><strong>When something is persistent, distressing, or in the way,</strong> talking to a professional is a wise next step — not an overreaction.</li>
-        <li><strong>The relationship matters most.</strong> The fit between you and your therapist is one of the strongest predictors that therapy works.</li>
+        <li><strong>The relationship matters most.</strong> The relationship between you and your therapist is one of the strongest predictors that therapy works.</li>
       </ul>
       <div class="tp-ready-ctas">
-        <a class="btn btn-dark btn-sm" href="#tp-match">Find a therapist who fits</a>
+        <a class="btn btn-dark btn-sm" href="#tp-match">Find a therapist who suits you</a>
         <a class="btn btn-outline btn-sm" href="start-here.html">Take the Check-In first</a>
       </div>
       ${picked.some(s => s.key === 'mostdays' || s.key === 'unspoken') ? `

@@ -97,7 +97,7 @@ function render(t) {
   // "in their words" — the prompts that make this feel like a person
   const prompts = [];
   if (t.prompt_style) prompts.push(['My therapy style is…', t.prompt_style]);
-  if (t.prompt_fit) prompts.push(['You may be a fit if…', t.prompt_fit]);
+  if (t.prompt_fit) prompts.push(['You may be right for each other if…', t.prompt_fit]);
   if (t.prompt_first_session) prompts.push(['First sessions feel like…', t.prompt_first_session]);
   (Array.isArray(t.optional_prompts) ? t.optional_prompts : []).forEach(p => {
     if (p && p.question && p.answer) prompts.push([p.question, p.answer]);

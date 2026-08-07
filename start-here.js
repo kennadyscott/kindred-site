@@ -197,15 +197,15 @@ const SCREENS = {
         step('understand-yourself.html', 'Understand the pattern', "Short reads on what you're noticing and why it happens.")
       ],
       lot: [
-        step('therapy.html', 'What therapy is really like', 'How it works, what it costs, and how to know if someone is a fit.'),
+        step('therapy.html', 'What therapy is really like', 'How it works, what it costs, and how to know if someone is right for you.'),
         step('feel-better.html', 'Tools for right now', 'Small ways to steady yourself while you line up support.')
       ]
     }[im];
 
     /* every check-in ends at the same door — matching — with the warmth tuned to how heavy things are */
     const matchLead = {
-      little: "And whenever you want a person in your corner — not just tools — we'll introduce you to therapists who fit how you communicate.",
-      some: "If you'd like real support with this, meeting the right therapist is easier than you might think. We match on fit, not just credentials.",
+      little: "And whenever you want a person in your corner — not just tools — we'll introduce you to therapists who match how you communicate.",
+      some: "If you'd like real support with this, meeting the right therapist is easier than you might think. We match on how someone works, not just credentials.",
       lot: "When it's heavy most days, you deserve more than self-help. We'll match you with therapists suited to you — how you communicate, what you need, what helps you feel understood."
     }[im];
 
@@ -278,7 +278,7 @@ const SCREENS = {
       <ul class="therapy-truths">
         <li><strong>Milder, short-lived rough patches</strong> often respond to rest, connection, and small tools — and therapy can still help you get there faster.</li>
         <li><strong>When something is persistent, distressing, or getting in the way</strong> of work, sleep, or relationships, talking to a professional is a wise next step — not an overreaction.</li>
-        <li><strong>The relationship matters most.</strong> Research consistently finds the fit between you and your therapist is one of the strongest predictors that therapy works.</li>
+        <li><strong>The relationship matters most.</strong> Research consistently finds the relationship between you and your therapist is one of the strongest predictors that therapy works.</li>
       </ul>
       <div class="flow-nextsteps">
         ${step('therapy.html', 'How therapy works', 'Types of therapy, what sessions are like, what it costs, and FAQs.')}
@@ -326,8 +326,8 @@ function matchBlock(lead, opts = {}) {
     <div class="flow-match-cta">
       ${tag}
       <p>${lead}</p>
-      <a class="btn" href="${href}" target="_blank" rel="noopener">${opts.prefilled ? 'See therapists who fit' : 'Match with a Therapist'}</a>
-      <p class="flow-match-fine">Matched by fit — never by fee. Free for you, always.</p>
+      <a class="btn" href="${href}" target="_blank" rel="noopener">${opts.prefilled ? 'See therapists matched to you' : 'Match with a Therapist'}</a>
+      <p class="flow-match-fine">Matched to you — never to a budget. Free for you, always.</p>
     </div>`;
 }
 
