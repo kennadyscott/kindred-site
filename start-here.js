@@ -327,7 +327,7 @@ function matchBlock(lead, opts = {}) {
       ${tag}
       <p>${lead}</p>
       <a class="btn" href="${href}" target="_blank" rel="noopener">${opts.prefilled ? 'See therapists matched to you' : 'Match with a Therapist'}</a>
-      <p class="flow-match-fine">Matched to you — never to a budget. Free for you, always.</p>
+      <p class="flow-match-fine">Matched to you — never to the highest bidder. Free for you, always.</p>
     </div>`;
 }
 
