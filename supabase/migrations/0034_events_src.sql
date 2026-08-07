@@ -6,12 +6,18 @@
 -- the signup page but not that the email is what sent them — which is the only
 -- question the outreach is actually asking.
 --
+-- Dropped and recreated rather than CREATE OR REPLACE: that can only append
+-- columns, and inserting src before n reads to Postgres as renaming column 5.
+-- Nothing depends on this view, and the grant is reissued below.
+--
 -- Coarse channel only. There is deliberately no per-recipient token: that would
 -- turn an aggregate counts table into one that identifies people, and the whole
 -- design rests on it not being able to.
 -- =============================================================================
 
-create or replace view public.events_daily
+drop view if exists public.events_daily;
+
+create view public.events_daily
   with (security_invoker = on) as
 select
   (created_at at time zone 'America/Denver')::date as day,
