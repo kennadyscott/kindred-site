@@ -6,7 +6,7 @@
    marketing site sharing this origin. The name is app-specific for the same
    reason -- one origin now holds two things and they must not evict each
    other's caches. */
-const CACHE = 'kindred-app-v3';
+const CACHE = 'kindred-app-v4';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 

@@ -2712,3 +2712,14 @@ select.t-rate-input,
   text-decoration: underline;
 }
 .prompt-remove-btn:hover { color: #A8443A; }
+
+/* Was a bare 🚪 with only an aria-label. Nobody is sure what a door does
+   until they press it, and "signs you out" is the worst thing to discover by
+   experiment. Says what it does. */
+.signout-btn {
+  background: transparent; border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 14px; font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--ink-soft); cursor: pointer; white-space: nowrap;
+}
+.signout-btn:hover { border-color: var(--coral); color: var(--coral-dark); }
+.signout-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
