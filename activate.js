@@ -119,7 +119,7 @@ const FOUNDING_LOCK_MONTHS = 12;
   const now = new Date();
   const i = PRICING_TIERS.findIndex(t => now < t.until);
   const tier = i !== -1 ? PRICING_TIERS[i] : null;
-  const link = (q.get('offer') === 'trial30' && PAYMENT_LINK_TRIAL) ? PAYMENT_LINK_TRIAL : PAYMENT_LINK;
+  const link = PAYMENT_LINK_TRIAL || PAYMENT_LINK;   // see ONE LINK note in initActivate
   if (!link) return;
 
   const u = new URL(link);
@@ -135,8 +135,24 @@ const FOUNDING_LOCK_MONTHS = 12;
   const now = new Date();
   /* Outreach offer. Falls back silently if the trial link isn't configured
      yet, so a half-finished setup can never produce a broken checkout. */
-  const wantsTrial = new URLSearchParams(location.search).get('offer') === 'trial30';
-  const trial = wantsTrial && !!PAYMENT_LINK_TRIAL;
+  /* ---- ONE LINK ------------------------------------------------------------
+     The trial used to be opt-in via ?offer=trial30, back when it was an
+     outreach-only sweetener. It is not one any more: the app's Activate modal
+     appends offer=trial30 unconditionally and promises "Free for 30 days" to
+     everyone, so the trial link is already the only one anybody reaches
+     through the product.
+
+     What the opt-in still bought was a way to get it WRONG. Loading
+     activate.html without the parameter -- a typed URL, an old bookmark, a
+     link pasted without its query string -- silently used the no-trial link
+     while every screen around it still promised 30 days free. That is a page
+     that says "nothing charged today" and then charges.
+
+     So the trial is simply the offer now. PAYMENT_LINK_TRIAL being null is the
+     kill switch: unset it and everyone falls back to PAYMENT_LINK, no other
+     edit needed. Both Stripe links still need the same After-payment redirect
+     to welcome.html, since that is a per-link setting in the dashboard. */
+  const trial = !!PAYMENT_LINK_TRIAL;
   const idx = PRICING_TIERS.findIndex(t => now < t.until);
   const founding = idx !== -1;
   const tier = founding ? PRICING_TIERS[idx] : null;
