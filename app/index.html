@@ -46,7 +46,14 @@
       <button class="icon-btn back-btn" id="login-back">←</button>
       <div class="logo" id="login-title">Log In</div>
     </header>
-    <div class="login-form">
+    <!-- Shown INSTEAD of the form when a session already exists on this device
+         and restoreSession() is still in flight — welcome.html sends a
+         therapist who has just paid straight here, and a login form they do
+         not need appearing for half a second and then vanishing is the same
+         page-flash problem as the old checkout hop. If the restore fails, the
+         form below replaces this. -->
+    <p class="login-context" id="login-restoring" hidden>Signing you in…</p>
+    <div class="login-form" id="login-form">
       <p class="login-context" id="login-context" hidden></p>
       <div class="t-form-label">Email</div>
       <input type="email" class="t-rate-input" id="login-email" placeholder="you@example.com">
@@ -346,7 +353,7 @@
   </nav>
 </div>
 
-<script src="app.js?v=merge7"></script>
+<script src="app.js?v=merge9"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control

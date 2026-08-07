@@ -4148,6 +4148,7 @@ document.getElementById('choose-therapist-btn').addEventListener('click', () => 
 });
 
 function openLogin() {
+  setLoginRestoring(false);   // any earlier restore is finished or irrelevant
   document.getElementById('login-title').textContent = accountType === 'client' ? 'Client Login' : 'Therapist Login';
   /* Reset what the post-checkout path may have changed -- someone who signs
      out and back in is not arriving from a purchase, and DOES need the
@@ -6596,6 +6597,21 @@ if (!PRODUCTION_BUILD && /[?&]demo=client\b/.test(location.search)) seedClientDe
 // Nothing else is needed: the login handler already routes an account that has
 // no profile row into startTherapistSignup(). Someone who has just paid has
 // exactly that shape.
+/* Swaps the login screen between "Signing you in…" and the actual form. Reset
+   in openLogin() too, so any later visit to this screen always shows the form
+   rather than inheriting a restore that has long since finished. */
+function setLoginRestoring(on) {
+  const note = document.getElementById('login-restoring');
+  const form = document.getElementById('login-form');
+  if (note) note.hidden = !on;
+  if (form) form.hidden = !!on;
+  /* "Therapist Login" over "Signing you in…" tells someone they are about to
+     be asked for a password when they are not. Only touched while restoring;
+     openLogin() owns the title the rest of the time. */
+  const title = document.getElementById('login-title');
+  if (title && on) title.textContent = 'Kindred';
+}
+
 function applyLandingParams() {
   const email = new URLSearchParams(location.search).get('email');
   const wantsSignup = /therapist-signup/.test(location.hash);
@@ -6606,6 +6622,14 @@ function applyLandingParams() {
   if (/therapist-signin/.test(location.hash) && !wantsSignup) {
     accountType = 'therapist';
     openLogin();
+    /* A session on this device means restoreSession() is already in flight and
+       will land them in their portal in a moment. welcome.html sends a
+       therapist who has just paid to this exact hash, so showing them a login
+       form -- with their own session sitting in storage -- and replacing it
+       half a second later is a flash of the one screen they had earned the
+       right not to see. Hold the form back; showLoginForm() below puts it up
+       if the restore does not work out. */
+    if (authReady() && loadAuthSession()) setLoginRestoring(true);
     return;
   }
 
@@ -6726,6 +6750,11 @@ window.addEventListener('load', async () => {
   const returning = /[?&]identity=done/.test(location.search);
   if (returning) history.replaceState(null, '', location.pathname);  // don't re-fire on refresh
   const signedIn = await restoreSession();
+  /* The restore is done either way now. If it failed -- expired token, deleted
+     account, a profile that was never built -- the held-back form is the only
+     way forward, so put it up rather than leaving "Signing you in…" on screen
+     forever. */
+  if (!signedIn) setLoginRestoring(false);
   if (returning) openIdentityReturn(signedIn);
 });
 
