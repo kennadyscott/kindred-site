@@ -988,11 +988,19 @@ h1, h2, .logo, .chat-name, .nav-btn span:last-child {
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ===== BOTTOM NAV ===== */
+/* People use this in a browser, not as an installed app, so a bottom bar has
+   none of the native cues that tell you it is navigation -- no home indicator,
+   no OS chrome above it. A hairline border on white read as the end of the
+   page rather than a control. It now sits on its own surface and casts a
+   shadow upward, so content clearly passes BEHIND it. */
 .bottom-nav {
   display: flex;
   border-top: 1px solid var(--line);
-  background: white;
-  padding: 10px 0 22px;
+  background: #fff;
+  padding: 8px 0 20px;
+  box-shadow: 0 -6px 18px rgba(43, 34, 51, .09);
+  position: relative;
+  z-index: 20;
 }
 .bottom-nav.hidden { display: none; }
 .nav-btn {
@@ -1009,17 +1017,31 @@ h1, h2, .logo, .chat-name, .nav-btn span:last-child {
   cursor: pointer;
   position: relative;
 }
-.nav-btn.active { color: var(--coral-dark); }
+/* Colour alone was carrying the active state, at 11px, which is a lot to ask
+   of one word. The active tab now sits in a tinted pill so it is findable
+   without reading. */
+.nav-btn.active { color: var(--aubergine); font-weight: 700; }
+.nav-btn {
+  border-radius: 12px;
+  padding: 6px 2px 4px;
+  margin: 0 3px;
+  transition: background .15s ease;
+}
+/* --cream is #FCFCFE, which is white on a white bar. A tint of the brand
+   aubergine reads as selected without shouting. */
+.nav-btn.active { background: rgba(66, 36, 72, .085); }
+.nav-btn:hover:not(.active) { background: rgba(66, 36, 72, .04); }
+.nav-btn:focus-visible { outline: 2px solid var(--aubergine); outline-offset: -2px; }
 /* Drawn icons rather than emoji: emoji render differently on every platform
    and cannot be tinted, so the bar looked like five unrelated stickers. These
    carry the brand palette and sit on a consistent baseline. */
 .nav-icon { font-size: 17px; display: grid; place-items: center; height: 24px; }
-.nav-icon svg { width: 23px; height: 23px; display: block; }
+.nav-icon svg { width: 24px; height: 24px; display: block; }
 /* The active tab is already named by its label colour; dimming the rest keeps
    the icons from competing with it. */
-.nav-btn:not(.active) .nav-icon svg { opacity: .62; }
+.nav-btn:not(.active) .nav-icon svg { opacity: .55; }
 .nav-btn.active .nav-icon svg { opacity: 1; }
-.nav-btn span:last-child { font-size: 10px; white-space: nowrap; }
+.nav-btn span:last-child { font-size: 10.5px; white-space: nowrap; letter-spacing: -.1px; }
 .five-tabs .nav-btn { padding: 0 2px; }
 .five-tabs .nav-icon svg { width: 21px; height: 21px; }
 .five-tabs .nav-btn span:last-child { font-size: 9px; letter-spacing: -0.2px; }

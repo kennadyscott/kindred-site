@@ -819,6 +819,46 @@ let CLIENT_GENDER_OPTIONS = ['Female', 'Male', 'Non-binary', 'Transgender', 'Pre
 // Ideal-client gender: no "prefer not to say" — you can't target the absence of an answer.
 const IDEAL_GENDER_OPTIONS = ['Female', 'Male', 'Non-binary', 'Transgender'];
 
+// A therapist's OWN gender identity. Trans identities are named rather than
+// folded into "Female"/"Male": a therapist who is a trans woman and wants that
+// visible had no way to say it, and a client looking for exactly that had no
+// way to find it. "Prefer not to answer" exists because a therapist is entitled
+// to not publish this; it costs them gender-filtered matches, nothing else.
+const GENDER_IDENTITY_OPTIONS = [
+  { value: 'woman',       label: 'Woman' },
+  { value: 'man',         label: 'Man' },
+  { value: 'trans-woman', label: 'Transgender Woman' },
+  { value: 'trans-man',   label: 'Transgender Man' },
+  { value: 'nonbinary',   label: 'Non-binary / Genderqueer / Genderfluid' },
+  { value: 'prefer-not',  label: 'Prefer not to answer' }
+];
+
+// Clients state a preference in three buckets — female / male / nonbinary —
+// and that is the vocabulary the intake, the saved filters and every stored
+// row already speak. A trans woman IS a woman, so she belongs in the same
+// bucket as one; comparing the raw value would have quietly hidden her from
+// every client who asked for a woman, which is the exact failure this whole
+// change exists to avoid. Legacy rows stored 'female'/'male' and map to
+// themselves, so nothing saved before today shifts bucket.
+// The saved value, expressed in today's vocabulary — so a therapist who picked
+// "Female" before this existed opens their profile and finds "Woman" already
+// ticked instead of a blank answer they'd have to give again.
+function normalizeGender(v) {
+  return v === 'female' ? 'woman'
+       : v === 'male'   ? 'man'
+       : v === 'non-binary' ? 'nonbinary'
+       : (v || '');
+}
+
+function genderBucket(v) {
+  switch (v) {
+    case 'woman': case 'trans-woman': case 'female':  return 'female';
+    case 'man':   case 'trans-man':   case 'male':    return 'male';
+    case 'nonbinary': case 'non-binary':              return 'nonbinary';
+    default: return null;   // 'prefer-not', blank, unknown — matches no preference
+  }
+}
+
 // Field of work: common pills, then "Other" opens the fuller list + free text.
 const FIELD_PRIMARY = ['First responder', 'Healthcare', 'Military & Veteran', 'Education', 'Entrepreneur', 'Full-time parent'];
 let FIELD_MORE = ['Tech', 'Finance & Legal', 'Legal', 'Service industry', 'Retail', 'Hospitality',
@@ -1136,7 +1176,7 @@ function isCompatible(t, mode) {
 
   if (intake.modality !== 'open' && intake.modalityRequired && !t.modalities.includes(intake.modality)) return false;
 
-  if (intake.genderPref !== 'no-preference' && intake.genderRequired && t.identity.gender !== intake.genderPref) return false;
+  if (intake.genderPref !== 'no-preference' && intake.genderRequired && genderBucket(t.identity.gender) !== intake.genderPref) return false;
 
   if (intake.lgbtqRequired && !t.identity.lgbtqAffirming) return false;
 
@@ -1193,8 +1233,8 @@ function getMatchReasons(t) {
   if (intake.hasInsurance === 'yes' && intake.insurance !== 'any' && t.insuranceList.includes(intake.insurance)) reasons.push(`Accepts ${intake.insurance}`);
   if (intake.hasInsurance === 'no' && intake.noInsurancePref === 'sliding-scale' && hasSlidingScale(t)) reasons.push('Sliding scale available');
   if (intake.lgbtqRequired && t.identity.lgbtqAffirming) reasons.push('LGBTQ+ Affirming');
-  if (intake.genderPref !== 'no-preference' && t.identity.gender === intake.genderPref) {
-    reasons.push({ female: 'Female therapist', male: 'Male therapist', nonbinary: 'Nonbinary therapist' }[t.identity.gender] || 'Preferred gender');
+  if (intake.genderPref !== 'no-preference' && genderBucket(t.identity.gender) === intake.genderPref) {
+    reasons.push({ female: 'Female therapist', male: 'Male therapist', nonbinary: 'Nonbinary therapist' }[intake.genderPref] || 'Preferred gender');
   }
   if (intake.languagePref !== 'any' && t.languages.includes(intake.languagePref)) reasons.push(`Speaks ${intake.languagePref}`);
   if (intake.stylePref && STYLE_ALIGN[intake.stylePref] === t.style) reasons.push('Similar style to what you want');
@@ -2483,7 +2523,7 @@ function prevExperienceScore(t) {
     if (!hit && sig.identity) {
       // "shares my identity" amplifies whatever identity preferences they set
       const idHits = [
-        intake.genderPref !== 'no-preference' && (t.identity || {}).gender === intake.genderPref,
+        intake.genderPref !== 'no-preference' && genderBucket((t.identity || {}).gender) === intake.genderPref,
         intake.ethnicityPref !== 'no-preference' && t.ethnicity === intake.ethnicityPref,
         (intake.affinities || []).some(a => (t.affinities || []).includes(a)),
         (intake.faith || []).some(f => (t.faith || []).includes(f))
@@ -4548,11 +4588,10 @@ function renderSignupStepBody() {
         <div class="option-row ${d.style === 'balanced' ? 'selected' : ''}" data-style="balanced">A mix of both</div>
         <div class="option-row ${d.style === 'direct' ? 'selected' : ''}" data-style="direct">Direct — tells it like it is</div>
       </div>
-      <div class="t-form-label">Gender</div>
+      <div class="t-form-label">Gender Identity</div>
       <div class="option-list" id="ts-gender-list">
-        <div class="option-row ${d.gender === 'female' ? 'selected' : ''}" data-gender="female">Female</div>
-        <div class="option-row ${d.gender === 'male' ? 'selected' : ''}" data-gender="male">Male</div>
-        <div class="option-row ${d.gender === 'nonbinary' ? 'selected' : ''}" data-gender="nonbinary">Nonbinary</div>
+        ${GENDER_IDENTITY_OPTIONS.map(g => `
+        <div class="option-row ${normalizeGender(d.gender) === g.value ? 'selected' : ''}" data-gender="${g.value}">${g.label}</div>`).join('')}
       </div>
       <div class="must-have-toggle">
         <div class="toggle-label"><strong>LGBTQ+ affirming</strong><span>Shown to clients who require this</span></div>
@@ -5129,7 +5168,11 @@ function openActivateProfile() {
          and the rate is what happens after it. Leading with $9.99 asked for
          money on a screen where none is due. -->
     <div class="activate-plan ${p.founding ? 'founding' : ''}">
-      ${p.founding ? `<div class="activate-badge">🌟 Rate rises to $${p.nextRate.toFixed(2)} on ${p.nextDateLabel}</div>` : ''}
+      <!-- The badge used to count down to the next price rise. It read as a
+           threat on the one screen where someone is deciding to pay, and it
+           made the deadline the story instead of the rate. Same offer, stated
+           as what they get: $20 a month less than the standard rate. -->
+      ${p.founding ? `<div class="activate-badge">🌟 Founding rate — $${p.introRate.toFixed(2)}/mo instead of $${p.standardRate.toFixed(2)}</div>` : ''}
       <div class="activate-price">Free<span> for 30 days</span></div>
       ${p.founding
         ? `<div class="activate-terms">then $${p.introRate.toFixed(2)}/mo, locked for ${p.introMonths} months · cancel anytime</div>`
@@ -5139,7 +5182,7 @@ function openActivateProfile() {
       <li><strong>Nothing is charged for 30 days.</strong> Your card is saved now; cancel before day 31 and you're never billed</li>
       <li>Your profile goes live in client matching once your licence and identity are verified</li>
       <li>Cancel anytime — your profile just unlists, nothing is deleted</li>
-      ${p.founding ? `<li>Your $${p.introRate.toFixed(2)} rate is locked for a full ${p.introMonths} months — join later and you'll pay more</li>` : ''}
+      ${p.founding ? `<li>Your $${p.introRate.toFixed(2)} rate is locked for a full ${p.introMonths} months — that's $${Math.round((p.standardRate - p.introRate) * p.introMonths)} less than the standard $${p.standardRate.toFixed(2)}/mo</li>` : ''}
     </ul>
     <div id="activate-status"></div>
     <button class="primary-btn" style="margin-top:14px;background:var(--coral);color:white;" id="activate-pay-btn">Continue to secure checkout →</button>
@@ -5927,11 +5970,10 @@ function renderTherapistProfileBody() {
           </div>
           <p class="portal-note">We check each license against that state's board by hand. A state only becomes available for matching once its license is verified.</p>
 
-        <div class="t-form-label">Gender</div>
+        <div class="t-form-label">Gender Identity</div>
         <div class="chip-grid">
-          <div class="chip-option ${t.identity.gender === 'female' ? 'selected' : ''}" data-set-gender="female">Female</div>
-          <div class="chip-option ${t.identity.gender === 'male' ? 'selected' : ''}" data-set-gender="male">Male</div>
-          <div class="chip-option ${t.identity.gender === 'nonbinary' ? 'selected' : ''}" data-set-gender="nonbinary">Nonbinary</div>
+          ${GENDER_IDENTITY_OPTIONS.map(g => `
+          <div class="chip-option ${normalizeGender(t.identity.gender) === g.value ? 'selected' : ''}" data-set-gender="${g.value}">${g.label}</div>`).join('')}
         </div>
 
         <div class="must-have-toggle">
@@ -6302,6 +6344,7 @@ function openOnDemandInfo() {
     <p class="modality-info-text">On-Demand lets clients book a single, one-time session with you this week — separate from ongoing therapy. A few things to know:</p>
     <ul class="policy-list">
       <li><strong>Not for crises.</strong> It's not crisis care — anyone in crisis should call or text 988 or their local emergency line.</li>
+      <li><strong>You set your On-Demand session fee.</strong> Kindred never prices your time — you choose what a one-time session costs, and you can change it whenever you like.</li>
       <li><strong>Cash-pay only.</strong> No insurance is billed for On-Demand sessions.</li>
       <li><strong>Clients pay up front.</strong> The client's card is authorized when they request a slot and charged the moment you accept — you never chase payment.</li>
       <li><strong>You meet outside the app.</strong> Kindred handles the request and payment; you schedule and hold the actual session on your own platform.</li>
@@ -6900,7 +6943,7 @@ function searchResults() {
   return THERAPISTS.filter(t => {
     if (q && !searchableText(t).includes(q)) return false;
     if (searchState.state && (t.location || {}).state !== searchState.state) return false;
-    if (searchState.gender && (t.identity || {}).gender !== searchState.gender) return false;
+    if (searchState.gender && genderBucket((t.identity || {}).gender) !== searchState.gender) return false;
     if (searchState.format && !(t.formats || []).includes(searchState.format)) return false;
     return true;
   });
@@ -6927,7 +6970,7 @@ function renderSearch() {
       ${chip('gender', '', 'Any')}
       ${chip('gender', 'female', 'Female')}
       ${chip('gender', 'male', 'Male')}
-      ${chip('gender', 'non-binary', 'Non-binary')}
+      ${chip('gender', 'nonbinary', 'Non-binary')}
     </div>
     <div class="search-filter-label">Session format</div>
     <div class="chip-grid">
@@ -6940,13 +6983,23 @@ function renderSearch() {
     // server mode: full-text search in Postgres over the live roster
     const seq = ++searchFetchSeq;
     results.innerHTML = '<p class="empty-state">Searching…</p>';
+    /* p_gender is deliberately NOT sent. The SQL compares the stored value
+       exactly, so asking it for 'female' would drop every therapist who
+       answered "Woman" or "Transgender Woman" — the filter would look like it
+       worked and silently return fewer people. Gender is bucketed here instead,
+       on the rows that come back, which needs no migration to be correct. */
     dbRpc('search_therapists', {
       p_query: searchState.q.trim() || null,
       p_state: searchState.state || null,
-      p_gender: searchState.gender || null,
+      p_gender: null,
       p_format: searchState.format || null
     })
-      .then(rows => { if (seq === searchFetchSeq) renderSearchRows(rows.map(dbRowToTherapist)); })
+      .then(rows => {
+        if (seq !== searchFetchSeq) return;
+        const list = rows.map(dbRowToTherapist)
+          .filter(t => !searchState.gender || genderBucket((t.identity || {}).gender) === searchState.gender);
+        renderSearchRows(list);
+      })
       .catch(() => { if (seq === searchFetchSeq) renderSearchRows(searchResults()); });
   } else {
     renderSearchRows(searchResults());

@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=merge4">
+<link rel="stylesheet" href="style.css?v=merge6">
 </head>
 <body>
 
@@ -346,7 +346,7 @@
   </nav>
 </div>
 
-<script src="app.js?v=merge4"></script>
+<script src="app.js?v=merge5"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control
@@ -367,7 +367,7 @@
     });
     /* The ?v= makes the browser fetch sw.js itself rather than reuse a cached
        copy -- bump it whenever sw.js changes. */
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=merge4').catch(() => {}));
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=merge6').catch(() => {}));
   }
 </script>
 </body>
