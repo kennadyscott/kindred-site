@@ -17,6 +17,13 @@
   --ink-soft: #6E6172;
   --coral: #422448;        /* brand Aubergine -- primary actions */
   --coral-dark: #301A35;
+  /* The brand colour under its ACTUAL name. The variables above kept their
+     pre-rebrand names, so anyone writing new CSS reaches for --aubergine,
+     gets nothing, and the browser discards the whole declaration -- which is
+     how starred specialty chips ended up white-on-white and unreadable:
+     `background: var(--aubergine)` fell back to transparent while the label
+     stayed #fff. An alias is cheaper than remembering. */
+  --aubergine: #422448;
   --teal: #6E6172;
   --teal-light: #F0EBF4;
   --lavender: #B8A3C4;     /* brand Lilac */
