@@ -413,10 +413,43 @@ async function authPost(path, body) {
       /* The account form and its 1-2-3 tracker belong to the pay-now path.
          A cold visitor makes their account in the app, one screen along. */
       ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
+
+      /* THE OFFER ITSELF still has to be on the page. The priced card and the
+         what-you-get list live inside #kt-step2, which stays hidden until an
+         account exists -- built for the pay-now path, where by definition one
+         does. Hiding the account form therefore stripped the page back to a
+         headline and a button, and the pitch this link exists to make went
+         with it.
+         So: reveal the offer, keep the checkout button out of it. A cold
+         visitor has no account to check out with -- their next step is the
+         Secure my spot button, which is moved below the offer so the page
+         reads pitch first, ask second. */
+      const step2 = document.getElementById('kt-step2');
+      if (step2) {
+        step2.hidden = false;
+        // "Account ready for x@y" — there is no account yet.
+        const who = document.getElementById('kt-acct-who');
+        if (who) who.hidden = true;
+        const wrap = document.getElementById('kt-checkout-wrap');
+        if (wrap) wrap.hidden = true;
+        step2.parentNode.insertBefore(step2, cold);   // offer above the ask
+      }
       const signin = document.getElementById('kt-coldstart-signin');
       if (signin) signin.addEventListener('click', () => {
         cold.hidden = true;
         ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = false; });
+        /* Undo the pitch layout. revealStep2() only toggles #kt-acct and
+           #kt-step2 -- it has never known about the checkout button, because
+           on the pay-now path nothing ever hides it. Leaving it hidden here
+           would drop someone who signed in onto the offer with no way to buy,
+           and step2 must go back to hidden so revealStep2() is the thing that
+           opens it, after the account is confirmed. */
+        const step2b = document.getElementById('kt-step2');
+        if (step2b) step2b.hidden = true;
+        const wrapB = document.getElementById('kt-checkout-wrap');
+        if (wrapB) wrapB.hidden = false;
+        const whoB = document.getElementById('kt-acct-who');
+        if (whoB) whoB.hidden = false;
         const ht2 = document.getElementById('kt-head-title');
         const hs2 = document.getElementById('kt-head-sub');
         if (ht2) ht2.textContent = 'Activate your profile';
