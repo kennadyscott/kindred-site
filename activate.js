@@ -180,13 +180,21 @@ const FOUNDING_LOCK_MONTHS = 12;
       : `then $${STANDARD_RATE.toFixed(2)}/month · cancel anytime`;
     const was = document.getElementById('kt-offer-was');
     if (was) was.hidden = true;
-    /* Stated rather than calculated: the trial shifts every subsequent billing
-       date, so any "you save $X in year one" figure here would be off by a
-       month and wrong in a way nobody would catch. */
+    /* This used to refuse to name a figure at all -- "the trial shifts every
+       billing date, so any 'you save $X in year one' would be off by a month".
+       That was true of a YEAR-ONE number and only of a year-one number. The
+       saving per BILLED month is exact, and so is the total across the twelve
+       of them, because the coupons were deliberately cut to 13 months so the
+       trial cohort still gets a full twelve invoices at the founding rate.
+       So say it in billed months and the number is right: $20 a month, $240
+       over twelve. Refusing to state a saving on the page whose whole job is
+       to present one was the more expensive kind of caution. */
+    const perMonth = STANDARD_RATE - rate;
+    const overLock = Math.round(perMonth * FOUNDING_LOCK_MONTHS);
     const save = document.getElementById('kt-offer-save');
     if (save) {
       save.textContent = founding
-        ? `Nothing to pay today. After ${TRIAL_DAYS} days it's $${rate.toFixed(2)}/month instead of $${STANDARD_RATE.toFixed(2)}.`
+        ? `You save $${perMonth.toFixed(2)} a month — $${overLock} across your first ${FOUNDING_LOCK_MONTHS} billed months, and nothing at all for the first ${TRIAL_DAYS} days.`
         : `Nothing to pay today. Cancel before day ${TRIAL_DAYS + 1} and you're never charged.`;
     }
   } else if (founding) {
