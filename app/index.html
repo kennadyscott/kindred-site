@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kindred &mdash; Therapy, Matched to You</title>
+<link rel="icon" type="image/png" href="brand-emblem.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#422448">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kindred">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=merge1">
+</head>
+<body>
+
+<div class="phone">
+
+  <div class="demo-banner">Demo prototype — all people and data are fictional</div>
+
+  <!-- ===== ACCOUNT TYPE (FIRST SCREEN) ===== -->
+  <section class="screen" id="screen-account-type">
+    <div class="welcome-content">
+      <img class="brand-lockup-img" src="brand-lockup.png" alt="Kindred — Therapy, matched to you">
+      <h1>What brings you to Kindred?</h1>
+      <div class="welcome-sub">Let's get you to the right place.</div>
+      <button class="welcome-card" id="choose-client-btn">
+        <span class="welcome-card-icon">🔍</span>
+        <span class="welcome-card-text"><span class="welcome-card-label">I'm looking for therapy</span><span class="welcome-card-desc">Find a therapist who actually fits</span></span>
+      </button>
+      <button class="welcome-card" id="choose-therapist-btn">
+        <span class="welcome-card-icon">🩺</span>
+        <span class="welcome-card-text"><span class="welcome-card-label">I'm a therapist</span><span class="welcome-card-desc">Manage your profile and requests</span></span>
+      </button>
+      <button class="welcome-demo-link" id="preview-client-demo-btn">👀 Preview a filled-in client account (demo data)</button>
+    </div>
+  </section>
+
+  <!-- ===== LOGIN ===== -->
+  <section class="screen hidden" id="screen-login">
+    <header class="top-bar">
+      <button class="icon-btn back-btn" id="login-back">←</button>
+      <div class="logo" id="login-title">Log In</div>
+    </header>
+    <div class="login-form">
+      <p class="login-context" id="login-context" hidden></p>
+      <div class="t-form-label">Email</div>
+      <input type="email" class="t-rate-input" id="login-email" placeholder="you@example.com">
+      <div class="t-form-label">Password</div>
+      <input type="password" class="t-rate-input" id="login-password" placeholder="••••••••">
+      <button class="primary-btn" style="margin-top:20px;background:var(--coral);color:white;" id="login-submit-btn">Log In</button>
+      <button class="primary-btn" style="background:white;border:1.5px solid var(--coral);color:var(--coral-dark);" id="login-create-btn">New here? Create an Account</button>
+    </div>
+  </section>
+
+  <!-- ===== THERAPIST SIGNUP (brand-new profile) ===== -->
+  <section class="screen hidden" id="screen-therapist-signup">
+    <div class="intake-content" id="therapist-signup-content"></div>
+  </section>
+
+  <!-- ===== INTAKE QUIZ ===== -->
+  <section class="screen hidden" id="screen-intake">
+    <div class="intake-content" id="intake-content"></div>
+  </section>
+
+  <!-- ===== EXPLORE KINDRED (app version of the website) ===== -->
+  <section class="screen hidden" id="screen-explore">
+    <header class="top-bar explore-bar">
+      <div class="logo">Kindred</div>
+      <button class="experience-switch-btn" id="explore-to-match-btn">Match with a Therapist →</button>
+    </header>
+    <div class="explore-content">
+      <img class="explore-lockup" src="brand-lockup.png" alt="Kindred — Therapy, matched to you">
+      <h1 class="explore-headline">Find someone who gets you.</h1>
+      <p class="explore-sub">Kindred makes finding a therapist feel less like searching a database and more like recognizing a person you can actually talk to.</p>
+      <div class="explore-block">
+        <div class="explore-block-title">Credentials matter. Connection does too.</div>
+        <p>Every Kindred therapist is licensed and vetted. Then we go further — matching you by style, specialty, identity preferences, and the emotional feel of the relationship.</p>
+      </div>
+      <div class="explore-block">
+        <div class="explore-block-title">Stop scrolling directories. Start with fit.</div>
+        <p>Tell us what you need emotionally, practically, and logistically. We'll show you a focused set of therapists with clear reasons why each one fits.</p>
+      </div>
+      <div class="explore-section-title">Resources</div>
+      <div class="explore-resources-sub">Save what speaks to you — you can share your saved resources with your therapist later.</div>
+      <div id="explore-resources-list"></div>
+      <div class="explore-block explore-placeholder">
+        <p>🌿 More of the Kindred site is coming to the app soon — stories, guides, and what to expect from your first session.</p>
+      </div>
+      <button class="primary-btn" style="background:var(--coral);color:white;margin-top:8px;" id="explore-cta-btn">Match with a Therapist</button>
+    </div>
+  </section>
+
+  <!-- ===== DISCOVER SCREEN ===== -->
+  <section class="screen hidden" id="screen-discover">
+    <header class="top-bar">
+      <div class="logo">Kindred</div>
+      <button class="icon-btn" id="open-search-btn" aria-label="Search therapists">🔍</button>
+    </header>
+
+    <div class="card-stack" id="card-stack"></div>
+
+    <div class="action-row" id="action-row">
+      <button class="action-btn pass" id="btn-pass" aria-label="Pass">✕</button>
+      <button class="action-btn info" id="btn-info" aria-label="More info">i</button>
+      <button class="action-btn like" id="btn-like" aria-label="Like">♥</button>
+    </div>
+  </section>
+
+  <!-- ===== ON-DEMAND SCREEN ===== -->
+  <section class="screen hidden" id="screen-ondemand">
+    <header class="top-bar">
+      <div class="logo">On-Demand</div>
+    </header>
+    <p class="ondemand-subtitle">Therapists with open one-time slots this week — matched to what you told us you need.</p>
+    <div class="crisis-note">In crisis? Call or text <strong>988</strong> — On-Demand isn't for emergencies.</div>
+    <div class="ondemand-list" id="ondemand-list"></div>
+  </section>
+
+  <!-- ===== SHORT LIST SCREEN ===== -->
+  <section class="screen hidden" id="screen-shortlist">
+    <header class="top-bar">
+      <div class="logo">Short List</div>
+    </header>
+    <p class="ondemand-subtitle">Therapists you've hearted. Pick up to 5 to actually reach out to — your Top 5 lets them know you're serious.</p>
+    <div class="matches-list" id="shortlist-list">
+      <p class="empty-state">Nothing saved yet — swipe right on someone in Discover to add them here.</p>
+    </div>
+  </section>
+
+  <!-- ===== TOP 5 (MATCHES) SCREEN ===== -->
+  <section class="screen hidden" id="screen-matches">
+    <header class="top-bar">
+      <div class="logo">Top 5</div>
+    </header>
+    <div class="matches-list" id="matches-list">
+      <p class="empty-state">No requests sent yet — head to your Short List to pick your Top 5.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHAT SCREEN ===== -->
+  <section class="screen hidden" id="screen-chat">
+    <header class="top-bar chat-header">
+      <button class="icon-btn back-btn" id="chat-back">←</button>
+      <div class="chat-therapist-info">
+        <div class="avatar-sm" id="chat-avatar"></div>
+        <div>
+          <div class="chat-name" id="chat-name"></div>
+          <div class="chat-status">Usually replies within a day</div>
+        </div>
+      </div>
+      <button class="experience-switch-btn hidden" id="between-sessions-btn">🌿 Between Sessions</button>
+    </header>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Say hello…" autocomplete="off">
+      <button id="chat-send">➤</button>
+    </div>
+  </section>
+
+  <!-- ===== THERAPIST: HOME / WEEKLY SCHEDULE ===== -->
+  <section class="screen hidden" id="screen-t-home">
+    <header class="top-bar">
+      <div class="logo" id="t-home-title">This Week</div>
+      <button class="icon-btn" id="therapist-logout-0" aria-label="Log out">🚪</button>
+    </header>
+    <div class="requests-list" id="t-home-list"></div>
+  </section>
+
+  <!-- ===== THERAPIST: REQUESTS INBOX ===== -->
+  <section class="screen hidden" id="screen-t-requests">
+    <header class="top-bar">
+      <div class="logo" id="t-requests-title">Requests</div>
+      <button class="icon-btn" id="therapist-logout-1" aria-label="Log out">🚪</button>
+    </header>
+    <div class="requests-list" id="requests-list"></div>
+  </section>
+
+  <!-- ===== THERAPIST: PROFILE & AVAILABILITY ===== -->
+  <section class="screen hidden" id="screen-t-profile">
+    <header class="top-bar">
+      <div class="logo">My Profile</div>
+      <button class="icon-btn" id="therapist-logout-2" aria-label="Log out">🚪</button>
+    </header>
+    <div class="t-profile-content" id="t-profile-content"></div>
+  </section>
+
+  <!-- ===== THERAPIST: INSIGHTS DASHBOARD ===== -->
+  <section class="screen hidden" id="screen-t-insights">
+    <header class="top-bar">
+      <div class="logo">Insights</div>
+      <button class="icon-btn" id="therapist-logout-3" aria-label="Log out">🚪</button>
+    </header>
+    <div class="t-profile-content" id="t-insights-content"></div>
+  </section>
+
+  <!-- ===== CLIENT: SEARCH ===== -->
+  <section class="screen hidden" id="screen-search">
+    <header class="top-bar">
+      <div class="logo">Search</div>
+      <button class="icon-btn" id="close-search-btn" aria-label="Close search">✕</button>
+    </header>
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="search-input" placeholder="Try a name, EMDR, anxiety, couples…" autocomplete="off">
+      <div class="search-filters" id="search-filters"></div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </section>
+
+  <!-- ===== THERAPIST: SETTINGS ===== -->
+  <section class="screen hidden" id="screen-t-settings">
+    <header class="top-bar">
+      <div class="logo">Settings</div>
+      <button class="icon-btn" id="therapist-logout-4" aria-label="Log out">🚪</button>
+    </header>
+    <div class="t-profile-content" id="t-settings-content"></div>
+  </section>
+
+  <!-- ===== THERAPIST BOTTOM NAV ===== -->
+  <nav class="bottom-nav hidden" id="therapist-nav">
+    <button class="nav-btn active" data-tscreen="t-insights">
+      <span class="nav-icon">🏠</span><span>Home</span>
+    </button>
+    <button class="nav-btn" data-tscreen="t-requests">
+      <span class="nav-icon">💌</span><span>Inquiries</span>
+      <span class="nav-badge hidden" id="t-nav-badge">0</span>
+    </button>
+    <button class="nav-btn" data-tscreen="t-home">
+      <span class="nav-icon">⚡</span><span>On Demand</span>
+    </button>
+    <button class="nav-btn" data-tscreen="t-profile">
+      <span class="nav-icon">👤</span><span>Profile</span>
+    </button>
+    <button class="nav-btn" data-tscreen="t-settings">
+      <span class="nav-icon">⚙</span><span>Settings</span>
+    </button>
+  </nav>
+
+  <!-- ===== PROFILE DETAIL MODAL ===== -->
+  <div class="modal-overlay hidden" id="detail-modal">
+    <div class="modal-sheet" id="detail-sheet"></div>
+  </div>
+
+  <!-- ===== REQUEST MATCH INTAKE MODAL ===== -->
+  <div class="modal-overlay hidden" id="request-intake-modal">
+    <div class="modal-sheet" id="request-intake-sheet"></div>
+  </div>
+
+  <!-- ===== GENERIC CONFIRM MODAL (payment / cancellation) ===== -->
+  <div class="modal-overlay hidden" id="confirm-modal">
+    <div class="modal-sheet" id="confirm-sheet"></div>
+  </div>
+
+  <!-- ===== EXPERIENCE CHOICE MODAL (matching vs explore) ===== -->
+  <div class="modal-overlay hidden" id="experience-modal">
+    <div class="experience-card">
+      <div class="experience-title">Welcome back</div>
+      <div class="experience-sub">Where would you like to start today?</div>
+      <button class="welcome-card" id="exp-match-btn">
+        <span class="welcome-card-icon">💜</span>
+        <span class="welcome-card-text"><span class="welcome-card-label">Match with a Therapist</span><span class="welcome-card-desc">Browse your curated matches</span></span>
+      </button>
+      <button class="welcome-card" id="exp-explore-btn">
+        <span class="welcome-card-icon">🌿</span>
+        <span class="welcome-card-text"><span class="welcome-card-label">Explore Kindred</span><span class="welcome-card-desc">Learn how Kindred works and what to expect</span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MODALITY INFO MODAL ===== -->
+  <div class="modal-overlay hidden" id="modality-info-modal">
+    <div class="modal-sheet" id="modality-info-sheet"></div>
+  </div>
+
+  <!-- ===== MATCH CELEBRATION MODAL ===== -->
+  <div class="modal-overlay hidden" id="match-modal">
+    <div class="match-celebration">
+      <div class="match-hearts">✦ ✧ ✦</div>
+      <h1>It's a Match!</h1>
+      <p id="match-subtext">You and <span id="match-name"></span> both feel good about this.</p>
+      <div class="match-avatars">
+        <div class="avatar-lg" id="match-avatar"></div>
+      </div>
+      <button class="primary-btn" id="match-message-btn">Send a Message</button>
+      <button class="text-btn" id="match-keep-swiping">Keep Browsing</button>
+    </div>
+  </div>
+
+  <!-- ===== WAITLIST TOAST ===== -->
+  <div class="toast hidden" id="waitlist-toast">Request sent — they'll confirm availability soon.</div>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav hidden" id="bottom-nav">
+    <button class="nav-btn active" data-screen="discover">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.2" fill="#E9E3F2"/>
+        <circle cx="10.5" cy="10.5" r="6.2" stroke="#422448" stroke-width="1.8"/>
+        <path d="M15.2 15.2 20 20" stroke="#422448" stroke-width="2.1" stroke-linecap="round"/>
+      </svg></span><span>Discover</span>
+    </button>
+    <button class="nav-btn" data-screen="ondemand">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M13.4 2.5 5.8 13.1h4.7l-1 8.4 7.7-10.7h-4.8z" fill="#F6C453" stroke="#E5A93A" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M19.6 6.4v2M18.6 7.4h2" stroke="#F6C453" stroke-width="1.3" stroke-linecap="round"/>
+      </svg></span><span>On-Demand</span>
+    </button>
+    <button class="nav-btn" data-screen="shortlist">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6.5 3.6h11a1 1 0 0 1 1 1v15.6l-6.5-4.4-6.5 4.4V4.6a1 1 0 0 1 1-1z" fill="#E9E3F2" stroke="#422448" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg></span><span>Short List</span>
+    </button>
+    <button class="nav-btn" data-screen="matches">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6.6 3.8h10.8v5.1a5.4 5.4 0 0 1-10.8 0z" fill="#DDEDE9" stroke="#4E8C82" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M6.6 5.2H4.2v1.6a3.2 3.2 0 0 0 2.6 3.1M17.4 5.2h2.4v1.6a3.2 3.2 0 0 1-2.6 3.1" stroke="#4E8C82" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M12 14.4v3.4M8.4 20.3h7.2" stroke="#4E8C82" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M12 9.1c-1.5-1.3-3-2-3-3.3a1.55 1.55 0 0 1 3-.55 1.55 1.55 0 0 1 3 .55c0 1.3-1.5 2-3 3.3z" fill="#8FCBBE"/>
+      </svg></span><span>Top 5</span>
+      <span class="nav-badge hidden" id="nav-badge">0</span>
+    </button>
+    <button class="nav-btn" data-screen="profile">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.2" fill="#FBE6DF"/>
+        <circle cx="12" cy="9.6" r="3.1" stroke="#D9705A" stroke-width="1.8"/>
+        <path d="M6.3 19.1c1.1-3 3.2-4.5 5.7-4.5s4.6 1.5 5.7 4.5" stroke="#D9705A" stroke-width="1.8" stroke-linecap="round"/>
+      </svg></span><span>You</span>
+    </button>
+  </nav>
+</div>
+
+<script src="app.js?v=merge1"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    /* A new worker calls skipWaiting() + clients.claim(), so it takes control
+       of THIS page -- but the JavaScript this page already loaded is still the
+       old copy. Without the reload below, the first refresh after a deploy
+       silently runs stale code and only a SECOND refresh picks up the new
+       build. That is what made fixed bugs look unfixed.
+
+       hadController distinguishes an UPDATE from a first install: on a first
+       install there is no controller yet and nothing stale to replace, so
+       reloading there would just be a pointless flash. */
+    const hadController = !!navigator.serviceWorker.controller;
+    let swReloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || swReloading) return;
+      swReloading = true;
+      location.reload();
+    });
+    /* The ?v= makes the browser fetch sw.js itself rather than reuse a cached
+       copy -- bump it whenever sw.js changes. */
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=merge1').catch(() => {}));
+  }
+</script>
+</body>
+</html>

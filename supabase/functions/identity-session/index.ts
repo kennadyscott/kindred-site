@@ -39,7 +39,11 @@ const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 // Where Stripe sends them back to. The app reads ?identity=done and shows the
 // pending state -- the flag itself is set by the webhook, never by this return.
-const RETURN_URL = 'https://app.kindredtherapymatch.com/?identity=done';
+// The app moved from a subdomain to /app/ on the main origin. The old address
+// still redirects, but Stripe should send people to the real one rather than
+// through a hop -- a redirect in the middle of an identity return is exactly
+// where a session gets dropped.
+const RETURN_URL = 'https://kindredtherapymatch.com/app/?identity=done';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',

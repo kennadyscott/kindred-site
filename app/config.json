@@ -1,0 +1,5 @@
+{
+  "clientDataPersistence": false,
+  "therapistBillingLive": true,
+  "_note": "Server-controlled runtime flags. The shipped app (incl. the App Store build) fetches this at launch, so flipping a flag here + redeploying changes behavior with NO new app binary and NO App Store re-review. Flip clientDataPersistence to true the moment the BAA is signed to turn on server-side client data."
+}

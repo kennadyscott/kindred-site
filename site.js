@@ -4,7 +4,12 @@
    At launch, change THIS ONE LINE to the production app URL. Every "Match with
    a therapist" / store-badge / search link (marked data-app-link) and the
    dynamic check-in handoff read from it — no site-wide find-replace needed. */
-window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
+/* The app now lives at /app/ on this same origin rather than on a subdomain.
+   That is what removes the double sign-in: one origin means one localStorage,
+   so the session a therapist creates here is the session the app already has.
+   app.kindredtherapymatch.com still resolves and redirects, for anyone holding
+   the old address. */
+window.KINDRED_APP_URL = '/app/';
 
 (() => {
   /* point every static app link at the current KINDRED_APP_URL (their hardcoded
@@ -32,7 +37,7 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
          app's "what brings you to Kindred?" screen. Without this the constant
          would overwrite the whole href and wipe the hash off every link. */
       const target = a.getAttribute('data-app-link');
-      a.href = window.KINDRED_APP_URL + (target ? '#' + target : '');
+      a.href = window.KINDRED_APP_URL.replace(/\/?$/, '/') + (target ? '#' + target : '');
     });
     routeByAudience();
   }

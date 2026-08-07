@@ -34,7 +34,7 @@
     <a href="feel-better.html">Feel Better</a>
     <a href="life-relationships.html">Life &amp; Relationships</a>
     <a href="therapy.html">Therapy</a>
-    <a class="nav-cta nav-cta-dark" data-app-link="match" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
+    <a class="nav-cta nav-cta-dark" data-app-link="match" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
   </nav>
 
   <div class="header-actions">
@@ -42,7 +42,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     </button>
     
-    <a class="btn btn-dark btn-sm" data-app-link="match" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
+    <a class="btn btn-dark btn-sm" data-app-link="match" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
     <span class="header-sep" aria-hidden="true"></span>
     <a class="nav-pro" href="therapists.html">For Therapists</a>
   </div>
@@ -65,7 +65,7 @@
       </h1>
       <p class="hero-sub">Articles, tools, and real support for your mind, your daily life, and your relationships.</p>
       <div class="hero-ctas">
-        <a data-app-link="match" class="btn btn-dark" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
+        <a data-app-link="match" class="btn btn-dark" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
         <a class="btn btn-outline" href="start-here.html">Start Where You Are</a>
       </div>
       <p class="hero-trust">
@@ -100,7 +100,7 @@
       <p>Kindred matches beyond specialties and credentials. Discover therapists based on what you need, how you communicate, and what helps you feel understood.</p>
       <p class="match-trustline">Credentials matter. Connection does too.</p>
       <div class="match-ctas">
-        <a data-app-link="match" class="btn btn-dark" href="https://app.kindredtherapymatch.com#match" target="_blank" rel="noopener">Find a Therapist</a>
+        <a data-app-link="match" class="btn btn-dark" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
         <a class="btn btn-outline home-therapist-cta" href="therapists.html">I'm a Therapist — Build my Profile</a>
       </div>
       <!-- The reassurance existed further down the page; it belongs where the
@@ -137,7 +137,7 @@
         <ul id="match-specs">
           <li>Anxiety</li><li>Life Transitions</li><li>Relationship issues</li><li>Burnout</li><li>Self-Esteem</li>
         </ul>
-        <a data-app-link class="pillar-link" href="https://app.kindredtherapymatch.com/#match" target="_blank" rel="noopener">View profile <span aria-hidden="true">→</span></a>
+        <a data-app-link class="pillar-link" href="/app/#match" target="_blank" rel="noopener">View profile <span aria-hidden="true">→</span></a>
       </div>
       <p class="sr-only" id="match-live" role="status" aria-live="polite"></p>
         <div class="match-controls">
@@ -694,7 +694,7 @@
       : INDEX.slice(0, 6);
     items = matches;
     results.innerHTML = matches.length
-      ? matches.map(([t, d, h], i) => { const u = h === 'APP' ? (window.KINDRED_APP_URL || 'https://app.kindredtherapymatch.com') : h; return `<a class="ksearch-item${i === 0 ? ' active' : ''}" href="${u}"${u.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}><strong>${t}</strong><span>${d}</span></a>`; }).join('')
+      ? matches.map(([t, d, h], i) => { const u = h === 'APP' ? (window.KINDRED_APP_URL || '/app/') : h; return `<a class="ksearch-item${i === 0 ? ' active' : ''}" href="${u}"${u.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}><strong>${t}</strong><span>${d}</span></a>`; }).join('')
       : '<p class="ksearch-empty">Nothing matched — try "anxiety", "sleep", or "tools". Or start where you are: <a href="start-here.html" style="text-decoration:underline;">Start Here</a>.</p>';
   }
   function open() {
