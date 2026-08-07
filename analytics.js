@@ -31,7 +31,25 @@
         || localStorage.getItem('kindred-no-analytics') === '1';
     } catch (e) { return false; }
   };
-  const PROP_WHITELIST = ['plan', 'bill', 'tool', 'path']; /* the ONLY properties ever recorded */
+  const PROP_WHITELIST = ['plan', 'bill', 'tool', 'path', 'src']; /* the ONLY properties ever recorded */
+
+  /* Where this visit came from, if the link said so — ?src=outreach on the
+     link in the therapist emails. Coarse channel only, never per-person: a
+     unique token per recipient would turn this table into something that
+     identifies people, which is the one thing it must not become.
+
+     Held for the whole page session and attached to every event, so a signup
+     can be attributed to the email that caused it rather than only the landing
+     being counted. Sticks to sessionStorage because the signup happens a few
+     clicks after the link. */
+  const SRC_KEY = 'kindred-src';
+  function source() {
+    try {
+      const q = new URLSearchParams(location.search).get('src');
+      if (q) { sessionStorage.setItem(SRC_KEY, q.slice(0, 24)); return q.slice(0, 24); }
+      return sessionStorage.getItem(SRC_KEY) || '';
+    } catch (e) { return ''; }
+  }
 
   function load() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { counts: {}, plans: {}, since: null }; }
@@ -45,6 +63,8 @@
     if (props) PROP_WHITELIST.forEach(k => {
       if (props[k] != null) clean[k] = String(props[k]).slice(0, 40);
     });
+    const src = source();
+    if (src && clean.src == null) clean.src = src;
 
     const m = load();
     if (!m.since) m.since = new Date().toISOString().slice(0, 10);
