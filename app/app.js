@@ -6632,28 +6632,26 @@ function applyLandingParams() {
   if (wantsSignup) {
     accountType = 'therapist';
     openLogin();
-    /* #therapist-signup with NO email is now the front door: the landing page
+    /* #therapist-signup with NO email is the front door: the landing page
        sends brand-new therapists straight here to build a profile before
-       paying anything. Opening on "Log In" with create as the pale secondary
-       button asks a stranger to sign in to an account they have never had, so
-       the emphasis flips. With an email it means they came back from checkout
-       and the block below handles it instead. */
+       paying anything.
+
+       This used to flip the buttons -- swap the order, repaint "Create my
+       account" as the filled primary, demote Log In to "I already have an
+       account" -- on the theory that a stranger should not be asked to sign
+       in. What it actually produced was a screen that rearranged itself
+       depending on how you arrived, so the same two choices sat in different
+       places with different names and different weights. The pair is now
+       fixed everywhere: Log In on top, New here? Create an Account below.
+       The CONTEXT LINE is what says which one you probably want -- that is
+       text, and text is free to change. */
     if (!email) {
       const title = document.getElementById('login-title');
       if (title) title.textContent = 'Create your account';
       const ctx = document.getElementById('login-context');
       if (ctx) {
-        ctx.innerHTML = '<strong>Build your profile free.</strong> No card, nothing to pay &mdash; you only activate once it&rsquo;s ready and you&rsquo;ve seen how you look to clients.';
+        ctx.innerHTML = '<strong>Build your profile free.</strong> No card, nothing to pay &mdash; you only activate once it&rsquo;s ready and you&rsquo;ve seen how you look to clients.<br><br>New to Kindred? <strong>Create an Account</strong> below.';
         ctx.hidden = false;
-      }
-      const create = document.getElementById('login-create-btn');
-      const login  = document.getElementById('login-submit-btn');
-      if (create && login) {
-        create.textContent = 'Create my account';
-        create.style.cssText = 'background:var(--coral);color:white;';
-        login.textContent = 'I already have an account';
-        login.style.cssText = 'background:white;border:1.5px solid var(--coral);color:var(--coral-dark);';
-        create.parentNode.insertBefore(create, login);
       }
     }
   }
@@ -6681,13 +6679,18 @@ function applyLandingParams() {
     const ctx = document.getElementById('login-context');
     if (ctx) {
       ctx.innerHTML = '<strong>Your membership is active.</strong> Keep the email below exactly as it is \u2014 it\u2019s what links your payment to your profile.<br><br>'
-        + 'Already chose a password? <strong>Log in.</strong> Haven\u2019t yet? <strong>Create your account</strong> and pick one now.';
+        /* Names the buttons EXACTLY as they are labelled below. They no longer
+           rename themselves per arrival, so the copy can point at them. */
+        + 'Already chose a password? <strong>Log In.</strong> Haven\u2019t yet? <strong>Create an Account</strong> and pick one now.';
       ctx.hidden = false;
     }
-    /* Renamed: "New here?" reads as a wrong turn to someone who has just paid,
-       even though for path B it is exactly the right one. */
+    /* This used to rename the button to "Create my password", because "New
+       here?" reads as a wrong turn to someone who has just paid -- true, but
+       not worth a third name for the same button. The context line above
+       already tells both arrivals which one is theirs, and a button that
+       keeps its name is easier to be told about than one that doesn't. */
     const create = document.getElementById('login-create-btn');
-    if (create) { create.hidden = false; create.textContent = 'Create my password'; }
+    if (create) create.hidden = false;
   }
 }
 
