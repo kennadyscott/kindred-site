@@ -3443,16 +3443,17 @@ function wireGettingStarted() {
      does not today -- that is a privacy decision to revisit, not an oversight. */
   const act = document.getElementById('t-gs-activate');
   if (act) act.addEventListener('click', () => {
+    /* Everyone who has built a profile gets the 30 days free -- someone who
+       has written their whole profile is exactly who you want over the line.
+
+       Navigates rather than opening a tab. Checkout is a page in this product
+       now, not a trip to a different site; a second tab was a workaround for
+       a session that could not cross origins, and it no longer has to. */
     const url = new URL('/activate.html', location.origin);
-    /* Everyone who has built a profile gets the 30 days free. The trial link
-       was made for outreach, but the app and the site are different origins,
-       so an "arrived from outreach" flag cannot travel here anyway -- and
-       someone who has written their whole profile is precisely who you want
-       over the line. One word to remove if that ever stops being true. */
     url.searchParams.set('offer', 'trial30');
     const s = loadAuthSession();
     if (s && s.user && s.user.email) url.searchParams.set('email', s.user.email);
-    window.open(url.toString(), '_blank', 'noopener');
+    location.href = url.toString();
   });
   const ideal = document.getElementById('t-gs-ideal');
   if (ideal) ideal.addEventListener('click', () => { profileMode = 'ideal'; showTScreen('t-profile'); });
@@ -5046,8 +5047,12 @@ function finishTherapistSignup() {
      and unverified, and re-opened the pay modal. Save, then take the server's
      word for those three fields. */
   const finish = () => {
+    /* Deliberately does NOT open the activate modal. Finishing a profile used
+       to be met with a price the moment the last field was saved -- the first
+       thing they saw after twenty minutes of writing was a paywall. The
+       checklist already carries Activate as its own step, with the offer on
+       it; let them look at what they built first. */
     showTherapistView();
-    if (!newT.listed) openActivateProfile();   // only when genuinely unpaid
   };
 
   /* A failed save here used to console.warn and carry on, so the therapist saw
@@ -5126,19 +5131,22 @@ function openActivateProfile() {
     <div class="sheet-close"></div>
     <h2>Activate your profile</h2>
     <div class="intake-sub">Your profile is built. List it on Kindred to start being matched with clients.</div>
+    <!-- Everyone activating gets the 30 days free, so the headline is the trial
+         and the rate is what happens after it. Leading with $9.99 asked for
+         money on a screen where none is due. -->
     <div class="activate-plan ${p.founding ? 'founding' : ''}">
       ${p.founding ? `<div class="activate-badge">🌟 Rate rises to $${p.nextRate.toFixed(2)} on ${p.nextDateLabel}</div>` : ''}
-      <div class="activate-price">$${p.introRate.toFixed(2)}<span>/mo</span></div>
+      <div class="activate-price">Free<span> for 30 days</span></div>
       ${p.founding
-        ? `<div class="activate-terms">locked for ${p.introMonths} months, then $${p.standardRate.toFixed(2)}/mo</div>`
-        : `<div class="activate-terms">billed monthly · cancel anytime</div>`}
+        ? `<div class="activate-terms">then $${p.introRate.toFixed(2)}/mo, locked for ${p.introMonths} months · cancel anytime</div>`
+        : `<div class="activate-terms">then $${p.standardRate.toFixed(2)}/mo · cancel anytime</div>`}
     </div>
     <ul class="policy-list">
-      <li>Your profile goes live in client matching once your subscription is active</li>
+      <li><strong>Nothing is charged for 30 days.</strong> Your card is saved now; cancel before day 31 and you're never billed</li>
+      <li>Your profile goes live in client matching once your licence and identity are verified</li>
       <li>Cancel anytime — your profile just unlists, nothing is deleted</li>
       ${p.founding ? `<li>Your $${p.introRate.toFixed(2)} rate is locked for a full ${p.introMonths} months — join later and you'll pay more</li>` : ''}
     </ul>
-    <p class="portal-note" style="margin:8px 0 0;">You'll complete your subscription securely on the Kindred website. We'll bring you right back.</p>
     <div id="activate-status"></div>
     <button class="primary-btn" style="margin-top:14px;background:var(--coral);color:white;" id="activate-pay-btn">Continue to secure checkout →</button>
     <button class="text-btn" id="activate-later-btn" style="color:var(--ink-soft);">I'll do this later</button>
@@ -5162,11 +5170,14 @@ function openActivateProfile() {
     if (KINDRED_FLAGS.therapistBillingLive || PRODUCTION_BUILD) {
       // Real: hand off to the website's Stripe checkout. Listing flips server-side
       // when the subscription is active; the app reflects it on next refresh.
+      /* Same origin as the app now, so this is a page in the product rather
+         than a trip to another site -- navigate instead of popping a tab. A
+         new tab used to be the only way to keep their session alive; the
+         session carries now, and a stranded second tab was its own confusion. */
       const sess = authReady() && loadAuthSession();
       const email = sess && sess.user && sess.user.email ? `&email=${encodeURIComponent(sess.user.email)}` : '';
-      window.open(`${THERAPIST_BILLING_URL}?plan=${plan}${email}`, '_blank');
-      status.innerHTML = `<div class="portal-note" style="margin-top:8px;">Opened secure checkout on the Kindred website. Your profile goes live the moment your subscription is active — refresh here after.</div>`;
-      btn.textContent = 'Re-open checkout →';
+      btn.disabled = true; btn.textContent = 'Taking you to checkout…';
+      location.href = `${THERAPIST_BILLING_URL}?plan=${plan}&offer=trial30${email}`;
       return;
     }
 

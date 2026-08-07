@@ -332,7 +332,7 @@
   </nav>
 </div>
 
-<script src="app.js?v=merge1"></script>
+<script src="app.js?v=merge2"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control
@@ -353,7 +353,7 @@
     });
     /* The ?v= makes the browser fetch sw.js itself rather than reuse a cached
        copy -- bump it whenever sw.js changes. */
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=merge1').catch(() => {}));
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=merge2').catch(() => {}));
   }
 </script>
 </body>
