@@ -498,6 +498,28 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
         </div>`;
     }).join('');
 
+    /* This was missing entirely. The button rendered, the edge function and
+       verify_therapist_license both worked, and nothing was listening -- so
+       clicking Verify did nothing at all, silently, with a real therapist
+       paying and hidden on the other side of it. Deny was wired; Verify never
+       was.
+
+       Confirms before acting: it flips a profile live to clients, and a
+       misclick here publishes someone whose licence has not actually been
+       checked. */
+    rowsEl.querySelectorAll('[data-verify]').forEach(b => b.addEventListener('click', async () => {
+      const email = b.dataset.verify, state = b.dataset.state;
+      if (!confirm(`Verify the ${state} licence for ${email}?\n\nOnly do this once you have checked it against the ${state} board. This makes their profile visible to clients.`)) return;
+      b.disabled = true; b.textContent = 'Verifying...';
+      const out = await adminApi({ action: 'verify_license', email, state });
+      if (out.error) {
+        b.disabled = false; b.textContent = 'Failed - retry';
+        alert('Could not verify: ' + (out.error.message || out.error));
+        return;
+      }
+      loadReview();
+    }));
+
     rowsEl.querySelectorAll('[data-deny]').forEach(b => b.addEventListener('click', async () => {
       /* A reason is required, and the therapist sees it -- they have paid, and
          "denied, no explanation" is the worst version of this. */
