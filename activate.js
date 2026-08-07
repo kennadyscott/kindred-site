@@ -311,6 +311,17 @@ async function authPost(path, body) {
       u.searchParams.set('client_reference_id', email);
       btn.href = u.toString();
     }
+    /* checkout=now: the app already showed them the offer in its own modal, so
+       rendering it again here and asking them to press Continue a second time
+       is one screen too many. The Stripe URL is built above -- the founding
+       ladder and the trial link live in this file, deliberately in one place
+       -- so go straight there.
+       replace() so Back does not land them on a page that immediately
+       forwards again. */
+    if (new URLSearchParams(location.search).get('checkout') === 'now') {
+      const b = document.getElementById('kt-checkout-btn');
+      if (b && b.href && b.href.indexOf('buy.stripe.com') !== -1) { location.replace(b.href); return; }
+    }
     step2.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 

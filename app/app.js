@@ -3443,17 +3443,11 @@ function wireGettingStarted() {
      does not today -- that is a privacy decision to revisit, not an oversight. */
   const act = document.getElementById('t-gs-activate');
   if (act) act.addEventListener('click', () => {
-    /* Everyone who has built a profile gets the 30 days free -- someone who
-       has written their whole profile is exactly who you want over the line.
-
-       Navigates rather than opening a tab. Checkout is a page in this product
-       now, not a trip to a different site; a second tab was a workaround for
-       a session that could not cross origins, and it no longer has to. */
-    const url = new URL('/activate.html', location.origin);
-    url.searchParams.set('offer', 'trial30');
-    const s = loadAuthSession();
-    if (s && s.user && s.user.email) url.searchParams.set('email', s.user.email);
-    location.href = url.toString();
+    /* Shows the offer here rather than navigating to a page that shows the
+       same offer again. It used to be: button -> activate.html (offer card)
+       -> Continue -> Stripe. Two screens making the same promise, with a page
+       load between them. Now: button -> this modal -> Stripe. */
+    openActivateProfile();
   });
   const ideal = document.getElementById('t-gs-ideal');
   if (ideal) ideal.addEventListener('click', () => { profileMode = 'ideal'; showTScreen('t-profile'); });
@@ -5176,8 +5170,12 @@ function openActivateProfile() {
          session carries now, and a stranded second tab was its own confusion. */
       const sess = authReady() && loadAuthSession();
       const email = sess && sess.user && sess.user.email ? `&email=${encodeURIComponent(sess.user.email)}` : '';
+      /* checkout=now tells activate.html to build the Stripe URL -- which is
+         where the founding-rate ladder and the trial link live, in ONE place
+         -- and go there immediately rather than rendering the offer a second
+         time. The therapist sees this modal, then Stripe. */
       btn.disabled = true; btn.textContent = 'Taking you to checkout…';
-      location.href = `${THERAPIST_BILLING_URL}?plan=${plan}&offer=trial30${email}`;
+      location.href = `${THERAPIST_BILLING_URL}?plan=${plan}&offer=trial30&checkout=now${email}`;
       return;
     }
 
