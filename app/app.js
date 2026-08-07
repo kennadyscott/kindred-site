@@ -6606,10 +6606,15 @@ function setLoginRestoring(on) {
   if (note) note.hidden = !on;
   if (form) form.hidden = !!on;
   /* "Therapist Login" over "Signing you in…" tells someone they are about to
-     be asked for a password when they are not. Only touched while restoring;
-     openLogin() owns the title the rest of the time. */
+     be asked for a password when they are not. Put it back when the form
+     returns: the fallback path reveals the form WITHOUT going through
+     openLogin(), so leaving the title alone here stranded a login form under
+     a heading that just said "Kindred". */
   const title = document.getElementById('login-title');
-  if (title && on) title.textContent = 'Kindred';
+  if (title) {
+    title.textContent = on ? 'Kindred'
+      : accountType === 'client' ? 'Client Login' : 'Therapist Login';
+  }
 }
 
 function applyLandingParams() {
