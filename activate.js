@@ -325,6 +325,43 @@ async function authPost(path, body) {
        session does not cross. Opening on "create account" would offer them a
        second one and fail with "already registered". Default to sign-in. */
     const fromApp = new URLSearchParams(location.search).get('email');
+
+    /* COLD VISITOR -- no account on this browser and none passed from the app.
+       This link went out to real people before onboarding was reordered, so it
+       cannot be retired; it just has to stop being the one path that still
+       charges first. These are cold contacts: the least context and the most
+       scepticism of anyone who reaches this page, and the hardest possible
+       audience to ask for a card before showing them anything.
+
+       So they get what the website button gives -- build a profile free -- and
+       the account and checkout steps stay out of the way until there is
+       something to activate. Anyone who already has a profile can still sign
+       in from here. */
+    if (!fromApp) {
+      const cold = document.getElementById('kt-coldstart');
+      if (cold) {
+        cold.hidden = false;
+        /* The heading was written for the old order -- "a sign-in, then your
+           card" -- which is now the opposite of what happens next. */
+        const ht = document.getElementById('kt-head-title');
+        const hs = document.getElementById('kt-head-sub');
+        if (ht) ht.textContent = 'Start with your profile';
+        if (hs) hs.textContent = "Build it free — about ten minutes, no card. When it's ready you activate with 30 days free, and we check your licence and identity from there.";
+        ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
+        const signin = document.getElementById('kt-coldstart-signin');
+        if (signin) signin.addEventListener('click', () => {
+          cold.hidden = true;
+          ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = false; });
+          const ht2 = document.getElementById('kt-head-title');
+          const hs2 = document.getElementById('kt-head-sub');
+          if (ht2) ht2.textContent = 'Activate your profile';
+          if (hs2) hs2.textContent = 'Sign in and we\u2019ll start your membership — 30 days free, nothing charged until day 31.';
+          if (mode === 'signup') toggle.click();          // open on sign-in, not signup
+          document.getElementById('ka-email')?.focus();
+        });
+      }
+    }
+
     if (fromApp) {
       /* They built a profile in the app and pressed Activate. This page is now
          a checkout counter for them, not a pitch: the hero sells something

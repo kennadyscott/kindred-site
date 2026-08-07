@@ -29,6 +29,9 @@
   .kt-offer.standard .kt-offer-badge { color: #5b4470; background: #EFE7F2; }
   .kt-offer-price { font-family: 'Literata', Georgia, serif; font-size: 52px; font-weight: 600; color: #422448; line-height: 1; }
   .kt-offer-price span { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 500; color: #6b5a70; }
+  .kt-coldstart { text-align: center; margin: 0 0 30px; }
+  .kt-coldstart-fine { margin-top: 12px; font-size: 13px; color: #6E6172; }
+  .kt-coldstart-alt { margin-top: 20px; font-size: 13px; color: #6E6172; }
   .kt-track { list-style: none; display: flex; gap: 8px; justify-content: center; margin: 0 0 26px; padding: 0; flex-wrap: wrap; }
   .kt-track-step { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #9A8FA0; }
   /* first-child only: the label is a span too, and the unscoped rule turned
@@ -159,6 +162,17 @@
        whose profile is already built -- showing it as a step still ahead of
        them says they are a third of the way through when they are nearly
        done. -->
+  <!-- Shown only to a cold visitor: someone who followed the outreach link and
+       has no account and no profile yet. That link was sent to real people
+       before onboarding was reordered, so it has to keep working -- but it
+       should now do what the website button does, not charge first. -->
+  <div class="kt-coldstart" id="kt-coldstart" hidden>
+    <a class="btn btn-dark btn-arrow" id="kt-coldstart-cta"
+       href="https://app.kindredtherapymatch.com/#therapist-signup">Build my profile &mdash; free <span aria-hidden="true">&rarr;</span></a>
+    <p class="kt-coldstart-fine">Free to build. No card until you activate, and then it&rsquo;s 30 days free.</p>
+    <p class="kt-coldstart-alt">Already have a Kindred profile? <button type="button" class="kt-linkish" id="kt-coldstart-signin">Sign in to activate it</button></p>
+  </div>
+
   <ol class="kt-track" id="kt-track">
     <li class="kt-track-step on" data-step="1"><span>1</span><span class="kt-track-label">Sign-in</span></li>
     <li class="kt-track-step" data-step="2"><span>2</span><span class="kt-track-label">Membership</span></li>
@@ -272,7 +286,7 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=10"></script>
+<script src="activate.js?v=11"></script>
 <script src="site.js?v=10"></script>
 <script src="analytics.js?v=15"></script>
 </body>
