@@ -31,12 +31,16 @@
   .kt-offer-price span { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 500; color: #6b5a70; }
   .kt-track { list-style: none; display: flex; gap: 8px; justify-content: center; margin: 0 0 26px; padding: 0; flex-wrap: wrap; }
   .kt-track-step { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #9A8FA0; }
-  .kt-track-step span { width: 26px; height: 26px; border-radius: 50%; background: #F0EEF6; color: #9A8FA0; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; }
+  /* first-child only: the label is a span too, and the unscoped rule turned
+     it into a 26px circle -- numbers and words stacked on top of each
+     other, "Activate" clipped to "Acti". */
+  .kt-track-step > span:first-child { width: 26px; height: 26px; border-radius: 50%; background: #F0EEF6; color: #9A8FA0; display: grid; place-items: center; font-size: 12.5px; font-weight: 700; flex: none; }
+  .kt-track-label { white-space: nowrap; }
   .kt-track-step + .kt-track-step::before { content: ''; width: 26px; height: 1.5px; background: #E9E7F0; margin-right: 8px; }
   .kt-track-step.on { color: #422448; }
-  .kt-track-step.on span { background: #422448; color: #fff; }
+  .kt-track-step.on > span:first-child { background: #422448; color: #fff; }
   .kt-track-step.done { color: #4c6b4c; }
-  .kt-track-step.done span { background: #E9EDE7; color: #4c6b4c; }
+  .kt-track-step.done > span:first-child { background: #E9EDE7; color: #4c6b4c; }
   .kt-acct { background: #fff; border: 1.5px solid #E9E7F0; border-radius: 20px; padding: 26px 26px 22px; max-width: 460px; margin: 0 auto 26px; }
   .kt-acct h2 { font-family: 'Literata', Georgia, serif; font-size: 22px; font-weight: 500; color: #422448; margin: 0 0 6px; }
   .kt-acct-sub { font-size: 14px; color: #6b5a70; line-height: 1.55; margin: 0 0 18px; }
