@@ -326,6 +326,23 @@ async function authPost(path, body) {
        second one and fail with "already registered". Default to sign-in. */
     const fromApp = new URLSearchParams(location.search).get('email');
     if (fromApp) {
+      /* They built a profile in the app and pressed Activate. This page is now
+         a checkout counter for them, not a pitch: the hero sells something
+         they have already bought into, and the tracker was telling them their
+         profile still lay ahead when it is finished and waiting. */
+      const hero = document.getElementById('kt-hero');
+      if (hero) hero.hidden = true;
+      const labels = ['Profile', 'Activate', 'Go live'];
+      document.querySelectorAll('#kt-track .kt-track-label')
+        .forEach((el, i) => { el.textContent = labels[i]; });
+      const steps = document.querySelectorAll('.kt-track-step');
+      if (steps[0]) { steps[0].classList.add('done'); steps[0].classList.remove('on'); }
+      if (steps[1]) steps[1].classList.add('on');
+      const ht = document.getElementById('kt-head-title');
+      const hs = document.getElementById('kt-head-sub');
+      if (ht) ht.textContent = 'Your profile is ready';
+      if (hs) hs.textContent = 'Activate to go live. We check your licence and identity next, and nothing is charged for 30 days.';
+
       const f = document.getElementById('ka-email');
       if (f) f.value = fromApp;
       mode = 'signin';

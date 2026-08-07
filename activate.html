@@ -95,7 +95,7 @@
        they were joining. The CTA scrolls rather than navigates: the thing it
        points at is already on this page. -->
 <!-- ======================= HERO ======================= -->
-<section class="kt-hero kt-hero-activate">
+<section class="kt-hero kt-hero-activate" id="kt-hero">
   <div class="kt-hero-inner">
     <div class="kt-hero-copy">
       <p class="eyebrow">For therapists</p>
@@ -151,10 +151,14 @@
     <p id="kt-head-sub">A sign-in, then your membership — about two minutes. Your profile comes next, and you go live once we've checked your licence and identity.</p>
   </div>
 
+  <!-- Labels are rewritten by activate.js for someone arriving from the app,
+       whose profile is already built -- showing it as a step still ahead of
+       them says they are a third of the way through when they are nearly
+       done. -->
   <ol class="kt-track" id="kt-track">
-    <li class="kt-track-step on" data-step="1"><span>1</span>Sign-in</li>
-    <li class="kt-track-step" data-step="2"><span>2</span>Membership</li>
-    <li class="kt-track-step" data-step="3"><span>3</span>Your profile</li>
+    <li class="kt-track-step on" data-step="1"><span>1</span><span class="kt-track-label">Sign-in</span></li>
+    <li class="kt-track-step" data-step="2"><span>2</span><span class="kt-track-label">Membership</span></li>
+    <li class="kt-track-step" data-step="3"><span>3</span><span class="kt-track-label">Your profile</span></li>
   </ol>
 
   <!-- ===== STEP 1 — create the account ===== -->
@@ -264,8 +268,8 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=9"></script>
+<script src="activate.js?v=10"></script>
 <script src="site.js?v=9"></script>
-<script src="analytics.js?v=14"></script>
+<script src="analytics.js?v=15"></script>
 </body>
 </html>
