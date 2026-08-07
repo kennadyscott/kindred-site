@@ -9,6 +9,23 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
 (() => {
   /* point every static app link at the current KINDRED_APP_URL (their hardcoded
      href stays as a no-JS fallback; this makes the constant authoritative) */
+  /* Belt and braces for the audience choice. Every app link is now written
+     with an explicit hash, but a new one added later without thinking would
+     land on "what brings you to Kindred?" -- a question the visitor answered
+     on the front door and should never be asked twice. The audience popup
+     stores that answer; this applies it to anything that forgot. */
+  function routeByAudience() {
+    let choice = null;
+    try { choice = (JSON.parse(localStorage.getItem('kindred-audience') || 'null') || {}).choice; } catch (e) {}
+    if (choice !== 'client' && choice !== 'therapist') return;
+    const hash = choice === 'therapist' ? '#therapist-signin' : '#match';
+    document.querySelectorAll('a[href*="app.kindredtherapymatch.com"]').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      if (href.indexOf('#') !== -1) return;               // already routed, leave it
+      a.setAttribute('href', href.replace(/\/?$/, '/') + hash);
+    });
+  }
+
   function wireAppLinks() {
     document.querySelectorAll('a[data-app-link]').forEach(a => {
       /* data-app-link="match" deep-links into the questionnaire instead of the
@@ -17,6 +34,7 @@ window.KINDRED_APP_URL = 'https://app.kindredtherapymatch.com';
       const target = a.getAttribute('data-app-link');
       a.href = window.KINDRED_APP_URL + (target ? '#' + target : '');
     });
+    routeByAudience();
   }
 
   /* Horizontal scroll strips (card rows, tab bars) can trap vertical page
