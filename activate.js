@@ -96,6 +96,41 @@ const PRICING_TIERS = [
 const STANDARD_RATE = 29.99;
 const FOUNDING_LOCK_MONTHS = 12;
 
+/* ---------------------------------------------------------------------------
+   checkout=now -- leave before this page paints.
+
+   The app's Activate modal sends people here purely to have the Stripe URL
+   built, because the founding ladder and the trial link live in this file.
+   Everything needed for that is above: the links, the tiers, and the email in
+   the query string. Waiting for initAccount's profile lookup meant the page
+   rendered first, so a therapist saw the landing page flash past on the way to
+   paying -- which reads like a misclick.
+
+   No profile check here, deliberately: the modal that sends them only opens
+   for a therapist who has already built one, so re-asking the database buys
+   nothing and costs a full render.
+--------------------------------------------------------------------------- */
+(function jumpStraightToCheckout() {
+  const q = new URLSearchParams(location.search);
+  if (q.get('checkout') !== 'now') return;
+  const email = q.get('email');
+  if (!email) return;                        // nothing to tie the payment to; fall through
+
+  const now = new Date();
+  const i = PRICING_TIERS.findIndex(t => now < t.until);
+  const tier = i !== -1 ? PRICING_TIERS[i] : null;
+  const link = (q.get('offer') === 'trial30' && PAYMENT_LINK_TRIAL) ? PAYMENT_LINK_TRIAL : PAYMENT_LINK;
+  if (!link) return;
+
+  const u = new URL(link);
+  if (tier && tier.promo) u.searchParams.set('prefilled_promo_code', tier.promo);
+  u.searchParams.set('prefilled_email', email);
+  u.searchParams.set('client_reference_id', email);   // what the webhook matches on
+  /* Nothing of this page should be visible even for a frame. */
+  document.documentElement.style.visibility = 'hidden';
+  location.replace(u.toString());
+})();
+
 (function initActivate() {
   const now = new Date();
   /* Outreach offer. Falls back silently if the trial link isn't configured

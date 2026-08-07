@@ -75,6 +75,21 @@
   }
   .kt-notready strong { color: #422448; display: block; margin-bottom: 6px; font-size: 15.5px; }
 </style>
+<script>
+  /* activate.js loads at the end of the body, so without this the page paints
+     before the redirect runs and a therapist sees the landing page flash past
+     on the way to paying. Hides the document the moment the parser gets here;
+     activate.js does the actual redirect a beat later.
+     Restored on pageshow so the Back button never lands on a blank page --
+     bfcache returns this document exactly as it was left, hidden and all. */
+  (function () {
+    if (new URLSearchParams(location.search).get('checkout') !== 'now') return;
+    document.documentElement.style.visibility = 'hidden';
+    addEventListener('pageshow', function (e) {
+      if (e.persisted) document.documentElement.style.visibility = '';
+    });
+  })();
+</script>
 </head>
 <body>
 
@@ -286,7 +301,7 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=14"></script>
+<script src="activate.js?v=15"></script>
 <script src="site.js?v=10"></script>
 <script src="analytics.js?v=15"></script>
 </body>
