@@ -315,9 +315,50 @@ async function authPost(path, body) {
   }
 
   /* already signed in on this browser? skip straight to membership */
+  window.__ktShowColdStart = function () {
+    const cold = document.getElementById('kt-coldstart');
+    if (cold) {
+      cold.hidden = false;
+      /* The heading was written for the old order -- "a sign-in, then your
+         card" -- which is now the opposite of what happens next. */
+      const ht = document.getElementById('kt-head-title');
+      const hs = document.getElementById('kt-head-sub');
+      if (ht) ht.textContent = 'Start with your profile';
+      if (hs) hs.textContent = "Build it free — about ten minutes, no card. When it's ready you activate with 30 days free, and we check your licence and identity from there.";
+      ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
+      const signin = document.getElementById('kt-coldstart-signin');
+      if (signin) signin.addEventListener('click', () => {
+        cold.hidden = true;
+        ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = false; });
+        const ht2 = document.getElementById('kt-head-title');
+        const hs2 = document.getElementById('kt-head-sub');
+        if (ht2) ht2.textContent = 'Activate your profile';
+        if (hs2) hs2.textContent = 'Sign in and we\u2019ll start your membership — 30 days free, nothing charged until day 31.';
+        if (mode === 'signup') toggle.click();          // open on sign-in, not signup
+        document.getElementById('ka-email')?.focus();
+      });
+    }
+  };
+
   const existing = loadSession();
   if (existing && existing.user && existing.user.email) {
-    revealStep2(existing.user.email);
+    /* A session only proves they have an ACCOUNT. Someone who signed up and
+       has not built anything was still being sent straight to checkout --
+       the exact pay-first order this page just stopped doing for everyone
+       else. Ask what they actually have.
+       Errs toward building: if the lookup fails they get the free path, never
+       an unexpected paywall. */
+    fetch(`${KINDRED_AUTH.url}/rest/v1/therapists?select=name,specialties&limit=1`, {
+      headers: { apikey: KINDRED_AUTH.key, Authorization: `Bearer ${existing.access_token}` }
+    })
+      .then(r => (r.ok ? r.json() : []))
+      .then(rows => {
+        const t = rows && rows[0];
+        const built = !!(t && t.name && String(t.name).trim() && (t.specialties || []).length);
+        if (built) revealStep2(existing.user.email);
+        else if (window.__ktShowColdStart) window.__ktShowColdStart();
+      })
+      .catch(() => { if (window.__ktShowColdStart) window.__ktShowColdStart(); });
   } else {
     /* Arriving from the APP with ?email= means they built a profile there and
        pressed Activate. They have an account -- they just cannot prove it
@@ -337,30 +378,9 @@ async function authPost(path, body) {
        the account and checkout steps stay out of the way until there is
        something to activate. Anyone who already has a profile can still sign
        in from here. */
-    if (!fromApp) {
-      const cold = document.getElementById('kt-coldstart');
-      if (cold) {
-        cold.hidden = false;
-        /* The heading was written for the old order -- "a sign-in, then your
-           card" -- which is now the opposite of what happens next. */
-        const ht = document.getElementById('kt-head-title');
-        const hs = document.getElementById('kt-head-sub');
-        if (ht) ht.textContent = 'Start with your profile';
-        if (hs) hs.textContent = "Build it free — about ten minutes, no card. When it's ready you activate with 30 days free, and we check your licence and identity from there.";
-        ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
-        const signin = document.getElementById('kt-coldstart-signin');
-        if (signin) signin.addEventListener('click', () => {
-          cold.hidden = true;
-          ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = false; });
-          const ht2 = document.getElementById('kt-head-title');
-          const hs2 = document.getElementById('kt-head-sub');
-          if (ht2) ht2.textContent = 'Activate your profile';
-          if (hs2) hs2.textContent = 'Sign in and we\u2019ll start your membership — 30 days free, nothing charged until day 31.';
-          if (mode === 'signup') toggle.click();          // open on sign-in, not signup
-          document.getElementById('ka-email')?.focus();
-        });
-      }
-    }
+    /* Named so the signed-in branch can use it too: whether someone sees the
+       free path depends on having a PROFILE, not on having a session. */
+    if (!fromApp) window.__ktShowColdStart();
 
     if (fromApp) {
       /* They built a profile in the app and pressed Activate. This page is now
