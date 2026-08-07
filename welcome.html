@@ -58,7 +58,13 @@
     <span class="wel-check" aria-hidden="true">✓</span>
     <p class="eyebrow">Founding Therapist</p>
     <h1>You’re in.</h1>
-    <p class="kt-sub wel-lede">Your membership is active and your founding rate is locked for your first 12 months. Here’s exactly what happens next — it takes about ten minutes of your time, and then it’s on us.</p>
+    <!-- Rewritten for the ACCOUNT-FIRST order. This page used to be step one
+         of four -- pay, then build a profile, then verify. Onboarding was
+         reordered so the profile is built free BEFORE activating, which left
+         this page congratulating people and then telling them to go and do
+         the thing they had just spent ten minutes doing. Everything below now
+         starts from "your profile is written". -->
+    <p class="kt-sub wel-lede">Your profile is built and your membership is active — nothing is charged for 30 days, and your founding rate is locked for your first 12 months after that. Two short things left, and then it’s on us.</p>
   </div>
 </section>
 
@@ -69,27 +75,25 @@
       <li class="wel-step now">
         <span class="wel-num">1</span>
         <div>
-          <h3>Build your profile <span class="wel-time">about 10 minutes</span></h3>
-          <p>Prompt by prompt — your therapy style, who you work best with, what sessions feel like. You’re never starting from a blank page, and you can save and come back.</p>
-          <a class="btn btn-dark btn-arrow" href="/app/#therapist-signup" id="wel-cta">Build my profile <span aria-hidden="true">→</span></a>
+          <h3>Your licence and your identity <span class="wel-time">about 2 minutes</span></h3>
+          <p>Add each state you’re licensed in with its licence number, then confirm your identity with a photo of your ID and a selfie. Every therapist on Kindred goes through this — it’s what lets a client trust the person they’re reading about.</p>
+          <!-- #therapist-signin, NOT #therapist-signup: the app restores a
+               saved session on this hash and drops them straight into their
+               portal, where both buttons are waiting on the checklist. The
+               signup hash deliberately suppresses session restore, so it
+               would have asked a signed-in therapist to log in again. -->
+          <a class="btn btn-dark btn-arrow" href="/app/#therapist-signin" id="wel-cta">Add my licence <span aria-hidden="true">→</span></a>
         </div>
       </li>
       <li class="wel-step">
         <span class="wel-num">2</span>
-        <div>
-          <h3>Sign in once, then verify your identity and licence</h3>
-          <p>Use the same email and password you just created. You’ll enter your licence number and the state that issued it, and confirm your identity — every therapist on Kindred goes through this, and it’s what lets a client trust the person they’re reading about.</p>
-        </div>
-      </li>
-      <li class="wel-step">
-        <span class="wel-num">3</span>
         <div>
           <h3>We check it</h3>
           <p>A real person on our side confirms your licence against your state board. We’ll email you the moment it clears — and if anything doesn’t match, we’ll write to you directly rather than leaving you wondering.</p>
         </div>
       </li>
       <li class="wel-step">
-        <span class="wel-num">4</span>
+        <span class="wel-num">3</span>
         <div>
           <h3>You go live</h3>
           <p>Your profile enters client matching, and you start receiving inquiries from people whose needs actually line up with how you work.</p>
@@ -104,10 +108,9 @@
   <div class="kt-sections-inner">
     <h2>What to have<br>handy.</h2>
     <div class="kt-sectiongrid">
-      <article><span class="kt-secicon t-lilac" aria-hidden="true">◇</span><h3>Your licence details</h3><p>Licence number, the issuing state, and your credential (LMFT, LCSW, LPC, PhD/PsyD, or equivalent).</p></article>
-      <article><span class="kt-secicon t-clay" aria-hidden="true">❝</span><h3>A few sentences in your voice</h3><p>How you’d describe your approach to someone at a party — not how you’d write it for an insurance panel.</p></article>
-      <article><span class="kt-secicon t-moss" aria-hidden="true">◎</span><h3>A photo you actually like</h3><p>Warm and human beats formal. It’s the first thing a nervous person looks at.</p></article>
-      <article><span class="kt-secicon t-gold" aria-hidden="true">✳</span><h3>Your practical details</h3><p>Location, in-person or online, insurance or private pay, and whether you’re taking new clients.</p></article>
+      <article><span class="kt-secicon t-lilac" aria-hidden="true">◇</span><h3>Your licence number</h3><p>One per state you practise in, with the state that issued it. Each is checked against that board separately.</p></article>
+      <article><span class="kt-secicon t-clay" aria-hidden="true">◎</span><h3>A photo ID</h3><p>Driver’s licence or passport. You’ll photograph it and take a selfie — it runs through Stripe and takes about a minute.</p></article>
+      <article><span class="kt-secicon t-moss" aria-hidden="true">✳</span><h3>Nothing else</h3><p>Your profile is already written. If you want to change anything in it, it’s all still editable from your portal.</p></article>
     </div>
   </div>
 </section>
@@ -129,7 +132,7 @@
     <h2>Questions before you start?</h2>
     <p class="wl-now-sub">Two things people usually ask.</p>
     <div class="kt-benefitgrid">
-      <article><h3>Can I finish this later?</h3><p>Yes. Your progress saves as you go, and your membership is already active — nothing expires while you’re drafting.</p></article>
+      <article><h3>Can I finish this later?</h3><p>Yes. Your profile is saved and your membership is active — it just doesn’t enter client matching until your licence clears, so the sooner you add it the sooner you’re live.</p></article>
       <article><h3>What if my licence check has a problem?</h3><p>We email you directly and help sort it. Nothing is silently rejected, and you can cancel for a full refund if we can’t verify you.</p></article>
       <article><h3>Something else?</h3><p>Write to us and a person answers.</p><a class="pillar-link" href="mailto:info@kindredtherapymatch.com?subject=Founding%20Therapist%20question">info@kindredtherapymatch.com →</a></article>
     </div>
@@ -319,25 +322,37 @@ const PRICING_TIERS = [
 })();
 </script>
 <script>
-/* Carry the account email to the app so the sign-in there is one field, not
-   two. The site and app are different subdomains, so the session itself can't
-   travel — but the email can, and that's the annoying half. */
+/* Where this button goes depends on ONE thing: is there a session on this
+   browser?
+
+   It used to always append `?email=…#therapist-signup`, written when the site
+   and the app were different subdomains and a session genuinely could not
+   travel. They share an origin now, so it can -- and both halves of that old
+   URL actively SUPPRESS the app's session restore (`?email=` and the signup
+   hash each disable it, deliberately, because each used to mean "this person
+   must prove who they are"). The result was that someone who had just built a
+   profile and paid got handed a login screen, which is the one thing this
+   page exists to spare them. */
 (() => {
   const btn = document.getElementById('wel-cta');
   if (!btn) return;
-  let email = '';
+  let session = null, email = '';
   try {
-    email = localStorage.getItem('kindred-pending-email') || '';
-    if (!email) {
-      const s = JSON.parse(localStorage.getItem('kindred-session') || 'null');
-      email = (s && s.user && s.user.email) || '';
-    }
+    session = JSON.parse(localStorage.getItem('kindred-session') || 'null');
+    email = (session && session.user && session.user.email)
+         || localStorage.getItem('kindred-pending-email') || '';
   } catch (e) {}
-  /* #therapist-signup skips the app's "what brings you to Kindred?" step and
-     opens the therapist login with the email prefilled -- they have just paid,
-     so the only thing left to type is a password. The hash must come AFTER the
-     query string or the app reads the email as part of the fragment. */
-  btn.href = btn.href + (email ? '?email=' + encodeURIComponent(email) : '') + '#therapist-signup';
+
+  /* Signed in here: leave the href alone. #therapist-signin restores the
+     session and lands them in their portal, on the checklist, with "Add my
+     license" and "Verify my ID" already waiting. Nothing to type. */
+  if (session && session.access_token) return;
+
+  /* No session -- they paid on another device, or cleared storage. Now the
+     old URL is exactly right: prefill the email they paid with and ask only
+     for a password. The hash must come AFTER the query string or the app
+     reads the email as part of the fragment. */
+  btn.href = '/app/' + (email ? '?email=' + encodeURIComponent(email) : '') + '#therapist-signup';
 })();
 </script>
 <script src="site.js?v=10"></script>
