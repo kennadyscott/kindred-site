@@ -315,6 +315,18 @@ async function authPost(path, body) {
   }
 
   /* already signed in on this browser? skip straight to membership */
+  /* No profile yet, however they arrived: send them straight into building
+     one. This page is the checkout counter -- standing them in front of it
+     with a "build a profile first" button was an extra click on the way to
+     the only thing they can actually do, and the pitch already happened on
+     the landing page or in the email that brought them.
+
+     replace() rather than assign() so Back returns them to wherever they came
+     from rather than bouncing them through here again. */
+  function ktGoBuildProfile() {
+    location.replace('/app/#therapist-signup');
+  }
+
   window.__ktShowColdStart = function () {
     const cold = document.getElementById('kt-coldstart');
     if (cold) {
@@ -356,9 +368,9 @@ async function authPost(path, body) {
         const t = rows && rows[0];
         const built = !!(t && t.name && String(t.name).trim() && (t.specialties || []).length);
         if (built) revealStep2(existing.user.email);
-        else if (window.__ktShowColdStart) window.__ktShowColdStart();
+        else ktGoBuildProfile();
       })
-      .catch(() => { if (window.__ktShowColdStart) window.__ktShowColdStart(); });
+      .catch(ktGoBuildProfile);
   } else {
     /* Arriving from the APP with ?email= means they built a profile there and
        pressed Activate. They have an account -- they just cannot prove it
@@ -380,7 +392,7 @@ async function authPost(path, body) {
        in from here. */
     /* Named so the signed-in branch can use it too: whether someone sees the
        free path depends on having a PROFILE, not on having a session. */
-    if (!fromApp) window.__ktShowColdStart();
+    if (!fromApp) ktGoBuildProfile();
 
     if (fromApp) {
       /* They built a profile in the app and pressed Activate. This page is now
