@@ -648,6 +648,12 @@ function profileGaps(t) {
   if (!t) return [];
   const gaps = [];
   if (!(t.name && String(t.name).trim())) gaps.push('your name');
+  /* A photo is not decoration on a therapy product. The question a client is
+     actually answering is "can I picture myself opening up to this person",
+     and initials on a coloured block answer it badly -- it reads as a listing
+     rather than a person. Required for the same reason specialties are:
+     without it the card cannot do its job. */
+  if (!(t.photo && String(t.photo).trim())) gaps.push('a photo of you');
   if (!((t.tags || []).length))           gaps.push('at least one specialty');
   if (!hasWrittenVoice(t))                gaps.push('something in your own words');
   return gaps;
@@ -3361,6 +3367,17 @@ function profileCardHtml(t, opts = {}) {
       ${t.photo ? `<img class="card-photo-img" src="${t.photo}" alt="">` : `<div class="initials">${t.initials}</div>`}
       ${preview ? '' : matchBadgeHtml(t)}
       ${preview ? '' : languageBadgeHtml(t)}
+      <!-- The initials block is the single biggest thing on the card and, with
+           no photo, it is the whole first impression: a coloured rectangle
+           where a face should be. In the therapist's own preview, say so over
+           the top of it -- this is the one place the absence is obvious at the
+           size a client sees it. -->
+      ${(preview && !t.photo) ? `<label class="photo-prompt">
+        <span class="photo-prompt-title">Add a photo of you</span>
+        <span class="photo-prompt-body">Clients decide who to open up to by looking at a face. Your profile can't go live without one.</span>
+        <span class="photo-prompt-btn">Choose a photo</span>
+        <input type="file" accept="image/*" data-media-upload="photo" hidden>
+      </label>` : ''}
       ${!t.acceptingOngoing ? `<div class="not-accepting-banner">Not currently accepting clients — save for later</div>` : ''}
     </div>
     ${profileCardBodyHtml(t, opts)}`;
@@ -6234,10 +6251,15 @@ function renderTherapistProfileBody() {
             </details>`;
 
           // lead photo stays fixed (it's the swipe-card image, not feed content)
+          /* Marked required when absent. It reads as one optional media slot
+             among several otherwise, which is how a profile reached "live" with
+             a coloured rectangle where the face goes. */
           const media = `
-            <div class="media-row">
+            <div class="media-row${t.photo ? '' : ' is-required'}">
               <div class="media-thumb">${t.photo ? `<img src="${t.photo}">` : '<span>—</span>'}</div>
-              <div class="media-row-text"><strong>Lead photo</strong><span>Your swipe-card image — the first thing clients see</span></div>
+              <div class="media-row-text"><strong>Lead photo${t.photo ? '' : ' <span class="req-pill">required</span>'}</strong><span>${t.photo
+                ? 'Your swipe-card image — the first thing clients see'
+                : "Your profile can't go live without one — it's the first thing a client looks at"}</span></div>
               <label class="media-upload-btn">${t.photo ? 'Change' : 'Add'}<input type="file" accept="image/*" data-media-upload="photo" hidden></label>
             </div>`;
 

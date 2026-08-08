@@ -1,7 +1,8 @@
 -- ============================================================================
 -- KINDRED — PENDING MIGRATIONS (run in order, top to bottom)
 --   0026  license expiry date + expiring-licence report
---   0027  a name is not a profile — require specialties + words to publish
+--   0027  a name is not a profile — require a PHOTO, specialties and words
+--         before a listing is shown to clients
 --         (SUPERSEDES 0025: it recreates gender_bucket() and carries the same
 --          match-scoring change, so 0025 does not need to be run separately)
 --
@@ -10,7 +11,8 @@
 -- authority rather than the browser.
 --
 -- BEFORE 0027, check who it will hide (should be nobody at current size):
---   select name, specialties, best_for from therapists
+--   select name, photo is not null as has_photo, specialties, best_for
+--     from therapists
 --    where published and license_verified and identity_verified;
 --
 -- HOW: Supabase → SQL Editor → New query → paste → Run.
@@ -94,25 +96,28 @@ grant  execute on function admin_expiring_licenses(int) to service_role;
 -- A blank profile is a worse first impression than no profile, and it is
 -- indistinguishable to the client from the product not working.
 --
--- Two conditions added, one per half of that pitch:
+-- Three conditions added:
+--   A PHOTO      the card's whole job is "can I picture talking to them"
 --   SPECIALTIES  what matching filters on and what the card shows
 --   A VOICE      at least one answered prompt, or a best_for line
 --
--- WHAT "A VOICE" MEANS HERE, precisely: optional_prompts is jsonb holding
--- [{question, answer}, ...]. The condition is satisfied by ANY element with a
--- non-blank answer, or by a non-blank best_for. Deliberately generous -- this
--- is a floor against emptiness, not an editor.
+-- WHAT "A VOICE" MEANS HERE, precisely: any ONE of best_for, prompt_fit,
+-- persona.inOffice, persona.outOfOffice, an answered element of
+-- optional_prompts, or an answered prompt block in `blocks`. Deliberately
+-- generous, and it must stay in step with hasWrittenVoice() in app/app.js --
+-- if the two disagree, one side calls a profile finished that the other hides.
+-- A floor against emptiness, not an editor. Whitespace does not count.
 --
 -- THIS SUPERSEDES 0025. That migration bucketed gender in match_therapists;
 -- rather than depend on the order they get run in, this file recreates
 -- gender_bucket() and carries the same change. Running 0027 alone leaves both
 -- correct; running 0025 first and then 0027 is also fine.
 --
--- WHO THIS HIDES. Any currently published therapist with no specialties or no
--- written answer disappears from client results the moment this runs. That is
--- the intent, and at Kindred's current size it should be nobody -- check
--- before running:
---     select name, specialties, best_for, optional_prompts from therapists
+-- WHO THIS HIDES. Any currently published therapist missing a photo, a
+-- specialty, or a written answer drops out of client results the moment this
+-- runs. That is the intent, and at Kindred's current size it should be
+-- nobody -- check before running:
+--     select name, photo is not null as has_photo, specialties, best_for from therapists
 --      where published and license_verified and identity_verified;
 -- Their listing, subscription and data are untouched; the app shows them
 -- exactly what is missing and they reappear as soon as they fill it in.
@@ -157,7 +162,8 @@ create or replace function profile_is_publishable(
   p_optional_prompts jsonb,
   p_blocks           jsonb  default '[]'::jsonb,
   p_persona          jsonb  default '{}'::jsonb,
-  p_prompt_fit       text   default null
+  p_prompt_fit       text   default null,
+  p_photo            text   default null
 ) returns boolean
 language sql
 immutable
@@ -165,6 +171,10 @@ set search_path = public
 as $$
   select
         p_name is not null and btrim(p_name) <> ''
+    -- Initials on a coloured block are not a face. The client's real question
+    -- is whether they can picture opening up to this person, and the card
+    -- cannot answer it without one.
+    and btrim(coalesce(p_photo, '')) <> ''
     and coalesce(array_length(p_specialties, 1), 0) > 0
     and (
           btrim(coalesce(p_best_for, ''))   <> ''
@@ -184,10 +194,10 @@ as $$
         );
 $$;
 
-comment on function profile_is_publishable(text, text[], text, jsonb, jsonb, jsonb, text) is
-  'A profile is fit to show a client when it has a name, at least one specialty, and at least one thing written in the therapist''s own words (best_for, or any answered prompt).';
+comment on function profile_is_publishable(text, text[], text, jsonb, jsonb, jsonb, text, text) is
+  'A profile is fit to show a client when it has a name, a photo, at least one specialty, and at least one thing written in the therapist''s own words (best_for, prompt_fit, either persona line, or any answered prompt or feed block).';
 
-grant execute on function profile_is_publishable(text, text[], text, jsonb, jsonb, jsonb, text) to anon, authenticated, service_role;
+grant execute on function profile_is_publishable(text, text[], text, jsonb, jsonb, jsonb, text, text) to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- The client-facing view. search_therapists is `returns setof therapists_public`
@@ -214,7 +224,7 @@ create view therapists_public as
     and accepting = true
     and license_verified  = true
     and identity_verified = true
-    and profile_is_publishable(name, specialties, best_for, optional_prompts, blocks, persona, prompt_fit);
+    and profile_is_publishable(name, specialties, best_for, optional_prompts, blocks, persona, prompt_fit, photo);
 
 grant select on therapists_public to anon, authenticated;
 
@@ -333,7 +343,7 @@ as $$
       and t.identity_verified = true
       -- A paid, verified, EMPTY profile is still not something to show a
       -- client. Was a name check; now the same bar the view uses.
-      and profile_is_publishable(t.name, t.specialties, t.best_for, t.optional_prompts, t.blocks, t.persona, t.prompt_fit)
+      and profile_is_publishable(t.name, t.specialties, t.best_for, t.optional_prompts, t.blocks, t.persona, t.prompt_fit, t.photo)
       and (p_state is null or t.license_states @> array[p_state])
   )
   select
@@ -368,6 +378,7 @@ create or replace function admin_incomplete_profiles()
 returns table (
   email        text,
   name         text,
+  has_photo    boolean,
   has_specialty boolean,
   has_voice    boolean,
   published    boolean,
@@ -380,13 +391,14 @@ as $$
   select
     u.email::text,
     t.name,
+    btrim(coalesce(t.photo, '')) <> '',
     coalesce(array_length(t.specialties, 1), 0) > 0,
-    profile_is_publishable('x', array['x'], t.best_for, t.optional_prompts, t.blocks, t.persona, t.prompt_fit),
+    profile_is_publishable('x', array['x'], t.best_for, t.optional_prompts, t.blocks, t.persona, t.prompt_fit, 'x'),
     t.published,
     t.subscription_status
   from therapists t
   join auth.users u on u.id = t.user_id
-  where not profile_is_publishable(t.name, t.specialties, t.best_for, t.optional_prompts, t.blocks, t.persona, t.prompt_fit)
+  where not profile_is_publishable(t.name, t.specialties, t.best_for, t.optional_prompts, t.blocks, t.persona, t.prompt_fit, t.photo)
   order by (t.subscription_status in ('active','trialing')) desc, t.updated_at desc;
 $$;
 

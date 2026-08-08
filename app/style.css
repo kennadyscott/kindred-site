@@ -2793,3 +2793,29 @@ select.t-rate-input,
   background: var(--rust-light, #FDF2EC); border: 1px dashed var(--clay, #BE765F);
   color: #8a5a3c; font-size: 13px; line-height: 1.5;
 }
+
+/* No-photo prompt, laid over the initials block in the therapist's own
+   preview. Sits where the face would be, at the size a client sees it --
+   which is the only place the absence actually lands. */
+.photo-prompt {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px; text-align: center;
+  padding: 22px; cursor: pointer; z-index: 3;
+  background: linear-gradient(180deg, rgba(43,34,51,.30), rgba(43,34,51,.62));
+  backdrop-filter: blur(1.5px);
+}
+.photo-prompt-title { font-family: 'Poppins', sans-serif; font-weight: 700;
+                      font-size: 17px; color: #fff; }
+.photo-prompt-body  { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.92);
+                      max-width: 30ch; }
+.photo-prompt-btn   { margin-top: 4px; background: #fff; color: var(--aubergine);
+                      border-radius: 999px; padding: 9px 20px;
+                      font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13.5px; }
+.photo-prompt:hover .photo-prompt-btn { background: var(--cream-2); }
+.photo-prompt:focus-within { outline: 3px solid var(--clay); outline-offset: -3px; }
+
+/* The lead-photo row in the editor, while it is still empty. */
+.media-row.is-required { border-color: var(--clay); background: var(--rust-light, #FDF2EC); }
+.req-pill { font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .05em; color: #8a5a3c; background: #F7E2D5;
+            border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 1px; }
