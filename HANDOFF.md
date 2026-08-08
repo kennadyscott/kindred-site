@@ -50,24 +50,37 @@ select * from admin_marketing_list();    -- therapists who opted in
 select * from therapist_stage();         -- where each therapist stalled
 ```
 
-### 2. The four 13-month coupons — has a deadline
-Stripe coupons are immutable, so these are NEW coupons + NEW promotion codes.
-Duration **13 months** (not 12: the coupon clock starts at subscription
-creation, which on the trial is day 0 of the free month, so 12 only covers 11
-paid invoices).
+### 2. The founding coupons — DECIDED: keep the existing 12-month ones
+Considered replacing them with 13-month versions so the trial cohort would get
+a full twelve invoices at the founding rate. Decided against it on 2026-08-08 —
+not worth rebuilding four coupons and four promotion codes for one billed month.
 
-| Amount off | Redeem by | Code |
-|---|---|---|
-| $20.00 | Sep 1 | `FOUNDINGSEPT13` |
-| $15.00 | Oct 1 | `FOUNDINGOCT13` |
-| $13.00 | Nov 1 | `FOUNDINGNOV13` |
-| $10.00 | Dec 1 | `FOUNDINGDEC13` |
+What that means, so nobody "fixes" it later thinking it is a bug:
 
-Do NOT restrict them to specific products — that fails silently. Don't delete
-the old coupons; archiving the old promotion codes is enough.
-Then swap the codes in `PRICING_TIERS` in `activate.js`.
+| | |
+|---|---|
+| Coupon window | 12 calendar months from subscription creation |
+| Month 1 | the free trial — burns a coupon month, no invoice |
+| Months 2–12 | **11** invoices at the founding rate |
+| Month 13+ | $29.99 |
 
-**`FOUNDINGSEPT` stops being the right tier on September 1st.**
+So "locked for 12 months" is true in calendar terms and stays. Any claim about
+a saving must count ELEVEN billed months, not twelve. The copy on both
+surfaces is derived, not typed:
+
+    STANDARD_RATE + (STANDARD_RATE - rate) * (FOUNDING_LOCK_MONTHS - 1)
+    = 29.99 + 20.00 * 11 = $249
+
+`FOUNDINGSEPT` / `OCT` / `NOV` / `DEC` stay exactly as they are in
+`PRICING_TIERS`. Nothing to do before September — the ladder is date-driven
+and rolls itself to $14.99.
+
+**One live risk left.** The tier cutoffs in `PRICING_TIERS` are evaluated in
+the THERAPIST'S browser timezone; Stripe's redeem-by runs on the account's. A
+therapist west of you late on August 31st can still be sent `FOUNDINGSEPT`
+after Stripe has stopped honouring it — Stripe rejects the code and they are
+charged $29.99 on a page that just promised $9.99. Pushing each coupon's
+redeem-by one day past its cutoff closes it.
 
 ### 3. Confirm the /welcome redirect on the trial payment link
 You thought you'd set it. The check takes five seconds: the link's detail page

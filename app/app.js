@@ -565,11 +565,16 @@ const LICENSE_SEED = { t1: ['TX', 'CA'] };
 // Paid on the WEBSITE (Stripe web checkout), never in-app — keeps Apple's cut
 // at 0% and avoids any IAP surface in the App Store build.
 const THERAPIST_BILLING_URL = '/activate.html';
+/* UTC, matching activate.js — see the long note there. Without the Z these
+   parse in the viewer's timezone, and this list has to agree with the one that
+   picks the Stripe promo code or the app quotes a rate the checkout won't
+   honour. Same instant on both sides is the only version of "in sync" worth
+   having. */
 const PRICING_TIERS = [
-  { until: new Date('2026-09-01T00:00:00'), rate: 9.99 },
-  { until: new Date('2026-10-01T00:00:00'), rate: 14.99 },
-  { until: new Date('2026-11-01T00:00:00'), rate: 16.99 },
-  { until: new Date('2026-12-01T00:00:00'), rate: 19.99 }
+  { until: new Date('2026-09-01T00:00:00Z'), rate: 9.99 },
+  { until: new Date('2026-10-01T00:00:00Z'), rate: 14.99 },
+  { until: new Date('2026-11-01T00:00:00Z'), rate: 16.99 },
+  { until: new Date('2026-12-01T00:00:00Z'), rate: 19.99 }
 ];
 const STANDARD_RATE = 29.99;
 const FOUNDING_LOCK_MONTHS = 12;
@@ -5191,7 +5196,13 @@ function openActivateProfile() {
       <li><strong>Nothing is charged for 30 days.</strong> Your card is saved now; cancel before day 31 and you're never billed</li>
       <li>Your profile goes live in client matching once your licence and identity are verified</li>
       <li>Cancel anytime — your profile just unlists, nothing is deleted</li>
-      ${p.founding ? `<li>Your $${p.introRate.toFixed(2)} rate is locked for a full ${p.introMonths} months — that's $${Math.round((p.standardRate - p.introRate) * p.introMonths)} less than the standard $${p.standardRate.toFixed(2)}/mo</li>` : ''}
+      <!-- The coupon's 12 months run from signup and the trial burns the
+           first, so only 11 carry an invoice -- $20 x 12 was the wrong sum.
+           Counted right the year is better: a free month is worth the STANDARD
+           rate. Must stay identical to the figure activate.js puts on the
+           website; two different savings numbers for one offer is worse than
+           either of them being slightly conservative. -->
+      ${p.founding ? `<li>Your $${p.introRate.toFixed(2)} rate is locked for a full ${p.introMonths} months — $${Math.floor(p.standardRate + (p.standardRate - p.introRate) * (p.introMonths - 1))} less than the standard $${p.standardRate.toFixed(2)}/mo across your first year</li>` : ''}
     </ul>
     <div id="activate-status"></div>
     <button class="primary-btn" style="margin-top:14px;background:var(--coral);color:white;" id="activate-pay-btn">Continue to secure checkout →</button>

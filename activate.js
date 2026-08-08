@@ -18,7 +18,7 @@
         founding discounts ride on top of it, which is what makes the step-up
         to $29.99 automatic.)
      2. Product catalog → Coupons → New coupon. Make FOUR, each with
-        Duration = "Multiple months" = 13, and a "Redeem by" date:
+        Duration = "Multiple months" = 12, and a "Redeem by" date:
              $20.00 off → $9.99/mo   · redeem by Sep 1
              $15.00 off → $14.99/mo  · redeem by Oct 1
              $13.00 off → $16.99/mo  · redeem by Nov 1
@@ -26,18 +26,23 @@
         The Redeem-by dates are what actually enforce the ladder, since the
         promo-code box is visible at checkout.
 
-        WHY 13 AND NOT 12. Stripe starts the coupon clock when the
-        subscription is CREATED, not at the first payment. On the 30-day
-        trial link that is day 0 of the trial, so a 12-month coupon runs out
-        after only 11 paid invoices. 13 gives the trial cohort a full 12
-        months of paying the founding rate, and gives everyone else 13 --
-        which is why the page still promises 12. Under-promise.
+        TWELVE, AND WHAT THAT COSTS. Stripe starts the coupon clock when
+        the subscription is CREATED, not at the first payment -- on the trial
+        link that is day 0 of the free month, so a 12-month coupon covers 12
+        calendar months but only ELEVEN paid invoices. 13-month coupons were
+        considered and rejected (2026-08-08): not worth rebuilding four
+        coupons and four promotion codes for one billed month.
+        Consequence to preserve: "locked for 12 months" is true in calendar
+        terms, but any SAVING quoted anywhere must count eleven billed months
+        plus the free one at standard price. Both surfaces derive it rather
+        than hardcode it -- see kt-offer-save below and the activate modal in
+        app/app.js. Do not "correct" either to rate x 12.
 
         COUPONS ARE IMMUTABLE. Stripe lets you edit a coupon's name and
-        metadata and nothing else -- not duration, not amount. Changing 12 to
-        13 means NEW coupons and NEW promotion codes; the old ones stay valid
-        for anyone already on them, which is correct, since a live discount
-        should never be shortened underneath someone.
+        metadata and nothing else -- not duration, not amount. Changing the
+        duration later means NEW coupons and NEW promotion codes; the old ones
+        stay valid for anyone already on them, which is correct, since a live
+        discount should never be shortened underneath someone.
      3. Create a PROMOTION CODE for each coupon (FOUNDINGSEPT, FOUNDINGOCT,
         FOUNDINGNOV, FOUNDINGDEC) and put them in PRICING_TIERS below.
      4. Payment links → New → the $29.99/month price → tick "Allow promotion
@@ -86,12 +91,27 @@ const TRIAL_DAYS = 30;
 /* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
    at a coupon set to "Multiple months / 12" so the rate is locked for a year
    and then steps up to $29.99 automatically.
-   Keep the dates in sync with PRICING_TIERS in the app (kindred-app/app.js). */
+   Keep the dates in sync with PRICING_TIERS in the app (app/app.js).
+
+   THE Z MATTERS. These were `new Date('2026-09-01T00:00:00')`, which JavaScript
+   parses in the VIEWER'S timezone -- so the page decided whether to send
+   FOUNDINGSEPT by the therapist's own clock, while Stripe enforces redeem-by
+   on the account's. A therapist in Hawaii at 11pm on August 31st is still
+   inside the window locally and it is already 5am on the 1st in Eastern: the
+   page sends the code, Stripe refuses it, and they are charged $29.99 on a
+   screen that just promised $9.99. Silently, and only to the people furthest
+   west.
+   Parsing as UTC makes the client the STRICTER gate in every US timezone --
+   Sep 1 00:00 UTC is Aug 31 8pm Eastern -- so a code is never offered after
+   Stripe has stopped honouring it. The cost is that the last few hours of a
+   tier roll early, which is visible and consistent rather than a surprise at
+   checkout. Fixing it the other way would mean new coupons, and coupons are
+   immutable. */
 const PRICING_TIERS = [
-  { key: 'tier1', until: new Date('2026-09-01T00:00:00'), rate: 9.99,  promo: 'FOUNDINGSEPT' },
-  { key: 'tier2', until: new Date('2026-10-01T00:00:00'), rate: 14.99, promo: 'FOUNDINGOCT' },
-  { key: 'tier3', until: new Date('2026-11-01T00:00:00'), rate: 16.99, promo: 'FOUNDINGNOV' },
-  { key: 'tier4', until: new Date('2026-12-01T00:00:00'), rate: 19.99, promo: 'FOUNDINGDEC' }
+  { key: 'tier1', until: new Date('2026-09-01T00:00:00Z'), rate: 9.99,  promo: 'FOUNDINGSEPT' },
+  { key: 'tier2', until: new Date('2026-10-01T00:00:00Z'), rate: 14.99, promo: 'FOUNDINGOCT' },
+  { key: 'tier3', until: new Date('2026-11-01T00:00:00Z'), rate: 16.99, promo: 'FOUNDINGNOV' },
+  { key: 'tier4', until: new Date('2026-12-01T00:00:00Z'), rate: 19.99, promo: 'FOUNDINGDEC' }
 ];
 const STANDARD_RATE = 29.99;
 const FOUNDING_LOCK_MONTHS = 12;
@@ -189,12 +209,22 @@ const FOUNDING_LOCK_MONTHS = 12;
        So say it in billed months and the number is right: $20 a month, $240
        over twelve. Refusing to state a saving on the page whose whole job is
        to present one was the more expensive kind of caution. */
+    /* The coupon runs FOUNDING_LOCK_MONTHS calendar months from subscription
+       creation and the trial burns the first of them, so the rate is locked
+       for twelve months but only ELEVEN carry an invoice. An earlier version
+       of this line multiplied $20 by twelve and claimed $240 across "12 billed
+       months" -- two errors that happened to point the same way, and the kind
+       of wrong that ends up quoted back at you by someone reading their card
+       statement.
+       Counted properly the year is better, not worse: a free month is worth
+       the STANDARD rate, not the founding one. */
     const perMonth = STANDARD_RATE - rate;
-    const overLock = Math.round(perMonth * FOUNDING_LOCK_MONTHS);
+    const billedAtRate = FOUNDING_LOCK_MONTHS - 1;                 // the trial takes month 1
+    const yearOne = Math.floor(STANDARD_RATE + perMonth * billedAtRate);
     const save = document.getElementById('kt-offer-save');
     if (save) {
       save.textContent = founding
-        ? `You save $${perMonth.toFixed(2)} a month — $${overLock} across your first ${FOUNDING_LOCK_MONTHS} billed months, and nothing at all for the first ${TRIAL_DAYS} days.`
+        ? `You save $${perMonth.toFixed(2)} a month — $${yearOne} across your first year, counting the ${TRIAL_DAYS} days free.`
         : `Nothing to pay today. Cancel before day ${TRIAL_DAYS + 1} and you're never charged.`;
     }
   } else if (founding) {
