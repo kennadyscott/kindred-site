@@ -578,6 +578,10 @@ const PRICING_TIERS = [
 ];
 const STANDARD_RATE = 29.99;
 const FOUNDING_LOCK_MONTHS = 12;
+/* Mirrors TRIAL_DAYS in activate.js, which owns the Stripe links. Everyone
+   activating gets the trial, so this appears in the Activate modal and in
+   every sentence about billing state. */
+const TRIAL_DAYS = 30;
 const dateLabel = d => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
 function listingPricing() {
@@ -597,6 +601,65 @@ function listingPricing() {
     nextRate: next ? next.rate : STANDARD_RATE,   // what it becomes after this deadline
     nextDateLabel: dateLabel(tier.until)          // when this rate goes away
   };
+}
+
+/* ===== WHAT IS THIS LISTING ACTUALLY DOING =====================================
+   The Home banner and Settings each worked this out for themselves and reached
+   opposite answers on the same screen: the banner required licence AND identity
+   before saying "live", Settings said "Your profile is live" the moment billing
+   started. A therapist could read "You're being billed but clients can't see
+   you yet" and "Listed — $29.99/mo. Your profile is live." three inches apart.
+
+   Two facts, deliberately separate, because they move independently:
+     MONEY       none | trial | charging      (from Stripe's subscription_status)
+     VISIBILITY  listed && licence && identity
+
+   `listed` means the subscription exists -- the webhook flips `published` for
+   BOTH 'active' and 'trialing' -- so it has never meant "a client can see you",
+   and reading it as though it did is the whole bug.
+   ========================================================================== */
+function listingState(t) {
+  const paying   = !!t.listed;
+  const checked  = !!(t.licenseVerified && t.identityVerified);
+  const trialing = t.subscriptionStatus === 'trialing';
+  return {
+    paying, checked, trialing,
+    visible: paying && checked,
+    stuck:   paying && !checked,
+    money:   !paying ? 'none' : trialing ? 'trial' : 'charging'
+  };
+}
+
+/* The one sentence. Both surfaces call this, so they cannot disagree again.
+   `opts.inChecklist` is the only thing that differs between them: the Home
+   banner sits above the six steps and can point at the one still outstanding,
+   Settings has no list to point at, so the same nudge there refers to nothing. */
+function listingLead(t, opts) {
+  const inChecklist = !!(opts && opts.inChecklist);
+  const allDone     = !!(opts && opts.allDone);
+  const s = listingState(t);
+  if (!s.paying) return "<strong>Getting set up.</strong> About ten minutes of your time, then it's on us.";
+
+  const trialNote = s.trialing
+    ? ` Nothing has been charged yet &mdash; your free ${TRIAL_DAYS} days are still running.`
+    : '';
+
+  if (s.visible) {
+    const nudge = (inChecklist && !allDone)
+      ? ' One thing left that will sharpen who reaches you.'
+      : '';
+    return allDone
+      ? `<strong>You're live.</strong> Clients matching your fit can now find you.${trialNote}`
+      : `<strong>You're live</strong> &mdash; clients can find you.${nudge}${trialNote}`;
+  }
+
+  /* Subscribed and invisible. Naming this is the point of the banner -- but
+     "you're being billed" is a lie for the first 30 days, and it is the most
+     alarming sentence on the page. Everyone activating now starts on the trial,
+     so for most people it was alarming AND false. */
+  return s.trialing
+    ? `<strong>Your membership is active and nothing has been charged yet</strong> &mdash; you're in your free ${TRIAL_DAYS} days. Clients can't see you until your licence and identity are verified.`
+    : `<strong>You're being billed but clients can't see you yet.</strong> Finish these and you're live.`;
 }
 
 function normalizeTherapist(t) {
@@ -1615,7 +1678,17 @@ function dbRowToTherapist(row) {
     licensedStates: (row.license_states && row.license_states.length) ? row.license_states : undefined,
     paymentOptions: row.payment_options || [],
     listed: !!row.published,
-    subscription: row.published ? { plan: 'standard', founding: false, standardRate: STANDARD_RATE, introRate: STANDARD_RATE, introMonths: 0 } : null,
+    /* Stripe's own word for it: 'trialing' | 'active' | 'past_due' | ... The
+       column has existed since 0008 and `select=*` has always returned it; it
+       was simply never read, which is why the app could not tell a therapist
+       on a free trial from one being charged. */
+    subscriptionStatus: row.subscription_status || null,
+    /* Was: a hardcoded {founding:false, standardRate:29.99} for every row that
+       came back published. Settings printed it verbatim, so a founding member
+       paying $9.99 was told "Listed — $29.99/mo" by their own account page.
+       There is no rate column to read, so the honest thing is to carry no rate
+       at all rather than a confident wrong one. */
+    subscription: row.published ? { status: row.subscription_status || null } : null,
     acceptingOngoing: row.accepting !== false, onDemand: false, onDemandSlots: [],
     nextAvailableRank: 1, nextAvailableLabel: 'This week',
     practiceType: row.practice_type || 'specialist', externalAppointments: [],
@@ -3430,25 +3503,22 @@ function gettingStartedHtml(t) {
     try { if (localStorage.getItem(GETTING_STARTED_KEY) === 'dismissed') return ''; } catch (e) {}
   }
 
-  // Paying and invisible is the state that most needs naming, so it leads.
-  const stuck = t.listed && !(t.licenseVerified && t.identityVerified);
-  /* Publishing is driven by billing, licence and identity -- NOT by this list.
-     So a therapist can be live with the ideal-client step still outstanding,
+  /* Derived, not re-derived. These two lines used to spell the rule out again
+     by hand right here, while Settings spelled out a DIFFERENT rule of its own
+     -- which is exactly how the same screen ended up claiming a profile was
+     both invisible and live. One function decides now.
+
+     Note publishing is driven by billing, licence and identity -- NOT by this
+     checklist. A therapist can be live with the ideal-client step outstanding,
      and telling them they are "getting set up" would be plainly false while
      clients are already seeing them. */
-  const live = t.listed && t.licenseVerified && t.identityVerified;
-  /* The two states worth counting. `stuck` is the leak: paying and invisible.
-     `live` is the only outcome that serves a client. Both once-per-therapist. */
+  const s = listingState(t);
+  const stuck = s.stuck;    // subscribed and invisible: the leak
+  const live  = s.visible;  // the only outcome that serves a client
   if (stuck) kTrack('app_paying_but_invisible', true);
   if (live) kTrack('app_therapist_live', true);
   if (allDone) kTrack('app_setup_complete', true);
-  const lead = allDone
-    ? "<strong>You're live.</strong> Clients matching your fit can now find you."
-    : stuck
-      ? "<strong>You're being billed but clients can't see you yet.</strong> Finish these and you're live."
-      : live
-        ? "<strong>You're live</strong> &mdash; clients can find you. One thing left that will sharpen who reaches you."
-        : "<strong>Getting set up.</strong> About ten minutes of your time, then it's on us.";
+  const lead = listingLead(t, { inChecklist: true, allDone });
 
   const items = steps.map(s => {
     const state = s.done ? 'done' : s.mine ? 'todo' : 'waiting';
@@ -5152,13 +5222,12 @@ function finishTherapistSignup() {
       .then(loadTherapistRow)
       .then(row => {
         if (!row) return;
-        newT.listed           = !!row.published;
-        newT.licenseVerified  = row.license_verified  === true;
-        newT.identityVerified = row.identity_verified === true;
-        newT.subscription     = row.published
-          ? { plan: 'standard', founding: false, standardRate: STANDARD_RATE,
-              introRate: STANDARD_RATE, introMonths: 0 }
-          : null;
+        newT.listed             = !!row.published;
+        newT.licenseVerified    = row.license_verified  === true;
+        newT.identityVerified   = row.identity_verified === true;
+        newT.subscriptionStatus = row.subscription_status || null;
+        // No invented rate here either -- see dbRowToTherapist.
+        newT.subscription       = row.published ? { status: row.subscription_status || null } : null;
       })
       .then(() => { clearDraft(); finish(); })
       .catch(saveFailed);
@@ -6874,6 +6943,9 @@ let therapistSettings = {
 function renderTherapistSettings() {
   const t = THERAPISTS.find(t => t.id === currentTherapistId);
   const s = therapistSettings;
+  /* Empty string once the checklist is complete AND dismissed -- which is what
+     the block below tests, so the listing state is stated exactly once. */
+  const listingCard = verificationBannerHtml(t);
   const row = (key, title, sub) => `
     <div class="must-have-toggle">
       <div class="toggle-label"><strong>${title}</strong><span>${sub}</span></div>
@@ -6905,11 +6977,22 @@ function renderTherapistSettings() {
     <p class="portal-note">Your ideal-client settings are always private and never shown to clients.</p>
 
     <div class="settings-group-title">Your listing</div>
-    ${verificationBannerHtml(t)}
-    ${t.listed && t.subscription
-      ? `<p class="portal-note" style="margin-top:0;">${t.subscription.founding
-            ? `🌟 <strong>Founding member</strong> — $${t.subscription.introRate.toFixed(2)}/mo for your first ${t.subscription.introMonths} months, then $${t.subscription.standardRate.toFixed(2)}/mo. Your profile is live.`
-            : `<strong>Listed</strong> — $${t.subscription.standardRate.toFixed(2)}/mo. Your profile is live.`}</p>`
+    ${listingCard}
+    ${t.listed
+      /* Same sentence the Home banner shows, from the same function. This used
+         to assert "Your profile is live" off `t.listed` alone and print a
+         hardcoded $29.99 beside it -- so a founding member awaiting licence
+         verification was told, on one screen, both that clients couldn't see
+         them and that their profile was live at a price they weren't paying.
+         No rate is quoted now: nothing in the row records which tier they
+         locked in, and a confident wrong number is worse than a pointer to
+         the receipt that has the right one. */
+      /* Only state it here if the card above ISN'T -- it carries the same
+         sentence from the same function, and a therapist who has dismissed
+         the completed checklist would otherwise have no statement of their
+         listing state anywhere in Settings. */
+      ? `${listingCard ? '' : `<p class="portal-note" style="margin-top:0;">${listingLead(t)}</p>`}
+         <p class="portal-note" style="margin-top:0;">Your rate and next charge date are on the Stripe receipt emailed to you when you activated.</p>`
       : `<p class="portal-note" style="margin-top:0;">Your profile isn't listed yet.</p><button class="edit-prefs-btn" id="t-settings-activate-btn" style="color:var(--coral-dark);">Activate my profile</button>`}
 
     <div class="settings-group-title">Account</div>
