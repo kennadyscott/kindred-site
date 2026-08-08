@@ -2636,6 +2636,36 @@ select.t-rate-input,
 .lic-denied-note { font-size: 12.5px; color: #912B21; background: #FAE6E3;
                    border-radius: 8px; padding: 6px 10px; margin: 4px 0 8px; }
 
+/* Expiry, and fixing a licence in place ------------------------------------
+   A denied licence used to have nowhere to go: its state was already taken in
+   the primary key, so the "add a state" dropdown filtered it out and the only
+   route was to delete it first. These are the fields that let it be corrected
+   where it sits. */
+.lic-sub { margin: -2px 0 8px 2px; }
+.lic-exp { font-size: 12px; color: var(--ink-soft); }
+.lic-exp.is-soon    { color: #8a5a3c; font-weight: 600; }
+.lic-exp.is-bad     { color: #912B21; font-weight: 700; }
+.lic-exp.is-missing { color: var(--ink-soft); font-style: italic; }
+.lic-exp-label { font-size: 12px; color: var(--ink-soft); flex: 0 0 52px; }
+.lic-add input[type="date"] { flex: 1; min-width: 0; padding: 10px;
+                              border: 1.5px solid var(--line); border-radius: 12px;
+                              font: inherit; background: var(--paper); color: var(--ink); }
+.lic-fix { border: 1px dashed var(--line); border-radius: 12px;
+           padding: 10px 12px; margin: 0 0 10px; background: var(--cream-2); }
+.lic-fix-lead { font-size: 12.5px; color: var(--ink-soft); margin: 0; line-height: 1.45; }
+.lic-fix .lic-add button { padding: 9px 18px; }
+
+/* The one checklist item that isn't a blocker. Visually separated from the
+   numbered path so it cannot be read as something standing between the
+   therapist and going live. */
+.gs-optional { margin: 12px 4px 2px; padding: 12px 14px; border-radius: 12px;
+               background: var(--paper); border: 1px solid var(--line); }
+.gs-optional-title { font-size: 11px; font-weight: 700; text-transform: uppercase;
+                     letter-spacing: .05em; color: var(--ink-soft); margin: 0 0 4px; }
+.gs-optional-body { font-size: 13px; color: var(--ink); line-height: 1.5; margin: 0; }
+.gs-action-quiet { background: transparent; color: var(--aubergine);
+                   border: 1.5px solid var(--aubergine); }
+
 /* Rate: a slider you can drag across the whole realistic range, plus an exact
    field. A 10-dollar step could not express $165, which plenty of people
    charge, and the old 80-250 range excluded both ends of the market. */

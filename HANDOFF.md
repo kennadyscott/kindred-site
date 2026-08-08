@@ -82,6 +82,18 @@ after Stripe has stopped honouring it — Stripe rejects the code and they are
 charged $29.99 on a page that just promised $9.99. Pushing each coupon's
 redeem-by one day past its cutoff closes it.
 
+### 2b. Migration 0026 — license expiry date
+`alter table therapist_licenses add column expires_on date` plus
+`admin_expiring_licenses(days)` for the review queue.
+
+NOT URGENT, and nothing breaks before it runs: saveLicense() sends expires_on,
+and if PostgREST answers PGRST204/42703 it retries once without the field and
+saves the licence anyway. Until it runs, expiry dates typed by therapists are
+silently dropped — so run it before asking anyone to fill them in.
+
+Why it matters: a licence verified in August is still flagged verified in
+December after it lapsed. Nothing in the system knew to look again.
+
 ### 3. Confirm the /welcome redirect on the trial payment link
 You thought you'd set it. The check takes five seconds: the link's detail page
 should read `Confirmation page: https://kindredtherapymatch.com/welcome`.

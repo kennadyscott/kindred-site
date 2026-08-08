@@ -631,12 +631,13 @@ function listingState(t) {
 }
 
 /* The one sentence. Both surfaces call this, so they cannot disagree again.
-   `opts.inChecklist` is the only thing that differs between them: the Home
-   banner sits above the six steps and can point at the one still outstanding,
-   Settings has no list to point at, so the same nudge there refers to nothing. */
+   It used to take an `inChecklist` flag so the banner could append "one thing
+   left that will sharpen who reaches you" -- a pointer at the ideal-client
+   step. That step is no longer part of the path to going live, so the nudge
+   travelled with it and now lives on the optional row itself, next to the
+   button that does something about it. */
 function listingLead(t, opts) {
-  const inChecklist = !!(opts && opts.inChecklist);
-  const allDone     = !!(opts && opts.allDone);
+  const allDone = !!(opts && opts.allDone);
   const s = listingState(t);
   if (!s.paying) return "<strong>Getting set up.</strong> About ten minutes of your time, then it's on us.";
 
@@ -645,12 +646,9 @@ function listingLead(t, opts) {
     : '';
 
   if (s.visible) {
-    const nudge = (inChecklist && !allDone)
-      ? ' One thing left that will sharpen who reaches you.'
-      : '';
     return allDone
       ? `<strong>You're live.</strong> Clients matching your fit can now find you.${trialNote}`
-      : `<strong>You're live</strong> &mdash; clients can find you.${nudge}${trialNote}`;
+      : `<strong>You're live</strong> &mdash; clients can find you.${trialNote}`;
   }
 
   /* Subscribed and invisible. Naming this is the point of the banner -- but
@@ -685,6 +683,15 @@ function normalizeTherapist(t) {
     t.subscription = { plan: p.founding ? 'founding' : 'standard', founding: p.founding,
                        introRate: p.introRate, introMonths: p.introMonths, standardRate: p.standardRate };
   }
+  /* The Ideal Client editor reads eight arrays with no guards --
+     `t.idealClient.ageBands.includes(...)` and seven more. A therapist object
+     carrying a partial (or absent) idealClient therefore did not degrade, it
+     threw mid-render, and a thrown render leaves innerHTML unset: the profile
+     tab went blank white. That is what "Fix my license" looked like from the
+     outside -- the button worked, switched screens, and the destination
+     crashed on arrival.
+     Filling the shape here means no caller has to remember. */
+  t.idealClient = Object.assign(emptyIdealClient(), t.idealClient || {});
   if (!t.stats) t.stats = { profileViews: 0, hearts: 0, top5: 0, conversationsStarted: 0, weekViews: 0, weekHearts: 0 };
   return t;
 }
@@ -1603,19 +1610,53 @@ async function loadLicenses() {
     if (!res.ok) return [];
     return (await res.json()).map(r => ({
       state: r.state, number: r.license_number,
+      // undefined until 0026 runs; the UI treats that as "not supplied"
+      expiresOn: r.expires_on || '',
       verifiedAt: r.verified_at, rejectedAt: r.rejected_at,
       rejectedReason: r.rejected_reason || ''
     }));
   } catch (e) { return []; }
 }
-async function saveLicense(state, number) {
+/* Set once a write proves the column is missing, so the retry happens at most
+   once per session rather than on every save. Same idea as unavailableColumns
+   for the therapists table. */
+let licenseExpiryUnavailable = false;
+
+async function saveLicense(state, number, expiresOn) {
   const s = loadAuthSession();
   if (!s) return false;
-  const res = await authRest('/therapist_licenses', {
+  const base = {
+    user_id: s.user.id,
+    state: String(state).toUpperCase(),
+    license_number: String(number).trim()
+  };
+  /* merge-duplicates upserts on (user_id, state) -- which is what makes
+     "fix my license" work at all: a denied licence is corrected in place
+     rather than needing to be deleted and re-added. */
+  const post = body => authRest('/therapist_licenses', {
     method: 'POST',
     headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ user_id: s.user.id, state: String(state).toUpperCase(), license_number: String(number).trim() })
+    body: JSON.stringify(body)
   });
+
+  let res;
+  const wantsExpiry = !!expiresOn && !licenseExpiryUnavailable;
+  if (wantsExpiry) {
+    res = await post({ ...base, expires_on: expiresOn });
+    /* 0026 may not have been run yet. PostgREST answers an unknown column with
+       PGRST204/42703 -- drop the field and save the rest rather than losing a
+       licence number over a date. */
+    if (!res.ok) {
+      const txt = await res.clone().text().catch(() => '');
+      if (/PGRST204|42703|expires_on/i.test(txt)) {
+        licenseExpiryUnavailable = true;
+        console.warn('therapist_licenses.expires_on not present yet (migration 0026) — saving without it');
+        res = await post(base);
+      }
+    }
+  } else {
+    res = await post(base);
+  }
   /* Deliberately no state in the payload — which states have supply is a
      server-side aggregate (admin_supply_by_state), not something to put in an
      events row where it would start to identify people at low volumes. */
@@ -1702,7 +1743,16 @@ function dbRowToTherapist(row) {
     licenseRejectedReason: row.license_rejected_reason || '',
     website: row.website || '',
     ethnicity: row.ethnicity || '', affinities: row.affinities || [], faith: row.faith || [],
-    availabilitySlots: [], idealClient: emptyIdealClient(),
+    availabilitySlots: [],
+    /* Was a bare emptyIdealClient(): the column was WRITTEN on every save and
+       never read back, so a therapist described their ideal client, reloaded,
+       and found the section blank and the checklist step un-ticked again. The
+       server still had it and still matched on it -- only the therapist could
+       not see it. Same shape of bug as `blocks`.
+       Merged OVER the empty shape, not used raw: every renderer here does
+       `t.idealClient.ageBands.includes(...)` with no guard, so a partial object
+       from an older row is a TypeError mid-render. */
+    idealClient: Object.assign(emptyIdealClient(), row.ideal_client || {}),
     stats: { profileViews: 0, hearts: 0, top5: 0, conversationsStarted: 0, weekViews: 0, weekHearts: 0 },
     media: row.media || { video: null, office: null, outOfOffice: null },
     persona: row.persona || { inOffice: '', outOfOffice: '' },
@@ -3466,27 +3516,41 @@ function gettingStartedHtml(t) {
      Activation is the paywall, and licence checking sits AFTER it on purpose:
      hand-verifying a state board takes real time, and spending it on people
      who never activate is work with no return. */
+  /* ONLY THE STEPS THAT GATE VISIBILITY BELONG IN THE COUNT.
+     "Describe your ideal client" used to sit at position two and count toward
+     the total, but it has never gated anything -- a therapist can be fully
+     live with it untouched. So the list said "3 of 6" while mixing four things
+     that stop clients seeing you with one that doesn't, and the arithmetic
+     could not be reconciled by reading it. It is still offered, below the
+     list, outside the number.
+
+     ORDER IS THE PRODUCT DECISION, not layout. Payment used to be step one: a
+     card before a therapist had seen how Kindred represents them, on a
+     marketplace with nobody in it yet. Building the profile IS the pitch, so it
+     comes first and costs nothing. Licence checking sits AFTER payment on
+     purpose -- hand-verifying a state board takes real time, and spending it on
+     people who never activate is work with no return. */
+  const licenceDone = hasLicence && !deniedLicence;
   const steps = [
     { key: 'profile',  done: hasProfile,          title: 'Build your profile', mine: true,
       body: 'Your therapy style, who you work best with, what sessions feel like. Free, and it saves as you go.',
       action: hasProfile ? null : { label: 'Build my profile', id: 't-gs-profile' } },
-    { key: 'ideal',    done: hasIdeal,            title: 'Describe your ideal client', mine: true,
-      body: hasIdeal
-        ? 'Sharpening this over time is the single best thing you can do for your matches.'
-        : "Who you're the right fit for — ages, what they're working on, how they want to work. Private to you, and it's what makes your matches accurate.",
-      action: hasIdeal ? null : { label: 'Describe my ideal client', id: 't-gs-ideal' } },
-    { key: 'pay',      done: !!t.listed,          title: 'Activate your profile', mine: true,
+    /* Renamed from "Activate your profile". That title claimed this single step
+       did the activating, so ticking it while the banner said clients still
+       could not see you read as a contradiction. It is the payment step; the
+       whole list is what activates. */
+    { key: 'pay',      done: !!t.listed,          title: 'Select a payment plan', mine: true,
       body: t.listed
         ? 'Your founding rate is locked for your first 12 months.'
-        : 'Everything above is free. Go live with 30 days free — we verify your licence and identity next, and nothing is charged until day 31.',
-      action: t.listed ? null : { label: 'Activate my profile', id: 't-gs-activate' } },
-    { key: 'licence',  done: hasLicence && !deniedLicence, title: 'Add your license(s)', mine: true,
+        : 'Everything above is free. Start with 30 days free — nothing is charged until day 31, and you can cancel before then.',
+      action: t.listed ? null : { label: 'See the plan', id: 't-gs-activate' } },
+    { key: 'licence',  done: licenceDone, title: 'Add your license(s)', mine: true,
       body: deniedLicence
         ? `${deniedLicence.state}: ${String(deniedLicence.rejectedReason || '').replace(/[<>&]/g, '')}`
         : hasLicence
           ? licences.map(l => l.state + ' ' + l.number).join(' &middot; ')
-          : 'One per state &mdash; each is checked against that board separately.',
-      action: (hasLicence && !deniedLicence) ? null
+          : 'One per state &mdash; number and expiry date, checked against that board separately.',
+      action: licenceDone ? null
             : { label: hasLicence ? 'Fix my license' : 'Add my license', id: 't-gs-licence' } },
     { key: 'identity', done: !!t.identityVerified, title: 'Verify your identity', mine: true,
       body: 'A photo of your ID and a selfie, through Stripe. About a minute.',
@@ -3518,7 +3582,7 @@ function gettingStartedHtml(t) {
   if (stuck) kTrack('app_paying_but_invisible', true);
   if (live) kTrack('app_therapist_live', true);
   if (allDone) kTrack('app_setup_complete', true);
-  const lead = listingLead(t, { inChecklist: true, allDone });
+  const lead = listingLead(t, { allDone });
 
   const items = steps.map(s => {
     const state = s.done ? 'done' : s.mine ? 'todo' : 'waiting';
@@ -3540,6 +3604,16 @@ function gettingStartedHtml(t) {
         ${allDone ? '<button class="gs-dismiss" id="t-gs-dismiss" aria-label="Dismiss">&#10005;</button>' : `<span class="gs-count">${doneCount} of ${steps.length}</span>`}
       </div>
       <ol class="gs-steps">${items}</ol>
+      ${hasIdeal ? '' : `
+      <!-- OUTSIDE the list and outside the count, on purpose. It does not gate
+           anything: a therapist is live without it. Inside the count it made
+           "3 of 6" unreadable, because four of the six were blockers and this
+           one was advice. -->
+      <div class="gs-optional">
+        <p class="gs-optional-title">Optional &mdash; sharpens who reaches you</p>
+        <p class="gs-optional-body">Describe your ideal client: ages, what they're working on, how they want to work. Private to you, and it makes your matches more accurate. This doesn't affect whether you go live.</p>
+        <button class="gs-action gs-action-quiet" id="t-gs-ideal">Describe my ideal client</button>
+      </div>`}
     </div>`;
 }
 
@@ -5766,6 +5840,80 @@ let dragBlockIndex = null; // which get-to-know block is being dragged
 // A drop-down whose options are checkboxes. Selected values also show as
 // removable chips above it. Re-renders on change, but the <details> open state
 // is persisted in editDropdownOpen so the panel stays put.
+/* One licence, and the state it is in.
+
+   A DENIED licence used to be a cul-de-sac. The row holds the (user_id, state)
+   primary key, and the "add a state" dropdown filters out states you already
+   have -- so the one state you needed to correct was the one state you could
+   not pick. The only way through was to delete the licence first, which reads
+   like throwing away the thing being asked about. Denied rows now carry their
+   own number + expiry fields and save in place (the POST already upserts).
+
+   Expiry is shown because a licence verified in August is still flagged
+   verified in December, and nobody finds out until a client does. */
+function licenseRowHtml(l) {
+  const st    = l.verifiedAt ? 'ok' : l.rejectedAt ? 'denied' : 'pending';
+  const label = l.verifiedAt ? '&#10003; verified' : l.rejectedAt ? '&#10007; denied' : 'pending';
+  const esc   = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  const days  = licenseDaysLeft(l);
+  const expiryNote = l.expiresOn
+    ? (days < 0
+        ? `<span class="lic-exp is-bad">expired ${fmtLicenseDate(l.expiresOn)}</span>`
+        : days <= 60
+          ? `<span class="lic-exp is-soon">expires ${fmtLicenseDate(l.expiresOn)}</span>`
+          : `<span class="lic-exp">expires ${fmtLicenseDate(l.expiresOn)}</span>`)
+    : `<span class="lic-exp is-missing">no expiry date</span>`;
+
+  return `<div class="lic-row">
+      <span class="lic-state">${esc(l.state)}</span>
+      <span class="lic-num">${esc(l.number)}</span>
+      <span class="lic-status ${st}">${label}</span>
+      <button type="button" class="lic-remove" data-drop-lic="${esc(l.state)}" aria-label="Remove ${esc(l.state)}">&#10005;</button>
+    </div>
+    <div class="lic-sub">${expiryNote}</div>
+    ${l.rejectedAt && l.rejectedReason ? `<p class="lic-denied-note">${esc(l.rejectedReason)}</p>` : ''}
+    ${(l.rejectedAt || !l.expiresOn) ? `
+    <div class="lic-fix" data-lic-fix="${esc(l.state)}">
+      <p class="lic-fix-lead">${l.rejectedAt
+        ? `Correct your ${esc(l.state)} details and we'll check again.`
+        : `Add the expiry date printed on your ${esc(l.state)} license.`}</p>
+      <div class="lic-add">
+        <input type="text" class="t-rate-input" data-lic-num="${esc(l.state)}" placeholder="License number" value="${esc(l.number)}">
+      </div>
+      <div class="lic-add" style="margin-top:6px;">
+        <label class="lic-exp-label">Expires</label>
+        <input type="date" class="t-rate-input" data-lic-exp="${esc(l.state)}" value="${esc(l.expiresOn)}">
+        <button type="button" data-lic-save="${esc(l.state)}">Save</button>
+      </div>
+    </div>` : ''}`;
+}
+
+/* Returns a message if the date is unusable, or '' if it is fine (including
+   blank -- expiry is optional until 0026 has run everywhere and every licence
+   has one). Rejecting an already-expired date at entry is the point: a lapsed
+   licence cannot be verified, and finding that out now beats finding it out
+   after a hand-check. */
+function licenseExpiryProblem(v) {
+  if (!v) return '';
+  const dt = new Date(v + 'T00:00:00Z');
+  if (isNaN(dt)) return "That expiry date doesn't look right.";
+  if (dt.getTime() < Date.now()) return "That license has already expired — enter the date on your current one.";
+  if (dt.getUTCFullYear() > new Date().getUTCFullYear() + 20) return "That expiry date looks too far out — check the year.";
+  return '';
+}
+
+function fmtLicenseDate(d) {
+  const dt = new Date(d + 'T00:00:00Z');
+  if (isNaN(dt)) return String(d);
+  return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
+function licenseDaysLeft(l) {
+  if (!l.expiresOn) return Infinity;
+  const dt = new Date(l.expiresOn + 'T00:00:00Z');
+  if (isNaN(dt)) return Infinity;
+  return Math.round((dt - Date.now()) / 86400000);
+}
+
 /* Specialties were TWO dropdowns over the same catalogue -- "your top 3" and
    "the full set" -- so a therapist picked Anxiety, Burnout and Trauma, then
    picked the identical three again below. One list instead: choose what you
@@ -5823,6 +5971,16 @@ function checkboxDropdownHtml(selected, options, key, summaryLabel, max) {
 
 function renderTherapistProfileBody() {
   const t = THERAPISTS.find(t => t.id === currentTherapistId);
+  /* The eight ideal-client arrays below are read with `.includes(...)` and no
+     guards. One partial idealClient -- an older row, a restored draft,
+     anything that did not go through normalizeTherapist -- threw mid-template,
+     and a thrown render leaves innerHTML unset: the profile tab painted blank
+     white. That is what a therapist saw after pressing "Fix my license", so
+     the button looked dead when it had worked perfectly.
+     Guaranteeing the shape HERE means no producer has to remember to, and
+     writing it back means the handlers below mutate the filled object. */
+  const ic = Object.assign(emptyIdealClient(), (t && t.idealClient) || {});
+  if (t) t.idealClient = ic;
   const container = document.getElementById('t-profile-content');
   // Every editor mutation re-renders through here, so this is the one place
   // that catches all of them. Debounced, and the upsert is idempotent, so the
@@ -5848,39 +6006,39 @@ function renderTherapistProfileBody() {
       <p class="ideal-section-sub">Describe who you're the strongest fit for. When a client lines up, they're flagged <strong>✦ Ideal match</strong> on your requests. This never limits who can find you — everything below this section is your "I also work with" profile, and that's what clients see.</p>
 
       <div class="t-form-label">Ages <span class="ideal-hint">life stages — clients enter their exact age, we match it here</span></div>
-      <div class="chip-grid">${IDEAL_AGE_BANDS.map(a => `<div class="chip-option ${t.idealClient.ageBands.includes(a.label) ? 'selected' : ''}" data-ideal="ageBands" data-val="${a.label}">${a.label} <span class="chip-sub">${a.sub}</span></div>`).join('')}</div>
+      <div class="chip-grid">${IDEAL_AGE_BANDS.map(a => `<div class="chip-option ${ic.ageBands.includes(a.label) ? 'selected' : ''}" data-ideal="ageBands" data-val="${a.label}">${a.label} <span class="chip-sub">${a.sub}</span></div>`).join('')}</div>
 
       <div class="t-form-label">Gender</div>
-      <div class="chip-grid">${IDEAL_GENDER_OPTIONS.map(g => `<div class="chip-option ${t.idealClient.genders.includes(g) ? 'selected' : ''}" data-ideal="genders" data-val="${g}">${g}</div>`).join('')}</div>
+      <div class="chip-grid">${IDEAL_GENDER_OPTIONS.map(g => `<div class="chip-option ${ic.genders.includes(g) ? 'selected' : ''}" data-ideal="genders" data-val="${g}">${g}</div>`).join('')}</div>
 
       <div class="t-form-label">Field of work</div>
       <div class="chip-grid">
-        ${FIELD_PRIMARY.map(f => `<div class="chip-option ${t.idealClient.fields.includes(f) ? 'selected' : ''}" data-ideal="fields" data-val="${f}">${f}</div>`).join('')}
-        ${t.idealClient.fields.filter(f => !FIELD_PRIMARY.includes(f)).map(f => `<div class="chip-option selected" data-ideal="fields" data-val="${f}">${f}</div>`).join('')}
+        ${FIELD_PRIMARY.map(f => `<div class="chip-option ${ic.fields.includes(f) ? 'selected' : ''}" data-ideal="fields" data-val="${f}">${f}</div>`).join('')}
+        ${ic.fields.filter(f => !FIELD_PRIMARY.includes(f)).map(f => `<div class="chip-option selected" data-ideal="fields" data-val="${f}">${f}</div>`).join('')}
         <div class="chip-option ${idealFieldOtherOpen ? 'selected' : ''}" id="ideal-field-other-btn">${idealFieldOtherOpen ? 'Done' : '+ Other'}</div>
       </div>
       ${idealFieldOtherOpen ? `
       <div class="other-language-row">
-        <select id="ideal-field-select"><option value="">Choose…</option>${FIELD_MORE.filter(f => !t.idealClient.fields.includes(f)).map(f => `<option value="${f}">${f}</option>`).join('')}</select>
+        <select id="ideal-field-select"><option value="">Choose…</option>${FIELD_MORE.filter(f => !ic.fields.includes(f)).map(f => `<option value="${f}">${f}</option>`).join('')}</select>
       </div>
       <input type="text" class="t-rate-input" id="ideal-field-typed" placeholder="…or type your own, press Enter">` : ''}
 
       <div class="t-form-label">What they want to work on</div>
-      ${checkboxDropdownHtml(t.idealClient.needs, specialtyAll(), 'ideal-needs', 'Choose what they want to work on…')}
+      ${checkboxDropdownHtml(ic.needs, specialtyAll(), 'ideal-needs', 'Choose what they want to work on…')}
 
       <div class="t-form-label">Type of Therapy</div>
-      ${checkboxDropdownHtml(t.idealClient.modalities, modalityAll(), 'ideal-modalities', 'Choose the therapy types…')}
+      ${checkboxDropdownHtml(ic.modalities, modalityAll(), 'ideal-modalities', 'Choose the therapy types…')}
 
       <div class="t-form-label">Payment <span class="ideal-hard">practical — must line up</span></div>
-      <div class="chip-grid">${PAYMENT_TYPE_OPTIONS.map(p => `<div class="chip-option ${t.idealClient.payment === p ? 'selected' : ''}" data-ideal-pay="${p}">${p}</div>`).join('')}</div>
+      <div class="chip-grid">${PAYMENT_TYPE_OPTIONS.map(p => `<div class="chip-option ${ic.payment === p ? 'selected' : ''}" data-ideal-pay="${p}">${p}</div>`).join('')}</div>
 
       <div class="t-form-label">When you'd see them <span class="ideal-hard">practical — must line up</span></div>
-      <div class="chip-grid">${AVAILABILITY_OPTIONS.map(a => `<div class="chip-option ${t.idealClient.availability.includes(a) ? 'selected' : ''}" data-ideal="availability" data-val="${a}">${a}</div>`).join('')}</div>
+      <div class="chip-grid">${AVAILABILITY_OPTIONS.map(a => `<div class="chip-option ${ic.availability.includes(a) ? 'selected' : ''}" data-ideal="availability" data-val="${a}">${a}</div>`).join('')}</div>
 
       <div class="t-form-label">Must-haves <span class="ideal-hint">pick up to ${MAX_MUST_HAVES} — these count double, but still never filter anyone out</span></div>
       <div class="chip-grid">${IDEAL_DIMENSIONS.map(d => {
-        const on = t.idealClient.mustHaves.includes(d.key);
-        const full = t.idealClient.mustHaves.length >= MAX_MUST_HAVES && !on;
+        const on = ic.mustHaves.includes(d.key);
+        const full = ic.mustHaves.length >= MAX_MUST_HAVES && !on;
         return `<div class="chip-option ${on ? 'selected' : ''}${full ? ' chip-disabled' : ''}" data-ideal-must="${d.key}">${d.label}</div>`;
       }).join('')}</div>
     </div></div>
@@ -6035,26 +6193,21 @@ function renderTherapistProfileBody() {
           <div class="switch ${t.acceptingOngoing ? 'on' : ''}" id="t-ongoing-switch"></div>
         </div>
 
-          <div class="t-form-label">Your licenses <span class="ideal-hint">one per state &mdash; each is checked separately</span></div>
+          <div class="t-form-label" id="t-lic-anchor">Your licenses <span class="ideal-hint">one per state &mdash; each is checked separately</span></div>
           ${(t.licenses && t.licenses.length)
-            ? t.licenses.map(l => {
-                const st = l.verifiedAt ? 'ok' : l.rejectedAt ? 'denied' : 'pending';
-                const label = l.verifiedAt ? '&#10003; verified' : l.rejectedAt ? '&#10007; denied' : 'pending';
-                return `<div class="lic-row">
-                    <span class="lic-state">${l.state}</span>
-                    <span class="lic-num">${l.number}</span>
-                    <span class="lic-status ${st}">${label}</span>
-                    <button type="button" class="lic-remove" data-drop-lic="${l.state}" aria-label="Remove ${l.state}">&#10005;</button>
-                  </div>
-                  ${l.rejectedAt && l.rejectedReason ? `<p class="lic-denied-note">${String(l.rejectedReason).replace(/[<>&]/g, '')}</p>` : ''}`;
-              }).join('')
+            ? t.licenses.map(l => licenseRowHtml(l)).join('')
             : `<p class="portal-note" style="margin:2px 0 8px;">No licenses yet. Add each state you're licensed in &mdash; you can only be matched with clients in a state we've verified.</p>`}
+          <div class="t-form-label" style="margin-top:14px;">Add a state</div>
           <div class="lic-add">
             <select id="t-lic-state">
               <option value="">State&hellip;</option>
               ${US_STATES.filter(s => !(t.licenses || []).some(l => l.state === s)).map(s => `<option value="${s}">${s}</option>`).join('')}
             </select>
             <input type="text" class="t-rate-input" id="t-lic-number" placeholder="License number">
+          </div>
+          <div class="lic-add" style="margin-top:6px;">
+            <label class="lic-exp-label" for="t-lic-expires">Expires</label>
+            <input type="date" class="t-rate-input" id="t-lic-expires">
             <button type="button" id="t-lic-add">Add</button>
           </div>
           <p class="portal-note">We check each license against that state's board by hand. A state only becomes available for matching once its license is verified.</p>
@@ -6319,18 +6472,39 @@ function attachTherapistProfileHandlers(t) {
      never matchable until it has been checked. */
   const licAddBtn = document.getElementById('t-lic-add');
   if (licAddBtn) licAddBtn.addEventListener('click', async () => {
-    const st = (document.getElementById('t-lic-state') || {}).value;
+    const st  = (document.getElementById('t-lic-state') || {}).value;
     const num = (document.getElementById('t-lic-number') || {}).value || '';
+    const exp = (document.getElementById('t-lic-expires') || {}).value || '';
     if (!st) { showToast('Pick the state that issued the license.'); return; }
     if (!num.trim()) { showToast('Enter the license number.'); return; }
+    const bad = licenseExpiryProblem(exp);
+    if (bad) { showToast(bad); return; }
     licAddBtn.disabled = true;
-    const ok = await saveLicense(st, num);
+    const ok = await saveLicense(st, num, exp);
     licAddBtn.disabled = false;
     if (!ok) { showToast("Couldn't save that license. Try again."); return; }
     t.licenses = await loadLicenses();
-    showToast(st + ' added -- pending verification');
+    showToast(st + ' added — pending verification');
     renderTherapistProfile();
   });
+
+  /* Saving a correction to a licence that already exists: same upsert, keyed on
+     the state, so a denied row is fixed where it sits. */
+  document.querySelectorAll('[data-lic-save]').forEach(btn => btn.addEventListener('click', async () => {
+    const st  = btn.dataset.licSave;
+    const num = (document.querySelector(`[data-lic-num="${st}"]`) || {}).value || '';
+    const exp = (document.querySelector(`[data-lic-exp="${st}"]`) || {}).value || '';
+    if (!num.trim()) { showToast('Enter the license number.'); return; }
+    const bad = licenseExpiryProblem(exp);
+    if (bad) { showToast(bad); return; }
+    btn.disabled = true;
+    const ok = await saveLicense(st, num, exp);
+    btn.disabled = false;
+    if (!ok) { showToast("Couldn't save that license. Try again."); return; }
+    t.licenses = await loadLicenses();
+    showToast(st + ' updated — back in the queue for checking');
+    renderTherapistProfile();
+  }));
   document.querySelectorAll('[data-drop-lic]').forEach(el => el.addEventListener('click', async () => {
     const st = el.dataset.dropLic;
     if (!confirm('Remove your ' + st + ' license? You will stop being matched with clients there.')) return;
