@@ -603,6 +603,56 @@ function listingPricing() {
   };
 }
 
+/* ===== WHAT A PROFILE NEEDS BEFORE A CLIENT SHOULD SEE IT ====================
+   The bar was `name is not null` -- client-side and in the database. So a
+   therapist could pay, verify, go live, and be shown to clients as a name, a
+   "Specialties" heading with nothing under it, and a "Get to Know Them"
+   section that was empty. Every checklist on the page said they were set up.
+
+   Kindred's pitch is "more than a specialty": clients are matched on how
+   someone works, and the profile is the only place that exists. A blank one
+   is worse than no listing -- it is a client's first impression of the whole
+   product, and it says there is nothing here.
+
+   Two essentials beyond the name, chosen because each is load-bearing for a
+   different half of the pitch:
+     SPECIALTIES  what matching filters on, and the tags on the card
+     ONE ANSWER   the voice -- the thing a directory doesn't have
+   Deliberately NOT a length or quality bar. "At least one" is a floor against
+   emptiness, not an editor. */
+/* MUST accept exactly the same set as profile_is_publishable() in migration
+   0027. If the database is stricter, the app calls a profile finished and the
+   therapist silently never appears; if the app is stricter, it withholds
+   someone the database is already showing. Either way it is the same class of
+   contradiction as the billing copy. The columns a therapist's words can land
+   in are: best_for, prompt_fit, persona.inOffice/outOfOffice, any
+   optional_prompts answer, any blocks prompt answer. */
+function hasWrittenVoice(t) {
+  if (!t) return false;
+  const filled = v => !!(v && String(v).trim());
+  if (filled(t.bestFor) || filled(t.promptFit)) return true;
+  const p = t.persona || {};
+  if (filled(p.inOffice) || filled(p.outOfOffice)) return true;
+  if ((t.optionalPrompts || []).some(q => q && filled(q.answer))) return true;
+  /* Read t.blocks directly rather than via getToKnowBlocks(), which WRITES
+     t.blocks as a side effect -- a predicate that rearranges the profile feed
+     every time something asks whether the profile is done is a trap. */
+  if (Array.isArray(t.blocks) && t.blocks.some(b => b && b.type === 'prompt' && filled(b.answer))) return true;
+  if ((t.mandatoryPromptAnswers || []).some(filled)) return true;
+  return false;
+}
+
+/* What is still missing, named the way a therapist would name it. Returned as
+   a list rather than a boolean so the checklist can say WHICH thing. */
+function profileGaps(t) {
+  if (!t) return [];
+  const gaps = [];
+  if (!(t.name && String(t.name).trim())) gaps.push('your name');
+  if (!((t.tags || []).length))           gaps.push('at least one specialty');
+  if (!hasWrittenVoice(t))                gaps.push('something in your own words');
+  return gaps;
+}
+
 /* ===== WHAT IS THIS LISTING ACTUALLY DOING =====================================
    The Home banner and Settings each worked this out for themselves and reached
    opposite answers on the same screen: the banner required licence AND identity
@@ -622,10 +672,16 @@ function listingState(t) {
   const paying   = !!t.listed;
   const checked  = !!(t.licenseVerified && t.identityVerified);
   const trialing = t.subscriptionStatus === 'trialing';
+  /* Content is a publishing condition too, not just a nudge -- so it has to be
+     part of `visible`, or the banner would announce someone as live while an
+     empty profile kept them out of the results. That is the same contradiction
+     the billing copy just had, one field over. */
+  const gaps     = profileGaps(t);
+  const complete = gaps.length === 0;
   return {
-    paying, checked, trialing,
-    visible: paying && checked,
-    stuck:   paying && !checked,
+    paying, checked, trialing, gaps, complete,
+    visible: paying && checked && complete,
+    stuck:   paying && !(checked && complete),
     money:   !paying ? 'none' : trialing ? 'trial' : 'charging'
   };
 }
@@ -654,10 +710,21 @@ function listingLead(t, opts) {
   /* Subscribed and invisible. Naming this is the point of the banner -- but
      "you're being billed" is a lie for the first 30 days, and it is the most
      alarming sentence on the page. Everyone activating now starts on the trial,
-     so for most people it was alarming AND false. */
+     so for most people it was alarming AND false.
+
+     Name the ACTUAL blocker. This used to say "until your licence and identity
+     are verified" whatever was wrong, so a therapist held back by an empty
+     Specialties list was pointed at a queue they were not in. */
+  const blocker = !s.complete
+    ? `your profile is missing ${s.gaps.join(' and ')}`
+    : 'your licence and identity are verified';
+  const because = !s.complete
+    ? `Clients can't see you while ${blocker}.`
+    : `Clients can't see you until ${blocker}.`;
+
   return s.trialing
-    ? `<strong>Your membership is active and nothing has been charged yet</strong> &mdash; you're in your free ${TRIAL_DAYS} days. Clients can't see you until your licence and identity are verified.`
-    : `<strong>You're being billed but clients can't see you yet.</strong> Finish these and you're live.`;
+    ? `<strong>Your membership is active and nothing has been charged yet</strong> &mdash; you're in your free ${TRIAL_DAYS} days. ${because}`
+    : `<strong>You're being billed but clients can't see you yet.</strong> ${because}`;
 }
 
 function normalizeTherapist(t) {
@@ -3255,14 +3322,35 @@ function profileCardBodyHtml(t, opts = {}) {
     </div>
     ${detailFactsHtml(t, { preview })}
     ${t.bestFor ? `<div class="best-for">${t.bestFor}</div>` : ''}
-    <div class="section-title spec-title">Specialties</div>
-    <div class="tag-row spec-tags">${displayedSpecialties(t).map(tagHtml).join('')}</div>
+    <!-- Headings used to render whether or not anything sat under them, so an
+         empty profile showed a client the word "Specialties" followed by
+         nothing and a "Get to Know Them" section with no content. Publishing is
+         gated on both now, so this should be unreachable for a live profile --
+         but the therapist's own PREVIEW renders through here too, and an
+         honest preview of an unfinished profile is exactly what tells them
+         what is missing. An empty heading is never the useful version. -->
+    ${(() => {
+      const specs = displayedSpecialties(t);
+      return specs.length
+        ? `<div class="section-title spec-title">Specialties</div>
+           <div class="tag-row spec-tags">${specs.map(tagHtml).join('')}</div>`
+        : (preview ? `<div class="profile-gap-note">No specialties yet &mdash; clients filter on these, so your profile can't go live without at least one.</div>` : '');
+    })()}
     ${practiceBadgeHtml(t)}
     ${preview ? '' : matchTagsHtml(t)}
-    <div class="get-to-know">
+    ${(() => {
+      const feed = profileFeedHtml(t);
+      const empty = !feed || !String(feed).trim();
+      if (empty) {
+        return preview
+          ? `<div class="profile-gap-note">Nothing here yet &mdash; this is the part clients read to decide if you're someone they can talk to. One answer is enough to go live.</div>`
+          : '';
+      }
+      return `<div class="get-to-know">
       <div class="get-to-know-title">Get to Know Them</div>
-      ${profileFeedHtml(t)}
+      ${feed}
     </div>`;
+    })()}`;
 }
 
 function profileCardHtml(t, opts = {}) {
@@ -3494,7 +3582,9 @@ const GETTING_STARTED_KEY = 'kindred-getting-started-done';
 function gettingStartedHtml(t) {
   if (!t) return '';
 
-  const hasProfile = !!(t.name && String(t.name).trim());
+  /* Was `!!t.name`. A name is not a profile -- see profileGaps(). */
+  const gaps = profileGaps(t);
+  const hasProfile = gaps.length === 0;
   /* Ideal Client sits on its own tab in the profile editor and nothing pointed
      at it, so it was easy to finish setup having never opened it. The bar is
      engagement, not completeness: any one of these means they have been in
@@ -3533,7 +3623,13 @@ function gettingStartedHtml(t) {
   const licenceDone = hasLicence && !deniedLicence;
   const steps = [
     { key: 'profile',  done: hasProfile,          title: 'Build your profile', mine: true,
-      body: 'Your therapy style, who you work best with, what sessions feel like. Free, and it saves as you go.',
+      /* Names the missing thing rather than restating the step. "Build your
+         profile" with a generic blurb beside it is unactionable when the only
+         gap is one unanswered prompt, and it was how a profile with an empty
+         Specialties heading passed for finished. */
+      body: hasProfile
+        ? 'Your therapy style, who you work best with, what sessions feel like.'
+        : `Clients can't see you until this has ${gaps.join(' and ')}. Everything else is optional.`,
       action: hasProfile ? null : { label: 'Build my profile', id: 't-gs-profile' } },
     /* Renamed from "Activate your profile". That title claimed this single step
        did the activating, so ticking it while the banner said clients still

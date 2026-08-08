@@ -2782,3 +2782,14 @@ select.t-rate-input,
 }
 .signout-btn:hover { border-color: var(--coral); color: var(--coral-dark); }
 .signout-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+/* Shown in the therapist's own preview where a client-facing section would be,
+   when that section has nothing in it. A blank gap tells them nothing; naming
+   what is missing, in the place the client would have seen it, is the whole
+   point of a preview. Never rendered to a client -- publishing is gated on
+   both of these being filled. */
+.profile-gap-note {
+  margin: 10px 0; padding: 10px 12px; border-radius: 12px;
+  background: var(--rust-light, #FDF2EC); border: 1px dashed var(--clay, #BE765F);
+  color: #8a5a3c; font-size: 13px; line-height: 1.5;
+}
