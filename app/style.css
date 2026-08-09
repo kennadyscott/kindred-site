@@ -2241,6 +2241,24 @@ select.t-rate-input,
 .lic-remove:hover { color:#a8443a; }
 
 /* ===== Get-to-know draggable feed blocks ===== */
+/* "Nothing here is saved until you press Save." The licence fix panel shows a
+   number, an expiry box and a Save button all at once; without this the three
+   read as a saved record rather than a form. */
+/* Two weights on purpose. is-block = we are holding the profile back, so it
+   reads as a stop. is-note = we are only checking they meant it, so it must
+   NOT look like an error -- a therapist who swears deliberately should not
+   feel told off by their own dashboard. */
+.content-warn { border-radius:16px; padding:14px 16px; margin-bottom:14px; }
+.content-warn.is-block { background:#fdf1ef; border:1.5px solid #f0cabf; }
+.content-warn.is-note  { background:#fffaf0; border:1.5px solid #e8d9b5; }
+.content-warn-title { margin:0; font-size:13.5px; font-weight:800; }
+.content-warn.is-block .content-warn-title { color:#8f3a2c; }
+.content-warn.is-note  .content-warn-title { color:#5b4415; }
+.content-warn-list { margin:8px 0 0; padding-left:18px; font-size:12.5px; line-height:1.6; color:var(--ink); }
+.content-warn-list strong { font-weight:700; }
+.content-warn-sub { margin:8px 0 0; font-size:12px; line-height:1.5; color:var(--ink-soft); }
+
+.lic-fix-hint { font-size:11.5px; color:var(--ink-soft); margin:8px 0 0; font-style:italic; }
 .feed-blocks { display:flex; flex-direction:column; gap:14px; margin-top:6px; }
 /* The phone stage only exists on desktop -- on a real phone the editor is
    already phone width, so a frame around it would be a box inside a box and

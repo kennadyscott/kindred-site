@@ -716,6 +716,110 @@ function hasWrittenVoice(t) {
 
 /* What is still missing, named the way a therapist would name it. Returned as
    a list rather than a boolean so the checklist can say WHICH thing. */
+/* ===== "Does this look finished?" =====================================
+   A live profile showed clients "getting your shit together" twice and a
+   bare "test" in three prompts. These fields are the first thing a
+   prospective client reads, so filler here does not read as a rough draft --
+   it reads as someone who did not care enough to finish.
+
+   Two DIFFERENT kinds of problem, deliberately handled differently:
+
+   * PLACEHOLDER text is never intentional. "test", "asdf", "tbd" -- nobody
+     means those. Blocks publishing, same as a missing photo.
+   * PROFANITY may be exactly the voice a therapist wants. Plenty of good
+     ones swear on purpose, and a product that silently sanitises how a
+     therapist talks is worse than one that shows a warning. Warns, never
+     blocks. Their profile, their voice; we just make sure they meant it.
+
+   Placeholder matching is WHOLE-VALUE, not substring, and that is the whole
+   trick: "I work with test anxiety" contains "test" and must never be
+   flagged, while a field whose entire content is "test" always is. */
+const PLACEHOLDER_VALUES = new Set([
+  'test', 'testing', 'test test', 'tests', 'asdf', 'asdfasdf', 'qwerty', 'abc',
+  'abc123', '123', '1234', 'xxx', 'xx', 'aaa', 'foo', 'bar', 'foobar', 'blah',
+  'blah blah', 'tbd', 'to be determined', 'todo', 'to do', 'na', 'n/a', 'none',
+  'nothing', 'placeholder', 'sample', 'example', 'lorem ipsum', 'lorem',
+  'dummy', 'text', 'temp', 'temporary', 'idk', 'stuff', 'words', 'fill in later',
+  'coming soon', 'update later'
+]);
+const PROFANITY_RE = /\b(?:fuck(?:ing|ed|er)?|shit(?:ty|s)?|bullshit|piss(?:ed)?|bitch(?:es|y)?|bastard|asshole|arsehole|dick(?:head)?|cunt|twat|wank(?:er)?|crap(?:py)?|damn|goddamn|douche(?:bag)?)\b/i;
+
+function looksPlaceholder(v) {
+  const raw = String(v == null ? '' : v).trim();
+  if (!raw) return false;                       // empty is a GAP, not filler
+  const norm = raw.toLowerCase().replace(/[!?.,;:"']+$/g, '').replace(/\s+/g, ' ').trim();
+  if (PLACEHOLDER_VALUES.has(norm)) return true;
+  if (norm.replace(/[^a-z0-9]/g, '').length < 3) return true;   // "ok", "..", "1"
+  if (/^(.)\1{2,}$/.test(norm.replace(/\s/g, ''))) return true; // "aaaa", "!!!!"
+  if (/^(?:test|asdf|xxx+)\b/.test(norm) && norm.split(' ').length <= 2) return true;
+  return false;
+}
+function hasProfanity(v) { return PROFANITY_RE.test(String(v == null ? '' : v)); }
+
+/* Every free-text field a client can actually read, with the name the
+   therapist knows it by. Anything not on this list is either private (ideal
+   client) or not free text, and flagging those would train people to ignore
+   the warning. */
+function publicTextFields(t) {
+  const out = [];
+  const add = (label, value) => { if (value && String(value).trim()) out.push({ label, value: String(value) }); };
+  add('Your name', t.name);
+  add('The one-sentence intro', t.bestFor);
+  add('You may be a fit if...', t.promptFit);
+  const p = t.persona || {};
+  add('Who I am in the office', p.inOffice);
+  add('Who I am out of the office', p.outOfOffice);
+  (t.optionalPrompts || []).forEach(q => { if (q) add(q.question || 'A prompt answer', q.answer); });
+  if (Array.isArray(t.blocks)) {
+    t.blocks.forEach(b => { if (b && b.type === 'prompt') add(b.question || 'A prompt answer', b.answer); });
+  }
+  (t.mandatoryPromptAnswers || []).forEach((a, i) => add('Prompt ' + (i + 1), a));
+  return out;
+}
+
+/* { placeholders: [...fields], profanity: [...fields] } -- de-duplicated,
+   because the same prompt can arrive through both optionalPrompts and blocks
+   and listing it twice makes the warning itself look broken. */
+function contentWarnings(t) {
+  const seen = new Set();
+  const placeholders = [], profanity = [];
+  for (const f of publicTextFields(t || {})) {
+    const key = f.label + ' :: ' + f.value;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (looksPlaceholder(f.value)) placeholders.push(f);
+    else if (hasProfanity(f.value)) profanity.push(f);
+  }
+  return { placeholders, profanity };
+}
+
+/* The warning itself. Named per field, because "something looks unfinished"
+   sends a therapist hunting through six collapsed sections. */
+function contentWarningHtml(t) {
+  const w = contentWarnings(t);
+  if (!w.placeholders.length && !w.profanity.length) return '';
+  const esc = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  const line = f => '<li><strong>' + esc(f.label) + '</strong> &mdash; "' + esc(String(f.value).trim().slice(0, 60)) + '"</li>';
+  let html = '';
+  if (w.placeholders.length) {
+    html += '<div class="content-warn is-block">'
+      + '<p class="content-warn-title">This still looks unfinished</p>'
+      + '<ul class="content-warn-list">' + w.placeholders.map(line).join('') + '</ul>'
+      + '<p class="content-warn-sub">Clients read these before anything else. Your profile stays hidden until they say something real.</p>'
+      + '</div>';
+  }
+  if (w.profanity.length) {
+    /* Warn, do not block, and say so plainly -- a therapist who swears on
+       purpose should not have to wonder whether we quietly changed it. */
+    html += '<div class="content-warn is-note">'
+      + '<p class="content-warn-title">Strong language on your public profile</p>'
+      + '<ul class="content-warn-list">' + w.profanity.map(line).join('') + '</ul>'
+      + '<p class="content-warn-sub">Clients see this word for word. Keep it if it is how you actually talk &mdash; we are only making sure you meant to.</p>'
+      + '</div>';
+  }
+  return html;
+}
+
 function profileGaps(t) {
   if (!t) return [];
   const gaps = [];
@@ -728,6 +832,15 @@ function profileGaps(t) {
   if (!(t.photo && String(t.photo).trim())) gaps.push('a photo of you');
   if (!((t.tags || []).length))           gaps.push('at least one specialty');
   if (!hasWrittenVoice(t))                gaps.push('something in your own words');
+  /* Filler is not "written voice". Without this, a profile answering every
+     prompt with "test" counted as complete and went live -- which is exactly
+     what happened. Profanity is deliberately NOT a gap; see contentWarnings(). */
+  const ph = contentWarnings(t).placeholders;
+  if (ph.length) {
+    gaps.push(ph.length === 1
+      ? 'a real answer for "' + ph[0].label + '"'
+      : 'real answers for ' + ph.length + ' fields that still look like placeholders');
+  }
   return gaps;
 }
 
@@ -752,7 +865,17 @@ function profileGaps(t) {
    that was an inference and it was wrong. A date is one sentence, says the
    same thing on the website and in the app without either computing anything,
    and cannot drift per therapist. Mirrors migration 0032. */
-const FREE_UNTIL_LABEL = 'March 2027';
+/* ONE instant, and every string about it is derived from it. Settings said
+   "Free until February 28, 2027" while the landing page and Home said
+   "March 2027" -- not two dates, the SAME date formatted two ways. free_until
+   is 2027-03-01T00:00Z, and toLocaleDateString with no timeZone renders that
+   in the reader's local zone: anywhere west of UTC it lands on Feb 28. A
+   billing date that changes between screens is the one thing a therapist will
+   not extend you the benefit of the doubt on, so both now format in UTC.
+   Keep in step with therapists.free_until (migration 0032). */
+const FREE_UNTIL_ISO   = '2027-03-01T00:00:00Z';
+const FREE_UNTIL_LABEL = new Date(FREE_UNTIL_ISO)
+  .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 /* Always stated WITH the date. "Free until March 2027" on its own invites a
    therapist to imagine whatever number they fear, which is a worse offer than
    the real one. Derived from STANDARD_RATE so the sentence and the charge
@@ -766,7 +889,9 @@ function fmtFreeUntil(t) {
   if (!t || !t.freeUntil) return '';
   const d = new Date(t.freeUntil);
   if (isNaN(d)) return '';
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  // timeZone: 'UTC' -- see FREE_UNTIL_ISO. Without it this rendered the day
+  // before across the Americas and disagreed with every other screen.
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
 function freeDaysLeft(t) {
@@ -883,7 +1008,6 @@ function normalizeTherapist(t) {
   if (!Array.isArray(t.media.photos)) t.media.photos = [t.media.office, t.media.outOfOffice].filter(Boolean).slice(0, 4);
   if (!t.topSpecialties || !t.topSpecialties.length) t.topSpecialties = (t.tags || []).slice(0, 3);
   if (t.selfPayNote === undefined) t.selfPayNote = '';
-  if (t.acceptsSlidingScale === undefined) t.acceptsSlidingScale = /sliding/i.test(t.selfPayNote || '');
   if (t.offerWaitlist === undefined) t.offerWaitlist = !t.acceptingOngoing;
   /* The two are mutually exclusive — see the toggle handlers. A row written
      before that rule existed could hold both, so settle it here rather than
@@ -896,6 +1020,14 @@ function normalizeTherapist(t) {
   if (t.onDemandRate == null) t.onDemandRate = t.rateMin;
   if (t.listed === undefined) t.listed = true;
   if (!Array.isArray(t.paymentOptions)) t.paymentOptions = [];
+  /* One-way migration of the two legacy spellings into the field that lasts.
+     Runs on every load, so a seeded row or a row written before this is
+     corrected in place the first time it is touched. */
+  if (!t.paymentOptions.includes('sliding_scale')
+      && (t.acceptsSlidingScale === true || /sliding/i.test(t.selfPayNote || ''))) {
+    t.paymentOptions.push('sliding_scale');
+  }
+  delete t.acceptsSlidingScale;      // no second copy to drift
   if (t.licenseVerified === undefined) t.licenseVerified = false;   // never assume verified
   if (t.identityVerified === undefined) t.identityVerified = false;
   if (t.subscription === undefined) {
@@ -1468,7 +1600,20 @@ const navBadge = document.getElementById('nav-badge');
 // Sliding scale is a first-class flag now, but older/seeded profiles may only
 // mention it in their free-text self-pay note — honor both.
 function hasSlidingScale(t) {
-  return !!t.acceptsSlidingScale || /sliding/i.test(t.selfPayNote || '');
+  /* payment_options is the source of truth: it is the only one of the three
+     that PERSISTS (0019 gives it a column and a fixed vocabulary).
+
+     Before this, the two controls were broken in opposite directions. The
+     "Accepts sliding scale" toggle wrote t.acceptsSlidingScale, which is in
+     the matching filter but was never sent to the server -- so it drove
+     matching and then vanished on reload. The "Sliding scale available"
+     payment chip wrote payment_options, which persists but was not read
+     here -- so it survived and matched nobody. A therapist could set either
+     one and be wrong, and neither would tell them.
+
+     selfPayNote stays as a fallback for seeded rows that predate the column. */
+  return (t.paymentOptions || []).includes('sliding_scale')
+      || /sliding/i.test(t.selfPayNote || '');
 }
 function isCompatible(t, mode) {
   /* A profile only reaches clients once it is ENTITLED (inside the six free
@@ -6620,15 +6765,15 @@ function licenseRowHtml(l) {
   const days  = licenseDaysLeft(l);
   const expiryNote = l.expiresOn
     ? (days < 0
-        ? `<span class="lic-exp is-bad">expired ${fmtLicenseDate(l.expiresOn)}</span>`
+        ? `<span class="lic-exp is-bad">Expired ${fmtLicenseDate(l.expiresOn)}</span>`
         : days <= 60
-          ? `<span class="lic-exp is-soon">expires ${fmtLicenseDate(l.expiresOn)}</span>`
-          : `<span class="lic-exp">expires ${fmtLicenseDate(l.expiresOn)}</span>`)
-    : `<span class="lic-exp is-missing">no expiry date</span>`;
+          ? `<span class="lic-exp is-soon">Expires ${fmtLicenseDate(l.expiresOn)}</span>`
+          : `<span class="lic-exp">Expires ${fmtLicenseDate(l.expiresOn)}</span>`)
+    : `<span class="lic-exp is-missing">Expiry: not added yet</span>`;
 
   return `<div class="lic-row">
       <span class="lic-state">${esc(l.state)}</span>
-      <span class="lic-num">${esc(l.number)}</span>
+      <span class="lic-num" title="License number">No. ${esc(l.number)}</span>
       <span class="lic-status ${st}">${label}</span>
       <button type="button" class="lic-remove" data-drop-lic="${esc(l.state)}" aria-label="Remove ${esc(l.state)}">&#10005;</button>
     </div>
@@ -6640,13 +6785,18 @@ function licenseRowHtml(l) {
         ? `Correct your ${esc(l.state)} details and we'll check again.`
         : `Add the expiry date printed on your ${esc(l.state)} license.`}</p>
       <div class="lic-add">
-        <input type="text" class="t-rate-input" data-lic-num="${esc(l.state)}" placeholder="License number" value="${esc(l.number)}">
+        <label class="lic-exp-label" for="lic-num-${esc(l.state)}">Number</label>
+        <input type="text" id="lic-num-${esc(l.state)}" class="t-rate-input" data-lic-num="${esc(l.state)}" placeholder="License number" value="${esc(l.number)}">
       </div>
       <div class="lic-add" style="margin-top:6px;">
-        <label class="lic-exp-label">Expires</label>
-        <input type="date" class="t-rate-input" data-lic-exp="${esc(l.state)}" value="${esc(l.expiresOn)}">
+        <label class="lic-exp-label" for="lic-exp-${esc(l.state)}">Expires</label>
+        <!-- min/max mirror licenseExpiryProblem(): the picker refuses what the
+             validator would reject, rather than accepting it and then arguing. -->
+        <input type="date" id="lic-exp-${esc(l.state)}" class="t-rate-input" data-lic-exp="${esc(l.state)}"
+               value="${esc(l.expiresOn)}" min="${todayIso()}" max="${new Date().getUTCFullYear() + 20}-12-31">
         <button type="button" data-lic-save="${esc(l.state)}">Save</button>
       </div>
+      <p class="lic-fix-hint">Nothing here is saved until you press Save.</p>
     </div>` : ''}`;
 }
 
@@ -6664,6 +6814,8 @@ function licenseExpiryProblem(v) {
   return '';
 }
 
+/* Today in the same UTC calendar the validator and the stored dates use. */
+function todayIso() { return new Date().toISOString().slice(0, 10); }
 function fmtLicenseDate(d) {
   const dt = new Date(d + 'T00:00:00Z');
   if (isNaN(dt)) return String(d);
@@ -6758,7 +6910,7 @@ function renderTherapistProfileBody() {
       <button class="pmode ${profileMode === 'view' ? 'active' : ''}" data-pmode="view" role="tab">👀 View Profile</button>
     </div>
 
-    <div class="pm-view">${profileCardHtml(t, { preview: true, inline: true })}</div>
+    <div class="pm-view">${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}</div>
 
     <div class="pm-ideal"><div class="ideal-section">
       <div class="ideal-section-head">
@@ -6825,6 +6977,8 @@ function renderTherapistProfileBody() {
       <p class="wider-section-pair">Your <strong>Ideal Client</strong> helps Kindred find your best matches. Your <strong>Wider Net</strong> helps clients find you for everything else you offer.</p>
     </div>
 
+    ${contentWarningHtml(t)}
+
     <!-- ===== SECTION 1 · FIRST GLANCE ===== -->
     <details class="edit-section" data-edit-section="first" ${editSectionsOpen.first ? 'open' : ''}>
       <summary><span class="edit-section-title">First Glance</span><span class="edit-section-hint">the card clients meet you on</span><span class="edit-caret">▾</span></summary>
@@ -6880,12 +7034,16 @@ function renderTherapistProfileBody() {
         </div>
         <div class="must-have-toggle">
           <div class="toggle-label"><strong>Accepts sliding scale</strong><span>Shown to clients who need flexible pricing</span></div>
-          <div class="switch ${t.acceptsSlidingScale ? 'on' : ''}" id="t-sliding-switch"></div>
+          <div class="switch ${hasSlidingScale(t) ? 'on' : ''}" id="t-sliding-switch"></div>
         </div>
         <div class="t-form-label">Insurance accepted</div>
         ${checkboxDropdownHtml(t.insuranceList, insuranceAll(), 'insurance', 'Choose every carrier you accept…')}
         <div class="t-form-label">Payment options</div>
-        <div class="chip-grid">${PAYMENT_OPTIONS.map(p => `<div class="chip-option ${(t.paymentOptions || []).includes(p.key) ? 'selected' : ''}" data-toggle-payment="${p.key}">${p.label}</div>`).join('')}</div>
+        <!-- sliding_scale is filtered out here on purpose: it has its own
+             toggle under Session Cost, above. Same field either way now, but
+             showing one value as two controls in a single form is how a
+             therapist ends up believing they disagree. -->
+        <div class="chip-grid">${PAYMENT_OPTIONS.filter(p => p.key !== 'sliding_scale').map(p => `<div class="chip-option ${(t.paymentOptions || []).includes(p.key) ? 'selected' : ''}" data-toggle-payment="${p.key}">${p.label}</div>`).join('')}</div>
 
         <div class="t-form-label">Website</div>
         <input type="text" class="t-rate-input" id="t-website-input" placeholder="e.g. yourpractice.com" value="${t.website || ''}">
@@ -7010,7 +7168,7 @@ function renderTherapistProfileBody() {
           </div>
           <div class="lic-add" style="margin-top:6px;">
             <label class="lic-exp-label" for="t-lic-expires">Expires</label>
-            <input type="date" class="t-rate-input" id="t-lic-expires">
+            <input type="date" class="t-rate-input" id="t-lic-expires" min="${todayIso()}" max="${new Date().getUTCFullYear() + 20}-12-31">
             <button type="button" id="t-lic-add">Add</button>
           </div>
           <p class="portal-note">We check each license against that state's board by hand. A state only becomes available for matching once its license is verified.</p>
@@ -7086,7 +7244,15 @@ function attachTherapistProfileHandlers(t) {
   const tWebsiteInput = document.getElementById('t-website-input');
   if (tWebsiteInput) tWebsiteInput.addEventListener('input', () => { t.website = tWebsiteInput.value.trim().replace(/^https?:\/\//, ''); });
   const tSlidingSwitch = document.getElementById('t-sliding-switch');
-  if (tSlidingSwitch) tSlidingSwitch.addEventListener('click', () => { t.acceptsSlidingScale = !t.acceptsSlidingScale; renderTherapistProfile(); });
+  if (tSlidingSwitch) tSlidingSwitch.addEventListener('click', () => {
+    /* Writes payment_options, the same array the Payment Options chips use.
+       Two controls over one field cannot contradict each other; two controls
+       over two fields is what produced a profile claiming both. */
+    if (!Array.isArray(t.paymentOptions)) t.paymentOptions = [];
+    const at = t.paymentOptions.indexOf('sliding_scale');
+    if (at === -1) t.paymentOptions.push('sliding_scale'); else t.paymentOptions.splice(at, 1);
+    renderTherapistProfile();
+  });
   // remember which collapsible sections / dropdowns are open across re-renders
   document.querySelectorAll('details[data-edit-section]').forEach(el => el.addEventListener('toggle', () => { editSectionsOpen[el.dataset.editSection] = el.open; }));
   document.querySelectorAll('details[data-dd]').forEach(el => el.addEventListener('toggle', () => { editDropdownOpen[el.dataset.dd] = el.open; }));
@@ -7384,6 +7550,11 @@ function attachTherapistProfileHandlers(t) {
     const exp = (document.getElementById('t-lic-expires') || {}).value || '';
     if (!st) { showToast('Pick the state that issued the license.'); return; }
     if (!num.trim()) { showToast('Enter the license number.'); return; }
+    /* Blank saved silently and left the panel looking untouched, so there was
+       no way to tell what had been stored. Skipped only when the column is
+       genuinely absent (0026 not run) -- the one case where requiring it would
+       lock someone out of saving at all. */
+    if (!exp && !licenseExpiryUnavailable) { showToast('Add the expiry date printed on your license.'); return; }
     const bad = licenseExpiryProblem(exp);
     if (bad) { showToast(bad); return; }
     licAddBtn.disabled = true;
@@ -7402,6 +7573,11 @@ function attachTherapistProfileHandlers(t) {
     const num = (document.querySelector(`[data-lic-num="${st}"]`) || {}).value || '';
     const exp = (document.querySelector(`[data-lic-exp="${st}"]`) || {}).value || '';
     if (!num.trim()) { showToast('Enter the license number.'); return; }
+    /* Blank saved silently and left the panel looking untouched, so there was
+       no way to tell what had been stored. Skipped only when the column is
+       genuinely absent (0026 not run) -- the one case where requiring it would
+       lock someone out of saving at all. */
+    if (!exp && !licenseExpiryUnavailable) { showToast('Add the expiry date printed on your license.'); return; }
     const bad = licenseExpiryProblem(exp);
     if (bad) { showToast(bad); return; }
     btn.disabled = true;
