@@ -2976,6 +2976,10 @@ select.t-rate-input,
                           border: 1px dashed var(--clay, #BE765F); }
 .empty-coach-title { font-family: 'Poppins', sans-serif; font-weight: 700;
                      font-size: 13.5px; color: #8a5a3c; margin: 0 0 5px; }
+/* "No views yet" is not a warning. The rust title is right for is-blocked,
+   where something is wrong; here it would turn an ordinary quiet week into an
+   alarm the therapist cannot do anything about. */
+.empty-coach.is-quiet .empty-coach-title { color: var(--ink); }
 .empty-coach-body  { font-size: 13.5px; line-height: 1.55; color: var(--ink); margin: 0; }
 .empty-coach-sub   { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); margin: 7px 0 0; }
 .empty-coach-btn   { margin-top: 11px; background: var(--aubergine); color: #fff;

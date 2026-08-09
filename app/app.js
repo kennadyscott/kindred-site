@@ -4099,8 +4099,18 @@ function gettingStartedHtml(t) {
     { key: 'identity', done: !!t.identityVerified, title: 'Verify your identity', mine: true,
       body: 'A photo of your ID and a selfie, through Stripe. About a minute.',
       action: t.identityVerified ? null : { label: 'Verify my ID', id: 't-gs-id' } },
+    /* "A real person confirms it. Nothing for you to do." was true and
+       useless. It is the only step a therapist cannot act on, it is the one
+       standing between them and any client at all, and it named neither how
+       long it takes nor what happens if it goes wrong -- so the honest read
+       was "indefinite, and possibly fatal". Both answers now, in the step
+       itself, and the denial case says plainly that nothing is lost. */
     { key: 'check',    done: !!t.licenseVerified,  title: 'We check your license',
-      body: 'A real person confirms it against your state board. Nothing for you to do.' }
+      body: deniedLicense
+        ? 'We could not confirm this one. Fix the details above and it goes straight back in the queue &mdash; nothing else on your profile is affected, and you can resubmit as many times as you need.'
+        : hasLicense
+          ? 'A real person is confirming it against your state board, usually <strong>within 2 business days</strong> of submitting. Nothing for you to do &mdash; we email you either way. If anything does not match, we tell you exactly what to fix and you can resubmit.'
+          : 'Once your license is in, a real person confirms it against your state board &mdash; usually <strong>within 2 business days</strong>. We email you either way, and if anything does not match we tell you exactly what to fix.' }
   ];
 
   const doneCount = steps.filter(s => s.done).length;
@@ -6271,18 +6281,49 @@ function renderTherapistInsights() {
       if (s.endingSoon) return `<div class="activate-banner"><div><strong>${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} of free Kindred left</strong><span>Keep your profile active and nothing changes for your clients.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
       return ''; })()}
     ${verificationBannerHtml(t)}
-    <div class="intake-sub" style="margin-bottom:14px;">How clients are finding and responding to your profile.</div>
-    <div class="stat-grid">
-      ${tiles.map(s => `
-        <div class="stat-tile">
-          <div class="stat-value">${s.value}</div>
-          <div class="stat-label">${s.label}</div>
-          <div class="stat-delta">${s.delta}</div>
+    ${(() => {
+      /* Six tiles reading 0, under a note about seeded demo data, was the
+         first thing a brand-new therapist saw. It is deflating, and it is
+         also inaccurate for them: nothing was seeded, so the disclaimer
+         explains numbers they do not have. Worse, it answers the wrong
+         question -- a therapist with no views does not want a dashboard,
+         they want to know whether something is broken.
+
+         So when every count is zero, say why there is nothing yet and what
+         happens next. The grid comes back the moment there is anything real
+         to put in it. */
+      const anyData = tiles.some(x => Number(x.value) > 0);
+      if (anyData) {
+        return `<div class="intake-sub" style="margin-bottom:14px;">How clients are finding and responding to your profile.</div>
+        <div class="stat-grid">
+          ${tiles.map(x => `
+            <div class="stat-tile">
+              <div class="stat-value">${x.value}</div>
+              <div class="stat-label">${x.label}</div>
+              <div class="stat-delta">${x.delta}</div>
+            </div>
+          `).join('')}
         </div>
-      `).join('')}
-    </div>
-    <button class="edit-prefs-btn share-profile-btn" id="t-share-profile-btn">↗ Share my profile</button>
-    <div class="portal-note" style="margin-top:12px;">Counts reflect this demo session plus seeded history — real analytics arrive with the production backend.</div>
+        <button class="edit-prefs-btn share-profile-btn" id="t-share-profile-btn">&#8599; Share my profile</button>
+        <div class="portal-note" style="margin-top:12px;">Counts reflect this demo session plus seeded history &mdash; real analytics arrive with the production backend.</div>`;
+      }
+      const st   = listingState(t);
+      const next = nextStepToLive(t);
+      /* Three genuinely different reasons for a zero, and a therapist can act
+         on two of them. Collapsing them into one "no data" message is what
+         made the old screen feel like a dead end. */
+      const body = st.visible
+        ? 'Your profile is live and clients can find you. Views show up here as they do &mdash; sharing your link is the quickest way to the first few.'
+        : next
+          ? `Nothing can arrive here while ${next.why}.${next.when ? ' ' + next.when : ''}`
+          : 'Your profile goes live once verification clears.';
+      return `<div class="empty-coach is-quiet">
+        <p class="empty-coach-title">No views yet</p>
+        <p class="empty-coach-body">${body}</p>
+        ${st.visible ? `<button class="empty-coach-btn" id="t-share-profile-btn">&#8599; Share my profile</button>` : ''}
+      </div>
+      <p class="portal-note" style="margin-top:12px;">Profile views, saves and conversations all appear here once clients start arriving.</p>`;
+    })()}
     <div class="home-accepting-card" style="margin-top:18px;margin-bottom:0;">
       <div class="must-have-toggle card-toggle">
         <div class="toggle-label"><strong>Accepting ongoing clients</strong><span>${t.acceptingOngoing ? 'New clients can find and book you' : "You're shown in Discover marked not accepting — clients can save you for later"}</span></div>
@@ -6503,15 +6544,20 @@ function nextStepToLive(t) {
   const denied = licenses.find(l => l.rejectedAt);
   if (!licenses.length || denied) {
     return { why: denied ? `your ${denied.state} license needs correcting` : 'we don’t have a license to check yet',
-             label: denied ? 'Fix my license' : 'Add my license', id: 't-empty-license' };
+             label: denied ? 'Fix my license' : 'Add my license', id: 't-empty-license',
+             when: denied
+               ? 'Resubmitting puts you straight back in the queue \u2014 we check within 2 business days.'
+               : 'Once it\u2019s in, we check it within 2 business days.' };
   }
   if (!t.identityVerified) {
-    return { why: 'your identity isn’t verified yet',
-             label: 'Verify my ID', id: 't-empty-identity' };
+    return { why: 'your identity isn\u2019t verified yet',
+             label: 'Verify my ID', id: 't-empty-identity',
+             when: 'A photo of your ID and a selfie, through Stripe \u2014 about a minute.' };
   }
   // everything done on their side; the license check is ours to finish
-  return { why: 'we’re still checking your license against your state board',
-           label: null, id: null };
+  return { why: 'we\u2019re still checking your license against your state board',
+           label: null, id: null,
+           when: 'Usually within 2 business days of submitting. We email you either way \u2014 and if anything doesn\u2019t match, we tell you exactly what to fix.' };
 }
 
 /* The blocker, once per SCREEN. It is a fact about the account, not about a
@@ -6524,8 +6570,9 @@ function blockedBannerHtml(t) {
   return `<div class="empty-coach is-blocked">
     <p class="empty-coach-title">Clients can’t find you yet</p>
     <p class="empty-coach-body">Nothing will arrive here while ${next.why}.</p>
+    ${next.when ? `<p class="empty-coach-sub">${next.when}</p>` : ''}
     ${next.label ? `<button class="empty-coach-btn" id="${next.id}">${next.label}</button>`
-                 : `<p class="empty-coach-sub">Nothing for you to do &mdash; we’ll email you the moment it clears.</p>`}
+                 : (next.when ? '' : `<p class="empty-coach-sub">Nothing for you to do &mdash; we\u2019ll email you the moment it clears.</p>`)}
   </div>`;
 }
 
