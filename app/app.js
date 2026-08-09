@@ -2203,9 +2203,19 @@ function renderIntakeStep() {
   const section = INTAKE_SECTION[k] || 'about';
   // First step of the second half: say plainly that the subject has changed.
   const firstOfSection = steps.findIndex(x => INTAKE_SECTION[x] === section) === intakeStep;
+  /* The "not sure" quiz now closes on "Let's get to know you a little better",
+     which IS the section label -- rendering both stacks near-identical
+     sentences. The eyebrow exists to tell you which half of the intake you are
+     in, and on that screen the headline already says it. Skip it there only. */
+  const unsureGroups = new Set(UNSURE_OPTIONS.map(o => o.group)).size;
+  const isQuizClose = k === 'needs' && intake.knowsNeeds === 'no'
+    && Math.min(intake.quizStage || 0, unsureGroups) >= unsureGroups;
+  const eyebrow = isQuizClose
+    ? ''
+    : '<p class="intake-section ' + (firstOfSection ? 'is-new' : '') + '">' + INTAKE_SECTION_LABEL[section] + '</p>';
   let html = `<div class="intake-progress">${steps.map((x, i) =>
     `<div class="dot ${i <= intakeStep ? 'done' : ''} ${INTAKE_SECTION[x] === 'therapist' ? 'dot-therapist' : ''}"></div>`).join('')}</div>
-    <p class="intake-section ${firstOfSection ? 'is-new' : ''}">${INTAKE_SECTION_LABEL[section]}</p>`;
+    ${eyebrow}`;
 
   if (k === 'careFor') {
     html += `
@@ -2257,10 +2267,15 @@ function renderIntakeStep() {
           </div>
         </div>`;
     } else {
-      // neutral close — reassurance only, deliberately names no conditions
+      /* Closes the "not sure" sub-quiz -- NOT the intake. It used to read
+         "Thanks! That's everything we need", which lands at step 3 of 8 with
+         five steps still to come: it reads as the finish line, so the progress
+         bar underneath looks broken and Continue feels like it should submit.
+         Says what is actually true instead -- that part is done, there is more.
+         Still names no condition; the reassurance was never the problem. */
       html += `
-        <h1>Thanks! That's everything we need</h1>
-        <div class="intake-sub">We'll use what you shared to find therapists who work with what you're carrying. Tap Continue whenever you're ready.</div>`;
+        <h1>Let's get to know you a little better</h1>
+        <div class="intake-sub">That's the hardest part done. We'll use what you shared to find therapists who work with what you're carrying &mdash; a few more questions and we're there.</div>`;
     }
   } else if (k === 'needs') {
     const extraSelected = intake.needs.filter(n => !NEED_OPTIONS.includes(n));
