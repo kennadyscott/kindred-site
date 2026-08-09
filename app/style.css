@@ -2859,3 +2859,14 @@ select.t-rate-input,
 .empty-coach-link  { background: none; border: none; padding: 0; cursor: pointer;
                      font: inherit; color: var(--aubergine); font-weight: 600;
                      text-decoration: underline; }
+
+/* Step one of signup: what is still missing, said out loud next to the button
+   it is disabling. A greyed-out Continue with no explanation is the same dead
+   end as a broken one — that exact shape already cost a therapist a working
+   "Fix my license" button earlier. */
+.step-missing {
+  margin: 14px 4px 0; padding: 9px 12px; border-radius: 10px;
+  background: var(--rust-light, #FDF2EC); border: 1px dashed var(--clay, #BE765F);
+  color: #8a5a3c; font-size: 12.5px; line-height: 1.45;
+}
+.ts-photo-row.is-required { border-color: var(--clay, #BE765F); background: var(--rust-light, #FDF2EC); }

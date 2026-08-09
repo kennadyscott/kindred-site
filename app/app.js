@@ -4916,6 +4916,24 @@ function renderTherapistProfile() {
   renderTherapistProfileBody();
   restoreDropdownState(focus);
 }
+/* What step one still needs before Continue does anything. ONE definition,
+   read by both the initial render and the live refresh on every keystroke --
+   they used to be two copies of the same condition, which is how a rule ends
+   up enforced in one place and not the other.
+
+   The photo is required here for the same reason it is required to publish:
+   a client's first question is whether they can picture talking to this
+   person, and initials on a coloured block cannot answer it. Better to ask
+   while they are already in the flow than to let them finish, go away, and
+   discover later that the profile cannot go live. */
+function step0Missing(d) {
+  const out = [];
+  if (!(d.photo && String(d.photo).trim())) out.push('a photo');
+  if (!d.name.trim())                        out.push('your name');
+  if (!((d.licenses || []).length))          out.push('a license');
+  return out;
+}
+
 function renderSignupStep() {
   const focus = captureDropdownState();
   renderSignupStepBody();
@@ -4937,12 +4955,14 @@ function renderSignupStepBody() {
            therapist had to go looking for AFTER finishing setup and seeing an
            empty preview. It belongs here: it is the swipe-card image, so it
            sits with the name it appears beside. -->
-      <div class="t-form-label">Your photo</div>
-      <label class="media-row ts-photo-row">
+      <div class="t-form-label">Your photo${d.photo ? '' : ' <span class="req-pill">required</span>'}</div>
+      <label class="media-row ts-photo-row${d.photo ? '' : ' is-required'}">
         <span class="media-thumb">${d.photo ? `<img src="${d.photo}" alt="">` : '<span>—</span>'}</span>
         <span class="media-row-text">
           <strong>${d.photo ? 'Change photo' : 'Add a photo'}</strong>
-          <span>The first thing a client sees. A clear, friendly headshot works best — you can add more later.</span>
+          <span>${d.photo
+            ? 'The first thing a client sees. You can add more later.'
+            : 'The first thing a client sees, and the one a client answers “could I talk to this person?” with. Your profile can’t go live without it.'}</span>
         </span>
         <span class="media-upload-btn">${d.photo ? 'Change' : 'Add'}</span>
         <input type="file" accept="image/*" id="ts-photo" hidden>
@@ -5122,10 +5142,11 @@ function renderSignupStepBody() {
   }
 
   let canProceed = true;
-  if (signupStep === 0) canProceed = d.name.trim().length > 0 && (d.licenses || []).length > 0;
+  if (signupStep === 0) canProceed = step0Missing(d).length === 0;
   else if (signupStep === 3) canProceed = d.city.trim() !== '' && d.state !== '';
   else if (signupStep === 4) canProceed = d.mandatoryPromptAnswers.every(a => a.trim().length > 0);
   html += `
+    ${signupStep === 0 ? `<p class="step-missing" id="ts-step0-missing" ${canProceed ? 'hidden' : ''}>Still needed: ${step0Missing(d).join(', ')}.</p>` : ''}
     <div class="intake-footer">
       ${signupStep > 0 ? `<button class="btn-back" id="ts-back">Back</button>` : ''}
       <button class="btn-next" id="ts-next" ${canProceed ? '' : 'disabled'}>${signupStep === TOTAL_SIGNUP_STEPS - 1 ? 'Create Profile' : 'Continue'}</button>
@@ -5146,7 +5167,16 @@ function attachSignupHandlers() {
      against anything. */
   const refreshStep0Next = () => {
     const b = document.getElementById('ts-next');
-    if (b) b.disabled = !(d.name.trim().length > 0 && (d.licenses || []).length > 0);
+    const missing = step0Missing(d);
+    if (b) b.disabled = missing.length > 0;
+    /* A disabled button with no explanation is the same dead end as a broken
+       one -- it was greyed out for a missing licence with nothing on screen
+       saying so. Name what is left. */
+    const note = document.getElementById('ts-step0-missing');
+    if (note) {
+      note.hidden = missing.length === 0;
+      note.textContent = missing.length ? `Still needed: ${missing.join(', ')}.` : '';
+    }
   };
   const nameInput = document.getElementById('ts-name');
   if (nameInput) nameInput.addEventListener('input', () => { d.name = nameInput.value; refreshStep0Next(); });
