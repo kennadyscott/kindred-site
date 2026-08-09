@@ -96,7 +96,7 @@ const THERAPISTS = [
     initials: 'MC', gradient: 'linear-gradient(135deg,#8a63a8,#5c3766)',
     meta: ['Online & In-person', '$140–180/session'],
     bestFor: 'I work best with high-achievers who are quietly running on empty.',
-    tags: ['Anxiety', 'Life Transitions', 'CBT', 'LGBTQ+ Affirming'],
+    tags: ['Anxiety', 'Life Transitions', 'LGBTQ+ Affirming'],
     mandatoryPromptAnswers: [
       "turning the anxious noise in your head into an actual plan you can follow, even on the days you don't feel like it.",
       "We'll skip the small talk. I want to know what's actually been sitting heavy on you lately, and what you're hoping is different a few months from now."
@@ -107,7 +107,7 @@ const THERAPISTS = [
       { question: 'My greatest strength is...', answer: "turning insight into an actual plan — understanding your anxiety perfectly doesn't help if we don't practice doing things differently.", photo: null },
       { question: 'How I can help...', answer: "give you a structured, judgment-free space to build habits that actually stick, not just talk about wanting to.", photo: null }
     ],
-    modalities: ['CBT'], style: 'direct',
+    modalities: ['Cognitive Behavioral (CBT)'], style: 'direct',
     identity: { gender: 'female', lgbtqAffirming: true }, languages: ['English'],
     formats: ['video', 'in-person'], rateMin: 140, insuranceList: ['Aetna', 'BCBS', 'EAP'],
     acceptingOngoing: true, onDemand: false, onDemandSlots: [],
@@ -131,7 +131,7 @@ const THERAPISTS = [
     meta: ['Online only', '$110–130/session'],
     selfPayNote: 'Sliding scale available',
     bestFor: "I work best with couples who still want to fight for the relationship, not just survive it.",
-    tags: ['Couples', 'Family Conflict', 'EFT'],
+    tags: ['Couples', 'Family Conflict', 'Relationship Issues'],
     mandatoryPromptAnswers: [
       "learning how to fight for each other again instead of just fighting.",
       "I want to hear both sides before either of you starts defending yours. First sessions are for understanding the pattern, not assigning blame."
@@ -142,7 +142,7 @@ const THERAPISTS = [
       { question: "I won't shut up about...", answer: "how fast things can shift once you both stop trying to win the argument and start trying to understand it.", photo: null },
       { question: 'How I can help...', answer: "translate what you're each trying to say so the other person can actually hear it.", photo: null }
     ],
-    modalities: ['EFT'], style: 'direct',
+    modalities: ['Emotionally Focused (EFT)'], style: 'direct',
     identity: { gender: 'male', lgbtqAffirming: false }, languages: ['English', 'Spanish'],
     formats: ['video'], rateMin: 110, insuranceList: [],
     acceptingOngoing: true, onDemand: true, onDemandSlots: [{ label: 'Thu 4:00pm', rank: 2 }],
@@ -314,7 +314,7 @@ const THERAPISTS = [
       { question: 'How I can help...', answer: "make sense of the low-grade heaviness that looks like 'fine' from the outside.", photo: null },
       { question: 'I became a therapist because...', answer: "I watched too many good men white-knuckle their way through things that a single honest conversation could have eased.", photo: null }
     ],
-    modalities: ['CBT'], style: 'direct',
+    modalities: ['Cognitive Behavioral (CBT)'], style: 'direct',
     identity: { gender: 'male', lgbtqAffirming: false }, languages: ['English'],
     formats: ['video', 'in-person'], rateMin: 135, insuranceList: ['Aetna', 'BCBS'],
     acceptingOngoing: true, onDemand: false, onDemandSlots: [],
@@ -347,7 +347,7 @@ const THERAPISTS = [
       { question: 'Together we could...', answer: "make room for the version of you that's still catching up to the change.", photo: null },
       { question: "Out of session, you'll find me...", answer: "cooking for far too many people — feeding people is how my family says the things we can't.", photo: null }
     ],
-    modalities: ['EFT'], style: 'gentle',
+    modalities: ['Emotionally Focused (EFT)'], style: 'gentle',
     identity: { gender: 'female', lgbtqAffirming: true }, languages: ['English', 'Spanish'],
     formats: ['video'], rateMin: 145, insuranceList: ['Cigna', 'EAP'],
     acceptingOngoing: true, onDemand: false, onDemandSlots: [],
@@ -446,7 +446,7 @@ const THERAPISTS = [
       { question: "I won't shut up about...", answer: "how much of what you call 'lazy' is actually an executive-function traffic jam, not a character flaw.", photo: null },
       { question: 'How I can help...', answer: "turn the overwhelm into a short list of next steps that don't make you want to nap.", photo: null }
     ],
-    modalities: ['CBT'], style: 'direct',
+    modalities: ['Cognitive Behavioral (CBT)'], style: 'direct',
     identity: { gender: 'male', lgbtqAffirming: false }, languages: ['English'],
     formats: ['video'], rateMin: 120, insuranceList: ['BCBS', 'Cigna'],
     acceptingOngoing: true, onDemand: true, onDemandSlots: [{ label: 'Mon 12:00pm', rank: 1 }, { label: 'Wed 5:30pm', rank: 2 }],
@@ -479,7 +479,7 @@ const THERAPISTS = [
       { question: 'Together we could...', answer: "untangle the difference between what you truly want and what you've been carrying because no one else would.", photo: null },
       { question: "You'll probably click with me if...", answer: "you want warmth and realness both — I'll hold space and also gently call it when you're overfunctioning again.", photo: null }
     ],
-    modalities: ['CBT'], style: 'gentle',
+    modalities: ['Cognitive Behavioral (CBT)'], style: 'gentle',
     identity: { gender: 'female', lgbtqAffirming: true }, languages: ['English'],
     formats: ['video'], rateMin: 130, insuranceList: ['Aetna', 'United', 'EAP'],
     acceptingOngoing: true, onDemand: false, onDemandSlots: [],
@@ -530,7 +530,7 @@ const THERAPIST_AVAILABILITY = {
 // mustHaves (max 3) weigh double in scoring; they are not filters.
 const THERAPIST_IDEAL = {
   t1: { ageBands: ['25–34', '35–44'], genders: ['Female'], fields: ['Tech', 'Healthcare'],
-        needs: ['Anxiety', 'Burnout'], modalities: ['CBT'], payment: 'Either',
+        needs: ['Anxiety', 'Burnout'], modalities: ['Cognitive Behavioral (CBT)'], payment: 'Either',
         availability: ['Early mornings', 'Evenings'], mustHaves: ['needs', 'modalities'] },
   t3: { ageBands: ['25–34', '35–44'], genders: ['Female'], fields: ['First responder', 'Military & Veteran'],
         needs: ['Trauma'], modalities: ['EMDR'], payment: 'Cash pay',
@@ -980,14 +980,14 @@ let OTHER_SPECIALTIES = [
   'Traumatic Brain Injury (TBI)', 'Veterans', 'Video Game Addiction',
   'Weight Loss', "Women's Issues"
 ];
-let MODALITY_OPTIONS = ['CBT', 'EMDR', 'ACT', 'EFT', 'Motivational Interviewing'];
+let MODALITY_OPTIONS = ['Cognitive Behavioral (CBT)', 'EMDR', 'ACT', 'Emotionally Focused (EFT)', 'Motivational Interviewing'];
 const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'];
 
 const MODALITY_INFO = {
-  'CBT': "Cognitive Behavioral Therapy. Focuses on identifying and changing unhelpful thought patterns and behaviors — often structured, with exercises to practice between sessions.",
+  'Cognitive Behavioral (CBT)': "Cognitive Behavioral Therapy. Focuses on identifying and changing unhelpful thought patterns and behaviors — often structured, with exercises to practice between sessions.",
   'EMDR': "Eye Movement Desensitization and Reprocessing. A structured approach often used for trauma, using guided eye movements or other bilateral stimulation to help the brain reprocess difficult memories.",
   'ACT': "Acceptance and Commitment Therapy. Focuses on accepting difficult thoughts and feelings rather than fighting them, while committing to actions aligned with your values.",
-  'EFT': "Emotionally Focused Therapy. Often used with couples and families — focused on identifying emotional patterns and building stronger, safer emotional bonds.",
+  'Emotionally Focused (EFT)': "Emotionally Focused Therapy. Often used with couples and families — focused on identifying emotional patterns and building stronger, safer emotional bonds.",
   'Motivational Interviewing': "A collaborative conversational style that helps you explore and strengthen your own motivation for change — especially useful for ambivalence around habits or behaviors.",
   'ERP': "Exposure and Response Prevention. A structured approach for OCD and anxiety that gently, gradually reduces the power of intrusive thoughts and compulsions.",
   'Somatic': "Body-based therapy that works with physical sensations, not just talk — helpful when stress and trauma live in the body.",
@@ -1004,7 +1004,7 @@ let OTHER_MODALITIES = [
   'Clinical Supervision and Licensed Supervisors', 'Coaching',
   'Cognitive Behavioral (CBT)', 'Cognitive Processing (CPT)',
   'Compassion Focused', 'Culturally Sensitive', 'Dance Movement Therapy',
-  'Eclectic', 'Emotionally Focused', 'Energy Psychology', 'Existential',
+  'Eclectic', 'Emotionally Focused (EFT)', 'Energy Psychology', 'Existential',
   'Experiential Therapy', 'Expressive Arts', 'Family Systems', 'Family Therapy',
   'Feminist', 'Forensic Psychology', 'Gestalt', 'Gottman Method', 'Humanistic',
   'Hypnotherapy', 'Imago', 'Integrative', 'Interpersonal', 'Intervention',
@@ -2907,7 +2907,7 @@ function avatarHtml(t, sizeClass) {
 const PREV_EXPERIENCE_SIGNALS = {
   'More direct feedback':            { style: 'direct' },
   'Someone who challenges me':       { style: 'direct' },
-  'More structure and homework':     { style: 'direct', modalities: ['CBT', 'DBT', 'ERP', 'ACT'] },
+  'More structure and homework':     { style: 'direct', modalities: ['Cognitive Behavioral (CBT)', 'DBT', 'ERP', 'ACT'] },
   'Less structure, more space to talk': { style: 'gentle', modalities: ['IFS', 'Psychodynamic', 'Person-Centered'] },
   'Someone gentler':                 { style: 'gentle' },
   'Better at handling trauma':       { tags: ['Trauma', 'PTSD'], modalities: ['EMDR', 'Somatic', 'IFS'] },
