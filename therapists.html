@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=46">
+<link rel="stylesheet" href="style.css?v=47">
 <link rel="stylesheet" href="therapist.css?v=10">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
@@ -374,22 +374,17 @@ navToggle.addEventListener('click', () => {
   navToggle.setAttribute('aria-expanded', open);
 });
 
-/* THE PRICE LADDER IS GONE FROM THIS PAGE.
+/* NO PRICE LOGIC ON THIS PAGE, ON PURPOSE.
 
-   It used to overwrite #kt-price-num, #kt-hero-rate and #kt-save at load with
-   whichever founding tier the date fell into — so the static copy above was
-   never what a therapist actually read. With signup free and the first six
-   months free, there is no rate to display, and leaving this here would have
-   painted "$29.99" straight over "Free for 6 months" the moment the page
-   loaded. (The ladder itself has also become unreachable: nobody pays at
-   signup any more, and the last tier closed Dec 1 2026, so by the time the
-   first six months elapse there is no founding rate left to apply. What
-   replaces it is a product decision, not a date lookup.)
+   A script here used to overwrite #kt-price-num and #kt-hero-rate at load
+   with a computed founding rate, so the copy in the HTML was never what a
+   therapist actually read. It is gone, and nothing should replace it: the
+   page states the offer as plain text.
 
-   The renewal price, once it exists, belongs in ONE place — activate.js,
-   which owns the Stripe links — and gets read from there. Not re-declared
-   per page, which is how this site ended up advertising $9.99 here and
-   $19.99 on the home page at the same time. */
+   The rate after the free period lives in ONE place, STANDARD_RATE in
+   activate.js, which owns the Stripe links. Re-declaring it per page is how
+   this site once advertised three different prices at the same time. If it
+   changes, change it there and update the plain text here to match. */
 
 /* ---------- founding-therapist lead capture ----------
    Captures the therapist's OWN details (a business contact opting in to be
