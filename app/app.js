@@ -740,7 +740,13 @@ function profileGaps(t) {
    BOTH 'active' and 'trialing' -- so it has never meant "a client can see you",
    and reading it as though it did is the whole bug.
    ========================================================================== */
-const FREE_MONTHS = 6;
+/* A FIXED DATE, not a rolling window. Kindred is free for therapists until
+   March 2027 — the same date for everyone, however and whenever they joined.
+   An earlier version gave each therapist six months from their own go-live;
+   that was an inference and it was wrong. A date is one sentence, says the
+   same thing on the website and in the app without either computing anything,
+   and cannot drift per therapist. Mirrors migration 0032. */
+const FREE_UNTIL_LABEL = 'March 2027';
 const FREE_ENDING_SOON_DAYS = 30;
 
 /* Days until the free period ends. Infinity when it has not started -- they
@@ -806,13 +812,13 @@ function listingLead(t, opts) {
      in it is intact -- it is simply not being shown -- and saying so plainly
      matters more than the offer does. */
   if (s.lapsed) {
-    return `<strong>Your free ${FREE_MONTHS} months have ended.</strong> Your profile is saved exactly as you left it, and clients stop seeing it until you keep it active.`;
+    return `<strong>Kindred is no longer free for your account.</strong> Your profile is saved exactly as you left it, and clients stop seeing it until you keep it active.`;
   }
 
   const freeNote = s.endingSoon
-    ? ` Your free ${FREE_MONTHS} months end in ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'}.`
+    ? ` Kindred is free for you until ${FREE_UNTIL_LABEL} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left.`
     : s.inFree && s.daysLeft !== Infinity
-      ? ` You're in your free ${FREE_MONTHS} months &mdash; nothing to pay until ${fmtFreeUntil(t)}.`
+      ? ` Kindred is free for therapists until ${FREE_UNTIL_LABEL} &mdash; nothing to pay until then.`
       : '';
   const trialNote = s.trialing
     ? ` Nothing has been charged yet &mdash; your free ${TRIAL_DAYS} days are still running.`
@@ -850,7 +856,7 @@ function listingLead(t, opts) {
   if (s.subscribed) {
     return `<strong>You're being billed but clients can't see you yet.</strong> ${because}`;
   }
-  return `<strong>Almost there.</strong> ${because} Nothing to pay &mdash; your first ${FREE_MONTHS} months are free, and they don't start until you're live.`;
+  return `<strong>Almost there.</strong> ${because} Nothing to pay &mdash; Kindred is free for therapists until ${FREE_UNTIL_LABEL}.`;
 }
 
 function normalizeTherapist(t) {
@@ -5723,7 +5729,7 @@ function openActivateProfile() {
   const sheet = document.getElementById('confirm-sheet');
   sheet.innerHTML = `
     <div class="sheet-close"></div>
-    <h2>${ls.lapsed ? 'Keep your profile active' : 'Your free ' + FREE_MONTHS + ' months are ending'}</h2>
+    <h2>${ls.lapsed ? 'Keep your profile active' : 'Kindred stops being free soon'}</h2>
     <div class="intake-sub">${ls.lapsed
       ? `Your profile and everything in it is saved. Clients stop seeing it until you keep it active.`
       : `${ls.daysLeft} day${ls.daysLeft === 1 ? '' : 's'} left. Keep it active and nothing changes &mdash; same profile, same matches.`}</div>
@@ -5908,8 +5914,8 @@ function renderTherapistInsights() {
          had not paid. Nobody pays to sign up now, so the only version of this
          worth showing is at the far end: the free period running out. -->
     ${(() => { const s = listingState(t);
-      if (s.lapsed) return `<div class="activate-banner"><div><strong>Your free ${FREE_MONTHS} months have ended</strong><span>Your profile is saved — clients stop seeing it until you keep it active.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
-      if (s.endingSoon) return `<div class="activate-banner"><div><strong>${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left of your free ${FREE_MONTHS} months</strong><span>Keep your profile active and nothing changes for your clients.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
+      if (s.lapsed) return `<div class="activate-banner"><div><strong>Kindred is no longer free for your account</strong><span>Your profile is saved — clients stop seeing it until you keep it active.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
+      if (s.endingSoon) return `<div class="activate-banner"><div><strong>${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} of free Kindred left</strong><span>Keep your profile active and nothing changes for your clients.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
       return ''; })()}
     ${verificationBannerHtml(t)}
     <div class="intake-sub" style="margin-bottom:14px;">How clients are finding and responding to your profile.</div>
@@ -6103,7 +6109,7 @@ function nextStepToLive(t) {
   /* No payment step: signing up is free and the first six months are too.
      A lapsed free period is the one money-shaped blocker left. */
   if (listingState(t).lapsed) {
-    return { why: `your free ${FREE_MONTHS} months have ended`,
+    return { why: 'Kindred is no longer free for your account',
              label: 'Keep my profile active', id: 't-empty-activate' };
   }
   const licences = t.licenses || [];
@@ -7725,14 +7731,14 @@ function renderTherapistSettings() {
       ? `${listingCard ? '' : `<p class="portal-note" style="margin-top:0;">${listingLead(t)}</p>`}
          ${(() => { const ls = listingState(t);
            if (ls.subscribed) return `<p class="portal-note" style="margin-top:0;">Your rate and next charge date are on the Stripe receipt emailed to you.</p>`;
-           if (ls.lapsed) return `<p class="portal-note" style="margin-top:0;">Your free ${FREE_MONTHS} months ended on ${fmtFreeUntil(t)}.</p>
+           if (ls.lapsed) return `<p class="portal-note" style="margin-top:0;">Kindred was free for you until ${fmtFreeUntil(t)}.</p>
              <button class="edit-prefs-btn" id="t-settings-activate-btn" style="color:var(--coral-dark);">Keep my profile active</button>`;
            if (ls.daysLeft !== Infinity) return `<p class="portal-note" style="margin-top:0;">Free until <strong>${fmtFreeUntil(t)}</strong> &mdash; ${ls.daysLeft} day${ls.daysLeft === 1 ? '' : 's'} left. No card on file, nothing to cancel.</p>
              ${ls.endingSoon ? `<button class="edit-prefs-btn" id="t-settings-activate-btn" style="color:var(--coral-dark);">Keep my profile active</button>` : ''}`;
            /* Clock not started: they have never been findable, so the six
               months have not begun. Saying "free until —" with no date would
               read as a bug. */
-           return `<p class="portal-note" style="margin-top:0;">Your free ${FREE_MONTHS} months start the day your profile goes live, not today &mdash; time spent waiting on your licence check doesn't count against it.</p>`;
+           return `<p class="portal-note" style="margin-top:0;">Kindred is free for therapists until ${FREE_UNTIL_LABEL}. No card, nothing to cancel.</p>`;
          })()}`
       : `<p class="portal-note" style="margin-top:0;">Your profile isn't live yet.</p>`}
 

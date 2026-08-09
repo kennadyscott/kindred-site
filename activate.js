@@ -98,9 +98,9 @@ const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
         founding flow rather than showing a dead button. */
 const PAYMENT_LINK_TRIAL = 'https://buy.stripe.com/fZu6oH1B8cyP4pZ6hNfjG01';
 const TRIAL_DAYS = 30;
-/* Free period for a new therapist. Mirrors FREE_MONTHS in app/app.js and the
-   six-month interval in migration 0029. */
-const FREE_MONTHS = 6;
+/* Free until this date, the same for every therapist. Mirrors
+   FREE_UNTIL_LABEL in app/app.js and the free_until default in 0032. */
+const FREE_UNTIL_LABEL = 'March 2027';
 
 /* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
    at a coupon set to "Multiple months / 12" so the rate is locked for a year
@@ -457,8 +457,8 @@ async function authPost(path, body) {
          offer page whose only button goes to the app. The Stripe machinery
          below still exists for RENEWALS, which reach this file with
          ?checkout=now and never render this branch. */
-      if (ht) ht.textContent = `Your first ${FREE_MONTHS} months are free`;
-      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Your six months start the day you go live, so time spent waiting on your licence check doesn't count against it.`;
+      if (ht) ht.textContent = `Free for therapists until ${FREE_UNTIL_LABEL}`;
+      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Free for every therapist until ${FREE_UNTIL_LABEL}.`;
       /* Named for what the click does, not for the work behind it. "Build my
          profile — free" describes a chore; this is the button on an offer
          page, and the offer is the spot. */
@@ -489,10 +489,10 @@ async function authPost(path, body) {
         const terms = document.getElementById('kt-offer-terms');
         const save  = document.getElementById('kt-offer-save');
         const was   = document.getElementById('kt-offer-was');
-        if (badge) badge.textContent = `\u2605 ${FREE_MONTHS} months free`;
-        if (price) price.innerHTML = `Free<span>&nbsp;for ${FREE_MONTHS} months</span>`;
+        if (badge) badge.textContent = `\u2605 Free until ${FREE_UNTIL_LABEL}`;
+        if (price) price.innerHTML = `Free<span>&nbsp;until ${FREE_UNTIL_LABEL}</span>`;
         if (terms) terms.textContent = 'No card up front. Nothing to cancel.';
-        if (save)  save.textContent  = 'We tell you what it costs long before the six months are up — and with no card on file, nothing renews on its own.';
+        if (save)  save.textContent  = 'We tell you what it costs long before that date — and with no card on file, nothing renews on its own.';
         if (was)   was.hidden = true;
         // "Account ready for x@y" — there is no account yet.
         const who = document.getElementById('kt-acct-who');
