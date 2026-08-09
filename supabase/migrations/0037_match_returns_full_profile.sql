@@ -47,6 +47,21 @@
 -- style_fit() are untouched.
 -- ============================================================================
 
+-- ---------------------------------------------------------------------------
+-- DROP FIRST. `create or replace` cannot change a function's return type --
+-- Postgres raises 42P13 -- and adding three OUT columns is exactly that.
+-- The full argument list is required because the name alone is ambiguous.
+--
+-- Safe here: dropping and recreating happens inside one transaction in the
+-- SQL editor, so there is no window where a client can call a missing
+-- function. The grant at the end restores execute permission, which the drop
+-- takes with it.
+-- ---------------------------------------------------------------------------
+drop function if exists match_therapists(
+  text[], text, text, text, text, boolean, text[], text[], text, text,
+  text, text, text, text, text, boolean, text[], integer, integer
+);
+
 create or replace function match_therapists(
   p_needs           text[]  default '{}',
   p_modality        text    default null,
