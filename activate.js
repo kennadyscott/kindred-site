@@ -121,13 +121,24 @@ const FREE_UNTIL_LABEL = 'March 2027';
    tier roll early, which is visible and consistent rather than a surprise at
    checkout. Fixing it the other way would mean new coupons, and coupons are
    immutable. */
-const PRICING_TIERS = [
-  { key: 'tier1', until: new Date('2026-09-01T00:00:00Z'), rate: 9.99,  promo: 'FOUNDINGSEPT' },
-  { key: 'tier2', until: new Date('2026-10-01T00:00:00Z'), rate: 14.99, promo: 'FOUNDINGOCT' },
-  { key: 'tier3', until: new Date('2026-11-01T00:00:00Z'), rate: 16.99, promo: 'FOUNDINGNOV' },
-  { key: 'tier4', until: new Date('2026-12-01T00:00:00Z'), rate: 19.99, promo: 'FOUNDINGDEC' }
-];
-const STANDARD_RATE = 29.99;
+const PRICING_TIERS = [];   // retired — see the note below
+/* THE PRICE AFTER THE FREE PERIOD. One number, one place.
+
+   The escalating founding ladder that used to live here is gone. It could no
+   longer apply to anybody: nobody pays at signup, and its last tier closed
+   Dec 1 2026, while the first renewal is March 2027. Leaving it in meant
+   listingPricing() quietly returning a rate nobody had decided on.
+
+   NOTE FOR WHOEVER TOUCHES BILLING NEXT: this constant is what the PRODUCT
+   says. Stripe is a separate system and still has a $29.99/month price behind
+   the payment links. A new price and link must exist in Stripe before the
+   first renewal, or the app will promise $24.99 and the card will be charged
+   $29.99. */
+const STANDARD_RATE = 24.99;
+/* Declared AFTER the rate it reads — a const referenced before its
+   declaration is a TDZ throw at load, not a syntax error, so it would have
+   taken the whole page down without node --check noticing. */
+const AFTER_FREE_RATE = '$' + STANDARD_RATE.toFixed(2) + '/month';
 const FOUNDING_LOCK_MONTHS = 12;
 
 /* ---------------------------------------------------------------------------
@@ -458,7 +469,7 @@ async function authPost(path, body) {
          below still exists for RENEWALS, which reach this file with
          ?checkout=now and never render this branch. */
       if (ht) ht.textContent = `Free for therapists until ${FREE_UNTIL_LABEL}`;
-      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Free for every therapist until ${FREE_UNTIL_LABEL}.`;
+      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Free for every therapist until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}.`;
       /* Named for what the click does, not for the work behind it. "Build my
          profile — free" describes a chore; this is the button on an offer
          page, and the offer is the spot. */
@@ -491,8 +502,8 @@ async function authPost(path, body) {
         const was   = document.getElementById('kt-offer-was');
         if (badge) badge.textContent = `\u2605 Free until ${FREE_UNTIL_LABEL}`;
         if (price) price.innerHTML = `Free<span>&nbsp;until ${FREE_UNTIL_LABEL}</span>`;
-        if (terms) terms.textContent = 'No card up front. Nothing to cancel.';
-        if (save)  save.textContent  = 'We tell you what it costs long before that date — and with no card on file, nothing renews on its own.';
+        if (terms) terms.textContent = `then ${AFTER_FREE_RATE} \u00b7 no card up front \u00b7 cancel anytime`;
+        if (save)  save.textContent  = 'No card on file until then, so nothing renews on its own — in March 2027 you decide.';
         if (was)   was.hidden = true;
         // "Account ready for x@y" — there is no account yet.
         const who = document.getElementById('kt-acct-who');

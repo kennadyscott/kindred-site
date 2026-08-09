@@ -570,13 +570,20 @@ const THERAPIST_BILLING_URL = '/activate.html';
    picks the Stripe promo code or the app quotes a rate the checkout won't
    honour. Same instant on both sides is the only version of "in sync" worth
    having. */
-const PRICING_TIERS = [
-  { until: new Date('2026-09-01T00:00:00Z'), rate: 9.99 },
-  { until: new Date('2026-10-01T00:00:00Z'), rate: 14.99 },
-  { until: new Date('2026-11-01T00:00:00Z'), rate: 16.99 },
-  { until: new Date('2026-12-01T00:00:00Z'), rate: 19.99 }
-];
-const STANDARD_RATE = 29.99;
+const PRICING_TIERS = [];   // retired — see the note below
+/* THE PRICE AFTER THE FREE PERIOD. One number, one place.
+
+   The escalating founding ladder that used to live here is gone. It could no
+   longer apply to anybody: nobody pays at signup, and its last tier closed
+   Dec 1 2026, while the first renewal is March 2027. Leaving it in meant
+   listingPricing() quietly returning a rate nobody had decided on.
+
+   NOTE FOR WHOEVER TOUCHES BILLING NEXT: this constant is what the PRODUCT
+   says. Stripe is a separate system and still has a $29.99/month price behind
+   the payment links. A new price and link must exist in Stripe before the
+   first renewal, or the app will promise $24.99 and the card will be charged
+   $29.99. */
+const STANDARD_RATE = 24.99;
 const FOUNDING_LOCK_MONTHS = 12;
 /* Mirrors TRIAL_DAYS in activate.js, which owns the Stripe links. Everyone
    activating gets the trial, so this appears in the Activate modal and in
@@ -747,6 +754,11 @@ function profileGaps(t) {
    same thing on the website and in the app without either computing anything,
    and cannot drift per therapist. Mirrors migration 0032. */
 const FREE_UNTIL_LABEL = 'March 2027';
+/* Always stated WITH the date. "Free until March 2027" on its own invites a
+   therapist to imagine whatever number they fear, which is a worse offer than
+   the real one. Derived from STANDARD_RATE so the sentence and the charge
+   cannot drift. */
+const AFTER_FREE_RATE = '$' + STANDARD_RATE.toFixed(2) + '/month';
 const FREE_ENDING_SOON_DAYS = 30;
 
 /* Days until the free period ends. Infinity when it has not started -- they
@@ -816,9 +828,9 @@ function listingLead(t, opts) {
   }
 
   const freeNote = s.endingSoon
-    ? ` Kindred is free for you until ${FREE_UNTIL_LABEL} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left.`
+    ? ` Kindred is free for you until ${FREE_UNTIL_LABEL} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left, then ${AFTER_FREE_RATE}.`
     : s.inFree && s.daysLeft !== Infinity
-      ? ` Kindred is free for therapists until ${FREE_UNTIL_LABEL} &mdash; nothing to pay until then.`
+      ? ` Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}.`
       : '';
   const trialNote = s.trialing
     ? ` Nothing has been charged yet &mdash; your free ${TRIAL_DAYS} days are still running.`
@@ -864,7 +876,7 @@ function listingLead(t, opts) {
      can't see you until…" — and tuck the good news behind it. The restriction
      is real and stays, but it is a step in progress, not the headline. Lead
      with the offer, then say what is left, in the positive. */
-  return `<strong>Almost there.</strong> Kindred is free for therapists until ${FREE_UNTIL_LABEL} &mdash; nothing to pay. ${becausePositive}`;
+  return `<strong>Almost there.</strong> Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}. ${becausePositive}`;
 }
 
 function normalizeTherapist(t) {
@@ -7753,7 +7765,7 @@ function renderTherapistSettings() {
            /* Clock not started: they have never been findable, so the six
               months have not begun. Saying "free until —" with no date would
               read as a bug. */
-           return `<p class="portal-note" style="margin-top:0;">Kindred is free for therapists until ${FREE_UNTIL_LABEL}. No card, nothing to cancel.</p>`;
+           return `<p class="portal-note" style="margin-top:0;">Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}. No card until then, nothing to cancel.</p>`;
          })()}`
       : `<p class="portal-note" style="margin-top:0;">Your profile isn't live yet.</p>`}
 
