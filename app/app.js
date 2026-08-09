@@ -4910,7 +4910,11 @@ function renderSignupStepBody() {
         <div class="option-row ${d.practiceType === 'specialist' ? 'selected' : ''}" data-practice="specialist">I have a few core specialties</div>
         <div class="option-row ${d.practiceType === 'generalist' ? 'selected' : ''}" data-practice="generalist">I work with a broad range of concerns</div>
       </div>
-        <div class="t-form-label">${d.practiceType === 'generalist' ? 'Optional — pick any specialties you especially enjoy' : "Specialties / needs you work with"}</div>
+        <!-- Same phrasing as the profile editor. Two labels for one field
+             invites them to drift apart. -->
+        <div class="t-form-label">${d.practiceType === 'generalist'
+          ? 'Optional — anything you especially enjoy working with'
+          : 'I have experience working with&hellip;'}</div>
         ${checkboxDropdownHtml(d.tags, specialtyAll(), 'ts-spec', 'Choose the specialties you work with…')}
         <div class="t-form-label" style="margin-top:16px;">Modalities you're certified in</div>
         ${checkboxDropdownHtml(d.modalities, modalityAll(), 'ts-modality', 'Choose the therapy types you offer…')}
@@ -6449,7 +6453,7 @@ function renderTherapistProfileBody() {
         <div class="t-form-label">In one line, who do you work best with?</div>
         <input type="text" class="t-rate-input" id="t-bestfor-input" placeholder="e.g. I work best with new parents navigating postpartum anxiety" value="${t.bestFor || ''}">
 
-        <div class="t-form-label">Specialties you work with <span class="ideal-hint">star up to 3 — those lead your profile</span></div>
+        <div class="t-form-label">I have experience working with&hellip; <span class="ideal-hint">star up to 3 — those lead your profile</span></div>
         ${specialtyPickerHtml(t)}
       </div>
     </details>
