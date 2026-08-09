@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Welcome to Kindred — Founding Therapist</title>
-<meta name="description" content="Your Kindred membership is active. Here is what happens next.">
+<title>Your profile stays active — Kindred</title>
+<meta name="description" content="Your Kindred profile stays active.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=42">
+<link rel="stylesheet" href="style.css?v=43">
 <link rel="stylesheet" href="therapist.css?v=10">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 </head>
@@ -57,61 +57,43 @@
   <div class="wel-inner">
     <span class="wel-check" aria-hidden="true">✓</span>
     <p class="eyebrow">Founding Therapist</p>
-    <h1>You’re in.</h1>
-    <!-- Rewritten for the ACCOUNT-FIRST order. This page used to be step one
-         of four -- pay, then build a profile, then verify. Onboarding was
-         reordered so the profile is built free BEFORE activating, which left
-         this page congratulating people and then telling them to go and do
-         the thing they had just spent ten minutes doing. Everything below now
-         starts from "your profile is written". -->
-    <p class="kt-sub wel-lede">Your profile is built and your membership is active — nothing is charged for 30 days, and your founding rate is locked for your first 12 months after that. Two short things left, and then it’s on us.</p>
+    <h1>You’re still here.</h1>
+    <!-- REPURPOSED. This was the page Stripe returned to after someone paid to
+         join. Nobody pays to join any more — the first six months are free and
+         there is no checkout in onboarding — so the only journey that lands
+         here now is a therapist keeping their profile active at the end of
+         those six months. Written for them. -->
+    <p class="kt-sub wel-lede">Your profile stays exactly where it was &mdash; same prompts, same photos, same conversations &mdash; and clients can keep finding you. Nothing is charged for 30 days.</p>
   </div>
 </section>
 
-<!-- ======================= THE PATH ======================= -->
+<!-- ======================= WHAT HAPPENS NOW ======================= -->
 <section class="wel-path">
   <div class="wel-path-inner">
     <ol class="wel-steps">
       <li class="wel-step now">
         <span class="wel-num">1</span>
         <div>
-          <h3>Your licence and your identity <span class="wel-time">about 2 minutes</span></h3>
-          <p>Add each state you’re licensed in with its licence number, then confirm your identity with a photo of your ID and a selfie. Every therapist on Kindred goes through this — it’s what lets a client trust the person they’re reading about.</p>
-          <!-- #therapist-signin, NOT #therapist-signup: the app restores a
-               saved session on this hash and drops them straight into their
-               portal, where both buttons are waiting on the checklist. The
-               signup hash deliberately suppresses session restore, so it
-               would have asked a signed-in therapist to log in again. -->
-          <a class="btn btn-dark btn-arrow" href="/app/#therapist-signin" id="wel-cta">Add my licence <span aria-hidden="true">→</span></a>
+          <h3>Nothing changes today <span class="wel-time">nothing to do</span></h3>
+          <p>Your profile never came down. Clients matching how you work keep seeing it, and every conversation you already have carries on where it was.</p>
+          <a class="btn btn-dark btn-arrow" href="/app/#therapist-signin" id="wel-cta">Back to my profile <span aria-hidden="true">&rarr;</span></a>
         </div>
       </li>
       <li class="wel-step">
         <span class="wel-num">2</span>
         <div>
-          <h3>We check it</h3>
-          <p>A real person on our side confirms your licence against your state board. We’ll email you the moment it clears — and if anything doesn’t match, we’ll write to you directly rather than leaving you wondering.</p>
+          <h3>Your first charge is in 30 days</h3>
+          <p>Cancel before then and you are never billed. Cancelling later only unlists your profile &mdash; nothing is deleted, and bringing it back is one click.</p>
         </div>
       </li>
       <li class="wel-step">
         <span class="wel-num">3</span>
         <div>
-          <h3>You go live</h3>
-          <p>Your profile enters client matching, and you start receiving inquiries from people whose needs actually line up with how you work.</p>
+          <h3>You helped build this</h3>
+          <p>You were here before it was proven. That still counts for something, and it still shapes what we build next.</p>
         </div>
       </li>
     </ol>
-  </div>
-</section>
-
-<!-- ======================= WHAT TO HAVE HANDY ======================= -->
-<section class="kt-sections wel-handy">
-  <div class="kt-sections-inner">
-    <h2>What to have<br>handy.</h2>
-    <div class="kt-sectiongrid">
-      <article><span class="kt-secicon t-lilac" aria-hidden="true">◇</span><h3>Your licence number</h3><p>One per state you practise in, with the state that issued it. Each is checked against that board separately.</p></article>
-      <article><span class="kt-secicon t-clay" aria-hidden="true">◎</span><h3>A photo ID</h3><p>Driver’s licence or passport. You’ll photograph it and take a selfie — it runs through Stripe and takes about a minute.</p></article>
-      <article><span class="kt-secicon t-moss" aria-hidden="true">✳</span><h3>Nothing else</h3><p>Your profile is already written. If you want to change anything in it, it’s all still editable from your portal.</p></article>
-    </div>
   </div>
 </section>
 
@@ -132,8 +114,8 @@
     <h2>Questions before you start?</h2>
     <p class="wl-now-sub">Two things people usually ask.</p>
     <div class="kt-benefitgrid">
-      <article><h3>Can I finish this later?</h3><p>Yes. Your profile is saved and your membership is active — it just doesn’t enter client matching until your licence clears, so the sooner you add it the sooner you’re live.</p></article>
-      <article><h3>What if my licence check has a problem?</h3><p>We email you directly and help sort it. Nothing is silently rejected, and you can cancel for a full refund if we can’t verify you.</p></article>
+      <article><h3>What if I change my mind?</h3><p>Cancel any time from Settings. Before day 31 you are never charged; after that your profile simply stops being shown. Nothing is deleted and nothing is lost.</p></article>
+      <article><h3>Did I have to do this?</h3><p>No. Your first six months were free with no card on file, so nothing could have renewed on its own — this was a decision, not a default.</p></article>
       <article><h3>Something else?</h3><p>Write to us and a person answers.</p><a class="pillar-link" href="mailto:info@kindredtherapymatch.com?subject=Founding%20Therapist%20question">info@kindredtherapymatch.com →</a></article>
     </div>
   </div>
@@ -212,8 +194,8 @@
     <h2>The right clients are looking for more than a list of credentials.</h2>
     <div class="kt-closing-cta">
       <p>Help them understand how you work — before they ever reach out.</p>
-      <a class="btn btn-dark btn-arrow" href="activate.html">Claim your Founding Therapist profile <span aria-hidden="true">→</span></a>
-      <p class="kt-hero-fine">Cancel anytime · Founding rate locked for 12 months · Matched to you, never to the highest bidder</p>
+      <a class="btn btn-dark btn-arrow" href="/app/#therapist-signup">Claim your Founding Therapist profile <span aria-hidden="true">→</span></a>
+      <p class="kt-hero-fine">Cancel anytime · Nothing is ever deleted · Matched to you, never to the highest bidder</p>
     </div>
   </div>
 </section>
@@ -228,35 +210,7 @@ navToggle.addEventListener('click', () => {
   navToggle.setAttribute('aria-expanded', open);
 });
 
-/* Escalating founding ladder — the rate rises on the 1st of each month and is
-   locked for 12 months. Keep in sync with activate.js and the app. */
-const PRICING_TIERS = [
-  { until: new Date('2026-09-01T00:00:00'), rate: 9.99 },
-  { until: new Date('2026-10-01T00:00:00'), rate: 14.99 },
-  { until: new Date('2026-11-01T00:00:00'), rate: 16.99 },
-  { until: new Date('2026-12-01T00:00:00'), rate: 19.99 }
-];
-(() => {
-  const now = new Date();
-  const i = PRICING_TIERS.findIndex(t => now < t.until);
-  const num = document.getElementById('kt-price-num');
-  const heroRate = document.getElementById('kt-hero-rate');
-  const trial = document.getElementById('kt-price-trial');
-  if (!num) return;
-  if (i === -1) {
-    num.textContent = '$29.99';
-    if (heroRate) heroRate.textContent = '$29.99';
-    if (trial) trial.textContent = 'Billed monthly. Cancel anytime.';
-    return;
-  }
-  const t = PRICING_TIERS[i];
-  const next = PRICING_TIERS[i + 1] ? PRICING_TIERS[i + 1].rate : 29.99;
-  const when = t.until.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-  num.textContent = '$' + t.rate.toFixed(2);
-  if (heroRate) heroRate.textContent = '$' + t.rate.toFixed(2);
-  if (trial) trial.textContent = `Today's founding rate — locked for 12 months. Rises to $${next.toFixed(2)} on ${when}.`;
-})();
-
+/* Price ladder removed — see the note in therapists.html. */
 /* ---------- founding-therapist lead capture ----------
    Captures the therapist's OWN details (a business contact opting in to be
    recruited) to a leads store the admin can read. This is separate from the

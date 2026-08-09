@@ -7,10 +7,21 @@
 
    >>> THE ONLY THING YOU NEED TO EDIT IS THE `PAYMENT_LINKS` BLOCK BELOW. <<<
 
-   THE OFFER — an escalating founding ladder. The earlier a therapist joins, the
-   lower their rate, and they KEEP it for 12 months before moving to $29.99:
-       by Sep 1 → $9.99/mo        by Nov 1 → $16.99/mo
-       by Oct 1 → $14.99/mo       by Dec 1 → $19.99/mo       after → $29.99/mo
+   >>> SIGNING UP IS FREE. The first SIX MONTHS are free, with no card taken.
+       Nothing on this page is part of therapist onboarding any more.
+
+   What this file is now: the RENEWAL checkout, reached at the end of those six
+   months (?checkout=now&email=…, sent by the app's Keep-it-active modal), plus
+   an offer page for cold outreach whose only button goes to /app/#therapist-signup.
+
+   THE LADDER BELOW IS EFFECTIVELY DEAD and kept only so existing subscriptions
+   are described correctly. Nobody pays at signup, and the last tier closed on
+   Dec 1 2026 — six months after the paywall was removed is February 2027 at
+   the earliest, by which time listingPricing() returns the standard rate. What
+   the renewal actually costs is an open product decision; when it is made, it
+   is decided HERE and read from here, not restated per page.
+       (historical) by Sep 1 → $9.99/mo   by Nov 1 → $16.99/mo
+                    by Oct 1 → $14.99/mo  by Dec 1 → $19.99/mo   after → $29.99/mo
 
    HOW TO BUILD THIS IN STRIPE (~15 minutes):
      1. Products → Add product → "Kindred Listing".
@@ -87,6 +98,9 @@ const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
         founding flow rather than showing a dead button. */
 const PAYMENT_LINK_TRIAL = 'https://buy.stripe.com/fZu6oH1B8cyP4pZ6hNfjG01';
 const TRIAL_DAYS = 30;
+/* Free period for a new therapist. Mirrors FREE_MONTHS in app/app.js and the
+   six-month interval in migration 0029. */
+const FREE_MONTHS = 6;
 
 /* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
    at a coupon set to "Multiple months / 12" so the rate is locked for a year
@@ -438,16 +452,18 @@ async function authPost(path, body) {
          card" -- which is now the opposite of what happens next. */
       const ht = document.getElementById('kt-head-title');
       const hs = document.getElementById('kt-head-sub');
-      const onTrial = !!PAYMENT_LINK_TRIAL;
-      if (ht) ht.textContent = onTrial ? `Start your ${TRIAL_DAYS} days free` : 'Start with your profile';
-      if (hs) hs.textContent = onTrial
-        ? `Build your profile first — about ten minutes, free, no card. When it's ready you activate with ${TRIAL_DAYS} days free, and we check your licence and identity from there.`
-        : "Build it free — about ten minutes, no card. When it's ready you activate, and we check your licence and identity from there.";
+      /* SIX MONTHS FREE. There is no checkout in onboarding any more, so a
+         cold visitor is never being sold anything here -- this page is now an
+         offer page whose only button goes to the app. The Stripe machinery
+         below still exists for RENEWALS, which reach this file with
+         ?checkout=now and never render this branch. */
+      if (ht) ht.textContent = `Your first ${FREE_MONTHS} months are free`;
+      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Your six months start the day you go live, so time spent waiting on your licence check doesn't count against it.`;
       /* Named for what the click does, not for the work behind it. "Build my
          profile — free" describes a chore; this is the button on an offer
          page, and the offer is the spot. */
       const ctaBtn = document.getElementById('kt-coldstart-cta');
-      if (ctaBtn && onTrial) ctaBtn.innerHTML = 'Secure my spot <span aria-hidden="true">&rarr;</span>';
+      if (ctaBtn) ctaBtn.innerHTML = 'Secure my spot <span aria-hidden="true">&rarr;</span>';
       /* The account form and its 1-2-3 tracker belong to the pay-now path.
          A cold visitor makes their account in the app, one screen along. */
       ['kt-track', 'kt-acct'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
@@ -465,6 +481,19 @@ async function authPost(path, body) {
       const step2 = document.getElementById('kt-step2');
       if (step2) {
         step2.hidden = false;
+        /* Overwrite the priced card. initActivate() fills it for the renewal
+           flow; a cold visitor is not buying anything and must not be shown a
+           rate as though they were. */
+        const badge = document.getElementById('kt-offer-badge');
+        const price = document.getElementById('kt-offer-price');
+        const terms = document.getElementById('kt-offer-terms');
+        const save  = document.getElementById('kt-offer-save');
+        const was   = document.getElementById('kt-offer-was');
+        if (badge) badge.textContent = `\u2605 ${FREE_MONTHS} months free`;
+        if (price) price.innerHTML = `Free<span>&nbsp;for ${FREE_MONTHS} months</span>`;
+        if (terms) terms.textContent = 'No card up front. Nothing to cancel.';
+        if (save)  save.textContent  = 'We tell you what it costs long before the six months are up — and with no card on file, nothing renews on its own.';
+        if (was)   was.hidden = true;
         // "Account ready for x@y" — there is no account yet.
         const who = document.getElementById('kt-acct-who');
         if (who) who.hidden = true;

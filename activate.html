@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Activate Your Listing — Kindred</title>
-<meta name="description" content="Activate your Kindred listing and start being matched with clients who are right for you. Founding rate: $19.99/month for your first three months.">
+<meta name="description" content="Build your Kindred profile and start being matched with clients who are right for you. Your first six months are free.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=42">
+<link rel="stylesheet" href="style.css?v=43">
 <link rel="stylesheet" href="therapist.css?v=10">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 <style>
@@ -128,7 +128,7 @@
         <span class="kt-offer-star" aria-hidden="true">✦</span>
         <div>
           <p class="kt-offer-name">Founding Therapist offer</p>
-          <p class="kt-offer-rate" id="kt-hero-offer"><s class="kt-was">$29.99</s> <b id="kt-hero-rate">$9.99</b>/month for your first 12 months</p>
+          <p class="kt-offer-rate" id="kt-hero-offer"><b id="kt-hero-rate">Your first 6 months are free</b> &mdash; no card, nothing to cancel</p>
         </div>
       </div>
 
@@ -184,7 +184,7 @@
   <div class="kt-coldstart" id="kt-coldstart" hidden>
     <a class="btn btn-dark btn-arrow" id="kt-coldstart-cta"
        href="/app/#therapist-signup">Build my profile &mdash; free <span aria-hidden="true">&rarr;</span></a>
-    <p class="kt-coldstart-fine">Free to build. No card until you activate, and then it&rsquo;s 30 days free.</p>
+    <p class="kt-coldstart-fine">Free to build, and free to be listed for six months. We never take a card up front.</p>
     <p class="kt-coldstart-alt">Already have a Kindred profile? <button type="button" class="kt-linkish" id="kt-coldstart-signin">Sign in to activate it</button></p>
   </div>
 
@@ -221,9 +221,9 @@
   <!-- Offer card — filled in by the script below based on the founding deadline -->
   <div class="kt-offer" id="kt-offer">
     <div class="kt-offer-badge" id="kt-offer-badge">Founding rate</div>
-    <p class="kt-offer-was" id="kt-offer-was">Usually <s>$29.99</s>/month</p>
-    <div class="kt-offer-price" id="kt-offer-price">$19.99<span>/month</span></div>
-    <p class="kt-offer-terms" id="kt-offer-terms">for your first 12 months</p>
+    <p class="kt-offer-was" id="kt-offer-was" hidden></p>
+    <div class="kt-offer-price" id="kt-offer-price">Free<span>&nbsp;for 6 months</span></div>
+    <p class="kt-offer-terms" id="kt-offer-terms">No card up front. Nothing to cancel.</p>
     <p class="kt-offer-save" id="kt-offer-save"></p>
   </div>
 
@@ -246,9 +246,8 @@
   <!-- Shown when the Stripe links haven't been configured yet -->
   <div class="kt-notready" id="kt-notready" hidden>
     <strong>Checkout is opening soon.</strong>
-    We're finalizing membership billing. Leave your details on the
-    <a href="therapists.html#kt-claim">For Therapists page</a> and we'll set your profile up personally —
-    and you'll still get the founding rate.
+    We're finalizing billing. Nothing is blocked meanwhile — signing up is free and your first six
+    months are free, so <a href="/app/#therapist-signup">build your profile</a> and we'll sort the rest later.
   </div>
   </div><!-- /step 2 -->
 
@@ -301,7 +300,7 @@
   <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
 </footer>
 
-<script src="activate.js?v=21"></script>
+<script src="activate.js?v=22"></script>
 <script src="site.js?v=10"></script>
 <script src="analytics.js?v=15"></script>
 </body>
