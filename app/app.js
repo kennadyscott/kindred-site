@@ -5081,10 +5081,54 @@ function restoreDropdownState(focus) {
 
 /* Wrappers, so all ~70 call sites keep the scroll fix without each one
    remembering to ask for it. */
-function renderTherapistProfile() {
+/* The profile body is rebuilt with innerHTML, which resets the scroller to the
+   top. Dropdown scroll was already preserved; the PAGE scroll was not — so
+   adding a photo at the bottom of a long feed silently threw the therapist
+   back to the top with their new photo somewhere off-screen, which reads as
+   "nothing happened" or "it won't scroll".
+   Both candidates are captured because which element scrolls depends on
+   layout: the phone frame scrolls #t-profile-content, the wide layout scrolls
+   #screen-t-profile. */
+const PROFILE_SCROLLERS = ['t-profile-content', 'screen-t-profile'];
+function captureProfileScroll() {
+  const out = {};
+  PROFILE_SCROLLERS.forEach(id => { const el = document.getElementById(id); if (el) out[id] = el.scrollTop; });
+  return out;
+}
+function restoreProfileScroll(saved) {
+  if (!saved) return;
+  PROFILE_SCROLLERS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && saved[id]) el.scrollTop = saved[id];
+  });
+}
+
+function renderTherapistProfile(opts) {
   const focus = captureDropdownState();
+  const scroll = captureProfileScroll();
   renderTherapistProfileBody();
   restoreDropdownState(focus);
+  restoreProfileScroll(scroll);
+  /* A block that was just added is the thing they want to see. Restoring the
+     old position would leave it below the fold, which is the same complaint
+     one scroll further down. */
+  if (opts && opts.revealLastBlock) {
+    const blocks = document.querySelectorAll('.feed-block');
+    const last = blocks[blocks.length - 1];
+    if (last) {
+      /* Positioned by hand rather than with scrollIntoView. Which element
+         scrolls changes with layout, and smooth behaviour does not reliably
+         run in every context — measured it landing nowhere while the block
+         sat 2000px below the fold. Finding the real scrolling ancestor and
+         setting scrollTop works everywhere and lands exactly. */
+      let sc = last.parentElement;
+      while (sc && sc.scrollHeight <= sc.clientHeight + 2) sc = sc.parentElement;
+      if (sc) {
+        const delta = last.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+        sc.scrollTop += delta - (sc.clientHeight / 2) + (last.offsetHeight / 2);
+      }
+    }
+  }
 }
 /* What step one still needs before Continue does anything. ONE definition,
    read by both the initial render and the live refresh on every keystroke --
@@ -5676,6 +5720,13 @@ function finishTherapistSignup() {
     identity: { gender: d.gender, lgbtqAffirming: d.lgbtqAffirming }, languages: d.languages,
     formats: d.formats, rateMin: d.rateMin, insuranceList: d.insuranceList,
     location: { city: d.city.trim(), state: d.state },
+    /* CARRY THE LICENSES. They were collected in step one, written to
+       therapist_licenses by saveLicense() below, and then not put on the
+       therapist object at all — so the row existed in the database while Edit
+       Profile said "No licenses yet". It corrected itself on the next sign-in,
+       because that path calls loadLicenses(), which is the worst kind of bug:
+       it looks like the data was thrown away and then quietly is not. */
+    licenses: (d.licenses || []).map(l => ({ state: l.state, number: l.number, expiresOn: l.expiresOn || '' })),
     acceptingOngoing: d.acceptingOngoing, onDemand: d.onDemand, onDemandSlots: d.onDemandSlots,
     agreedToOnDemandPolicy: d.agreedToOnDemandPolicy,
     nextAvailableRank: d.acceptingOngoing ? 1 : null,
@@ -5752,7 +5803,10 @@ function finishTherapistSignup() {
     saveTherapistProfile(newT)
       // Licenses go to their own table. The DB derives license_states from the
       // verified ones, so these must land before we read the row back.
-      .then(() => Promise.all((d.licenses || []).map(l => saveLicense(l.state, l.number))))
+      .then(() => Promise.all((d.licenses || []).map(l => saveLicense(l.state, l.number, l.expiresOn))))
+      /* Read them back so the object holds server truth — verification state,
+         and any row already there — rather than only what was typed. */
+      .then(async () => { const ls = await loadLicenses(); if (ls.length) newT.licenses = ls; })
       .then(loadTherapistRow)
       .then(row => {
         if (!row) return;
@@ -7103,7 +7157,7 @@ function attachTherapistProfileHandlers(t) {
     readPhoto(file).then(src => {
       if (!src) return;
       getToKnowBlocks(t).push({ type: 'photo', src });
-      renderTherapistProfile();
+      renderTherapistProfile({ revealLastBlock: true });
     });
   });
   const addBlockVideo = document.querySelector('[data-add-block-video]');
@@ -7113,7 +7167,7 @@ function attachTherapistProfileHandlers(t) {
     const src = URL.createObjectURL(file);      // object URL keeps big videos out of data URLs
     t.media.video = src;
     getToKnowBlocks(t).push({ type: 'video', src });
-    renderTherapistProfile();
+    renderTherapistProfile({ revealLastBlock: true });
   });
   document.querySelectorAll('[data-replace-block-video]').forEach(el => el.addEventListener('change', () => {
     const file = el.files[0];
