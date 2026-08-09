@@ -1482,6 +1482,25 @@ function isCompatible(t, mode) {
 // fires with the four new options.
 const STYLE_ALIGN = { gentle: 'gentle', empathy: 'gentle', direct: 'direct', challenge: 'direct' };
 
+/* "A mix of both" answers either request. A balanced therapist was matching
+   NOBODY on style: the comparison is an equality, and 'balanced' never equals
+   'gentle' or 'direct', so the one answer that means "I can do either" earned
+   the bonus for neither. Style is a scoring signal rather than a filter, so it
+   was costing them rank rather than hiding them — invisible, and exactly the
+   wrong way round.
+
+   Credited, but below an exact match. A therapist who says they are
+   specifically direct is a better answer for someone asking for direct than
+   one who does both — and if 'balanced' scored full marks it would be the
+   strictly dominant answer, which turns an honest question into a box
+   everybody ticks. */
+function styleFit(therapistStyle, wanted) {
+  if (!wanted) return 0;
+  if (therapistStyle === wanted)    return 1;      // exactly what they asked for
+  if (therapistStyle === 'balanced') return 0.6;   // works either way
+  return 0;
+}
+
 function getMatchReasons(t) {
   const reasons = [];
   const overlap = t.tags.filter(tag => intake.needs.includes(tag));
@@ -1507,7 +1526,9 @@ function getMatchReasons(t) {
     reasons.push({ female: 'Female therapist', male: 'Male therapist', nonbinary: 'Nonbinary therapist' }[intake.genderPref] || 'Preferred gender');
   }
   if (intake.languagePref !== 'any' && t.languages.includes(intake.languagePref)) reasons.push(`Speaks ${intake.languagePref}`);
-  if (intake.stylePref && STYLE_ALIGN[intake.stylePref] === t.style) reasons.push('Similar style to what you want');
+  const styleWanted = intake.stylePref ? STYLE_ALIGN[intake.stylePref] : null;
+  if (styleWanted && t.style === styleWanted) reasons.push('Similar style to what you want');
+  else if (styleWanted && t.style === 'balanced') reasons.push('Adapts to how you want to work');
   if (prevExperienceScore(t) >= 0.5) reasons.push('Matches what you wanted different this time');
   if (intake.ethnicityPref !== 'no-preference' && t.ethnicity === intake.ethnicityPref) reasons.push(`${t.ethnicity} therapist`);
   // Soft identity affinities — surface shared ground, don't hard-filter.
@@ -2844,7 +2865,7 @@ function prevExperienceScore(t) {
   picks.forEach(p => {
     const sig = PREV_EXPERIENCE_SIGNALS[p];
     let hit = false;
-    if (sig.style && t.style === sig.style) hit = true;
+    if (sig.style && (t.style === sig.style || t.style === 'balanced')) hit = true;
     if (!hit && sig.modalities && (t.modalities || []).some(m => sig.modalities.includes(m))) hit = true;
     if (!hit && sig.tags && (t.tags || []).some(x => sig.tags.includes(x))) hit = true;
     if (!hit && sig.identity) {
@@ -5007,20 +5028,21 @@ function renderSignupStepBody() {
   } else if (signupStep === 1) {
     html += `
       <h1>What do you specialize in?</h1>
-      <div class="intake-sub">Some therapists are deep in a few areas, others work well across the board — both are valuable, we just want to show you to the right clients.</div>
-      <div class="option-list" id="ts-practice-type-list">
-        <div class="option-row ${d.practiceType === 'specialist' ? 'selected' : ''}" data-practice="specialist">I have a few core specialties</div>
-        <div class="option-row ${d.practiceType === 'generalist' ? 'selected' : ''}" data-practice="generalist">I work with a broad range of concerns</div>
-      </div>
+      <div class="intake-sub">Pick everything you have real experience with — this is what clients are matched on.</div>
+        <!-- The specialist / generalist question used to sit here. Removed:
+             it asked a therapist to categorise their whole practice before
+             they had told us anything about it, and the answer is already
+             implied by how many specialties they go on to pick.
+             practiceType still exists on the record and still means something
+             to matching (see below) — it is simply no longer asked as a
+             question. -->
         <!-- Same phrasing as the profile editor. Two labels for one field
              invites them to drift apart. -->
-        <div class="t-form-label">${d.practiceType === 'generalist'
-          ? 'Optional — anything you especially enjoy working with'
-          : 'I have experience working with&hellip;'}</div>
+        <div class="t-form-label">I have experience working with&hellip;</div>
         ${checkboxDropdownHtml(d.tags, specialtyAll(), 'ts-spec', 'Choose the specialties you work with…')}
         <div class="t-form-label" style="margin-top:16px;">Modalities you're certified in</div>
         ${checkboxDropdownHtml(d.modalities, modalityAll(), 'ts-modality', 'Choose the therapy types you offer…')}
-      <div class="t-form-label">In one line, who do you work best with?</div>
+      <div class="t-form-label">In one sentence, who do you work best with? <span class="ideal-hint">this is the first sentence the client sees</span></div>
       <input type="text" class="t-rate-input" id="ts-bestfor" placeholder="e.g. I work best with new parents navigating postpartum anxiety" value="${d.bestFor}">`;
   } else if (signupStep === 2) {
     html += `
@@ -5209,9 +5231,13 @@ function attachSignupHandlers() {
     if (credInput) credInput.addEventListener('input', () => { d.credentials[i] = credInput.value; });
   });
 
-  document.querySelectorAll('#ts-practice-type-list .option-row').forEach(el => {
-    el.addEventListener('click', () => { d.practiceType = el.dataset.practice; renderSignupStep(); });
-  });
+  /* The specialist/generalist picker was removed from step one, so this bound
+     to nothing. Breadth is now expressed by how many specialties they choose
+     rather than by self-declaring a category — which is more honest anyway:
+     a therapist who works widely picks ten tags and matches widely, instead
+     of ticking "generalist" and being exempted from the overlap check.
+     practiceType stays on the record at its default of 'specialist'; existing
+     generalist rows keep working, nothing new sets it. */
 
   /* The signup step used a short chip grid while the editor already offered the
      full catalogue behind a dropdown -- so a therapist could pick a specialty
@@ -6579,7 +6605,7 @@ function renderTherapistProfileBody() {
           <div class="switch ${t.showPronouns ? 'on' : ''}" id="t-show-pronouns-switch"></div>
         </div>
 
-        <div class="t-form-label">In one line, who do you work best with?</div>
+        <div class="t-form-label">In one sentence, who do you work best with? <span class="ideal-hint">this is the first sentence the client sees</span></div>
         <input type="text" class="t-rate-input" id="t-bestfor-input" placeholder="e.g. I work best with new parents navigating postpartum anxiety" value="${t.bestFor || ''}">
 
         <div class="t-form-label">I have experience working with&hellip; <span class="ideal-hint">star up to 3 — those lead your profile</span></div>
