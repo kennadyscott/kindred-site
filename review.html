@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=47">
+<link rel="stylesheet" href="style.css?v=48">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 <style>
   body { background: #FBF4EA; }
@@ -265,7 +265,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
   /* ---------- auth ----------
      Was a hardcoded passcode ('kindred-admin') compared in JavaScript, i.e.
      readable by anyone using View Source. Fine for anonymous click counts;
-     not fine now that this page lists therapist names, emails and licence
+     not fine now that this page lists therapist names, emails and license
      numbers and can mark someone verified.
 
      The anon key below is safe to publish -- it is the public key, and RLS
@@ -432,7 +432,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     if (rejTab) rejTab.classList.toggle('has-denied', !!c.rejected);
     summary.innerHTML = c.paying_but_hidden
       ? `<strong style="color:#BE765F;">${c.paying_but_hidden} paying but still hidden.</strong> ${c.live || 0} live, ${c.total || 0} total.`
-      : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting licence &middot; ${c.awaiting_identity || 0} awaiting ID${c.rejected ? ` &middot; ${c.rejected} denied` : ''} &middot; ${c.total || 0} total.`;
+      : `${c.live || 0} live &middot; ${c.awaiting_license || 0} awaiting license &middot; ${c.awaiting_identity || 0} awaiting ID${c.rejected ? ` &middot; ${c.rejected} denied` : ''} &middot; ${c.total || 0} total.`;
 
     const res = await adminApi({ action: 'queue', filter: revFilter });
     let rows = (res && res.rows) || [];   // reassigned by the trial filter below
@@ -468,7 +468,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
         st === 'active'    ? '<span class="rev-chip chip-ok">paying</span>' : '';
 
       /* One line per state. A therapist licensed in TX and CA holds two
-         different licences, and verifying one must never vouch for the other. */
+         different licenses, and verifying one must never vouch for the other. */
       const licRows = lics.length ? lics.map(l => {
         const state = l.verified_at ? 'ok' : l.rejected_at ? 'denied' : 'pending';
         const label = l.verified_at ? '&#10003; verified' : l.rejected_at ? '&#10007; denied' : 'pending';
@@ -505,11 +505,11 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
        was.
 
        Confirms before acting: it flips a profile live to clients, and a
-       misclick here publishes someone whose licence has not actually been
+       misclick here publishes someone whose license has not actually been
        checked. */
     rowsEl.querySelectorAll('[data-verify]').forEach(b => b.addEventListener('click', async () => {
       const email = b.dataset.verify, state = b.dataset.state;
-      if (!confirm(`Verify the ${state} licence for ${email}?\n\nOnly do this once you have checked it against the ${state} board. This makes their profile visible to clients.`)) return;
+      if (!confirm(`Verify the ${state} license for ${email}?\n\nOnly do this once you have checked it against the ${state} board. This makes their profile visible to clients.`)) return;
       b.disabled = true; b.textContent = 'Verifying...';
       const out = await adminApi({ action: 'verify_license', email, state });
       if (out.error) {
@@ -523,7 +523,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     rowsEl.querySelectorAll('[data-deny]').forEach(b => b.addEventListener('click', async () => {
       /* A reason is required, and the therapist sees it -- they have paid, and
          "denied, no explanation" is the worst version of this. */
-      const reason = prompt(`Why is the ${b.dataset.state} licence being denied?\n\nThe therapist will see this, so write something they can act on.`);
+      const reason = prompt(`Why is the ${b.dataset.state} license being denied?\n\nThe therapist will see this, so write something they can act on.`);
       if (reason === null) return;
       if (!reason.trim()) { alert('A reason is required.'); return; }
       b.disabled = true; b.textContent = 'Denying...';

@@ -733,14 +733,14 @@ function profileGaps(t) {
 
 /* ===== WHAT IS THIS LISTING ACTUALLY DOING =====================================
    The Home banner and Settings each worked this out for themselves and reached
-   opposite answers on the same screen: the banner required licence AND identity
+   opposite answers on the same screen: the banner required license AND identity
    before saying "live", Settings said "Your profile is live" the moment billing
    started. A therapist could read "You're being billed but clients can't see
    you yet" and "Listed — $29.99/mo. Your profile is live." three inches apart.
 
    Two facts, deliberately separate, because they move independently:
      MONEY       none | trial | charging      (from Stripe's subscription_status)
-     VISIBILITY  listed && licence && identity
+     VISIBILITY  listed && license && identity
 
    `listed` means the subscription exists -- the webhook flips `published` for
    BOTH 'active' and 'trialing' -- so it has never meant "a client can see you",
@@ -846,19 +846,19 @@ function listingLead(t, opts) {
      alarming sentence on the page. Everyone activating now starts on the trial,
      so for most people it was alarming AND false.
 
-     Name the ACTUAL blocker. This used to say "until your licence and identity
+     Name the ACTUAL blocker. This used to say "until your license and identity
      are verified" whatever was wrong, so a therapist held back by an empty
      Specialties list was pointed at a queue they were not in. */
   const blocker = !s.complete
     ? `your profile is missing ${s.gaps.join(' and ')}`
-    : 'your licence and identity are verified';
+    : 'your license and identity are verified';
   const because = !s.complete
     ? `Clients can't see you while ${blocker}.`
     : `Clients can't see you until ${blocker}.`;
   /* The same fact said forwards, for the free-and-not-yet-live case. */
   const becausePositive = !s.complete
     ? `Clients can see you once your profile has ${s.gaps.join(' and ')}.`
-    : `Clients can see you once your licence and identity are verified.`;
+    : `Clients can see you once your license and identity are verified.`;
 
   /* "You're being billed" is only true of someone actually subscribed. With
      the paywall gone that is nobody at signup, so the alarming version now
@@ -1093,13 +1093,22 @@ const AVAILABILITY_OPTIONS = ['Anytime', 'Early mornings', 'Lunch', 'Evenings', 
 // Life-stage bands the therapist picks in their ideal client. The CLIENT never
 // sees these — they enter their exact age, and ageToBand() maps it to a band on
 // the matching side. min/max inclusive.
+/* Adulthood split three ways. "Adults 18–64" was one band covering a
+   26-year-old, a 45-year-old and a 60-year-old — three quite different
+   practices — so a therapist could not say who they actually work with, and
+   matching could not tell the difference either.
+   NOTE: bands are stored on ideal_client.ageBands BY LABEL, so a therapist
+   who had picked the old "Adults" keeps a label that no longer exists and
+   will need to re-pick. Harmless at current numbers; worth knowing. */
 const IDEAL_AGE_BANDS = [
-  { label: 'Toddlers',  sub: '0–4',   min: 0,  max: 4   },
-  { label: 'Children',  sub: '5–10',  min: 5,  max: 10  },
-  { label: 'Preteen',   sub: '11–13', min: 11, max: 13  },
-  { label: 'Teens',     sub: '14–17', min: 14, max: 17  },
-  { label: 'Adults',    sub: '18–64', min: 18, max: 64  },
-  { label: 'Seniors',   sub: '65+',   min: 65, max: 200 }
+  { label: 'Toddlers',     sub: '0–4',   min: 0,  max: 4   },
+  { label: 'Children',     sub: '5–10',  min: 5,  max: 10  },
+  { label: 'Preteen',      sub: '11–13', min: 11, max: 13  },
+  { label: 'Teens',        sub: '14–17', min: 14, max: 17  },
+  { label: 'Young Adults', sub: '18–29', min: 18, max: 29  },
+  { label: 'Adults',       sub: '30–49', min: 30, max: 49  },
+  { label: 'Older Adults', sub: '50–64', min: 50, max: 64  },
+  { label: 'Seniors',      sub: '65+',   min: 65, max: 200 }
 ];
 function ageToBand(age) {
   const n = parseInt(age, 10);
@@ -1110,7 +1119,10 @@ function ageToBand(age) {
 
 let CLIENT_GENDER_OPTIONS = ['Female', 'Male', 'Non-binary', 'Transgender', 'Prefer not to say'];
 // Ideal-client gender: no "prefer not to say" — you can't target the absence of an answer.
-const IDEAL_GENDER_OPTIONS = ['Female', 'Male', 'Non-binary', 'Transgender'];
+/* "No preference" is a real answer here and its absence forced a false one:
+   a therapist who works with anyone had to either tick every box or leave the
+   row blank, and blank is indistinguishable from "not filled in yet". */
+const IDEAL_GENDER_OPTIONS = ['No preference', 'Female', 'Male', 'Non-binary', 'Transgender'];
 
 // A therapist's OWN gender identity. Trans identities are named rather than
 // folded into "Female"/"Male": a therapist who is a trans woman and wants that
@@ -1701,7 +1713,7 @@ function therapistToDbRow(t, userId) {
     name: t.name, credentials: t.credentials || [], pronouns: t.pronouns || '', show_pronouns: !!t.showPronouns,
     // license_verified is deliberately NOT sent: it is admin-only, and the DB
     // trigger reverts it on any non-service-role write.
-    /* license_states is DERIVED from verified licences by a DB trigger, and
+    /* license_states is DERIVED from verified licenses by a DB trigger, and
        license_number is superseded by the per-state therapist_licenses table.
        Sending either is ignored at best and misleading at worst. */
     payment_options: t.paymentOptions || [],
@@ -1773,7 +1785,7 @@ let unavailableColumns = new Set();
 /* ---------------------------- analytics ----------------------------------
    The same aggregate tracker the marketing site uses, and the same rules:
    an event name and nothing else. No user id, no session id, no state, no
-   licence number — the events table has no column for a person and this must
+   license number — the events table has no column for a person and this must
    not become the thing that adds one.
 
    The app is where the therapist funnel actually happens (the site hands off
@@ -1858,7 +1870,7 @@ async function saveTherapistProfile(t) {
   }
   return true;
 }
-/* Licences live in their own table now: one row per (therapist, state), each
+/* Licenses live in their own table now: one row per (therapist, state), each
    with its own number and its own verification. therapists.license_states is
    derived from the VERIFIED ones by a DB trigger, so nothing here writes it. */
 async function loadLicenses() {
@@ -1889,7 +1901,7 @@ async function saveLicense(state, number, expiresOn) {
     license_number: String(number).trim()
   };
   /* merge-duplicates upserts on (user_id, state) -- which is what makes
-     "fix my license" work at all: a denied licence is corrected in place
+     "fix my license" work at all: a denied license is corrected in place
      rather than needing to be deleted and re-added. */
   const post = body => authRest('/therapist_licenses', {
     method: 'POST',
@@ -1903,7 +1915,7 @@ async function saveLicense(state, number, expiresOn) {
     res = await post({ ...base, expires_on: expiresOn });
     /* 0026 may not have been run yet. PostgREST answers an unknown column with
        PGRST204/42703 -- drop the field and save the rest rather than losing a
-       licence number over a date. */
+       license number over a date. */
     if (!res.ok) {
       const txt = await res.clone().text().catch(() => '');
       if (/PGRST204|42703|expires_on/i.test(txt)) {
@@ -1984,7 +1996,7 @@ function dbRowToTherapist(row) {
     subscriptionStatus: row.subscription_status || null,
     /* End of the six free months. Null until they first go live — the clock
        starts at findability, not signup, so nobody burns free time waiting on
-       a hand-checked licence. See migration 0029. */
+       a hand-checked license. See migration 0029. */
     freeUntil: row.free_until || null,
     /* Was: a hardcoded {founding:false, standardRate:29.99} for every row that
        came back published. Settings printed it verbatim, so a founding member
@@ -2806,12 +2818,12 @@ function renderStack() {
       /* This is the ONLY ending a client reaches today -- nobody is verified
          yet, so every completed intake lands here. It was written as an
          apology for an empty shelf. It now says what is actually happening,
-         because "we check every licence by hand" is the reason the shelf is
+         because "we check every license by hand" is the reason the shelf is
          empty and the reason it is worth waiting for. */
       cardStack.innerHTML = `<div class="empty-pool">
         <strong>We're building our therapist community right now.</strong><br><br>
         Every therapist on Kindred is licensed and identity-verified before
-        they can be matched — and we check each licence by hand, against the
+        they can be matched — and we check each license by hand, against the
         issuing state board. That takes time, and it's the whole point.<br><br>
         Join the waitlist and you'll be among the first to know when
         therapists arrive. Your answers stay on this device, ready for you.
@@ -3822,9 +3834,9 @@ function gettingStartedHtml(t) {
   const ic = t.idealClient || {};
   const hasIdeal = ['needs', 'ageBands', 'fields', 'genders', 'modalities', 'availability', 'mustHaves']
     .some(k => Array.isArray(ic[k]) && ic[k].length > 0);
-  const licences = t.licenses || [];
-  const hasLicence = licences.length > 0;
-  const deniedLicence = licences.find(l => l.rejectedAt);
+  const licenses = t.licenses || [];
+  const hasLicense = licenses.length > 0;
+  const deniedLicense = licenses.find(l => l.rejectedAt);
   /* ORDER IS THE PRODUCT DECISION, not a layout choice.
      Payment used to be step one: a card before a therapist had seen how
      Kindred represents them, on a marketplace with nobody in it yet. Building
@@ -3832,7 +3844,7 @@ function gettingStartedHtml(t) {
      how they work rather than by their credentials -- so it comes first and
      costs nothing.
 
-     Activation is the paywall, and licence checking sits AFTER it on purpose:
+     Activation is the paywall, and license checking sits AFTER it on purpose:
      hand-verifying a state board takes real time, and spending it on people
      who never activate is work with no return. */
   /* ONLY THE STEPS THAT GATE VISIBILITY BELONG IN THE COUNT.
@@ -3846,10 +3858,10 @@ function gettingStartedHtml(t) {
      ORDER IS THE PRODUCT DECISION, not layout. Payment used to be step one: a
      card before a therapist had seen how Kindred represents them, on a
      marketplace with nobody in it yet. Building the profile IS the pitch, so it
-     comes first and costs nothing. Licence checking sits AFTER payment on
+     comes first and costs nothing. License checking sits AFTER payment on
      purpose -- hand-verifying a state board takes real time, and spending it on
      people who never activate is work with no return. */
-  const licenceDone = hasLicence && !deniedLicence;
+  const licenseDone = hasLicense && !deniedLicense;
   const steps = [
     { key: 'profile',  done: hasProfile,          title: 'Build your profile', mine: true,
       /* Names the missing thing rather than restating the step. "Build your
@@ -3861,7 +3873,7 @@ function gettingStartedHtml(t) {
         : `Clients can't see you until this has ${gaps.join(' and ')}. Everything else is optional.`,
       action: hasProfile ? null : { label: 'Build my profile', id: 't-gs-profile' } },
     /* Second, deliberately: it shapes WHO arrives rather than whether anyone
-       can. Asking before the licence paperwork catches a therapist while they
+       can. Asking before the license paperwork catches a therapist while they
        are still thinking about their practice rather than their admin.
        Counted, but it does NOT gate visibility - listingState() is unchanged
        and the copy says so, because "required" would be the wrong reading. */
@@ -3878,14 +3890,14 @@ function gettingStartedHtml(t) {
        later, and lives in the banner and in Settings where a billing decision
        belongs. A list called "what's left before clients see you" should only
        ever contain things that are actually left. */
-    { key: 'licence',  done: licenceDone, title: 'Add your license(s)', mine: true,
-      body: deniedLicence
-        ? `${deniedLicence.state}: ${String(deniedLicence.rejectedReason || '').replace(/[<>&]/g, '')}`
-        : hasLicence
-          ? licences.map(l => l.state + ' ' + l.number).join(' &middot; ')
+    { key: 'license',  done: licenseDone, title: 'Add your license(s)', mine: true,
+      body: deniedLicense
+        ? `${deniedLicense.state}: ${String(deniedLicense.rejectedReason || '').replace(/[<>&]/g, '')}`
+        : hasLicense
+          ? licenses.map(l => l.state + ' ' + l.number).join(' &middot; ')
           : 'One per state &mdash; number and expiry date, checked against that board separately.',
-      action: licenceDone ? null
-            : { label: hasLicence ? 'Fix my license' : 'Add my license', id: 't-gs-licence' } },
+      action: licenseDone ? null
+            : { label: hasLicense ? 'Fix my license' : 'Add my license', id: 't-gs-license' } },
     { key: 'identity', done: !!t.identityVerified, title: 'Verify your identity', mine: true,
       body: 'A photo of your ID and a selfie, through Stripe. About a minute.',
       action: t.identityVerified ? null : { label: 'Verify my ID', id: 't-gs-id' } },
@@ -3906,7 +3918,7 @@ function gettingStartedHtml(t) {
      -- which is exactly how the same screen ended up claiming a profile was
      both invisible and live. One function decides now.
 
-     Note publishing is driven by billing, licence and identity -- NOT by this
+     Note publishing is driven by billing, license and identity -- NOT by this
      checklist. A therapist can be live with the ideal-client step outstanding,
      and telling them they are "getting set up" would be plainly false while
      clients are already seeing them. */
@@ -3947,7 +3959,7 @@ function gettingStartedHtml(t) {
 function wireGettingStarted() {
   const id = document.getElementById('t-gs-id');
   if (id) id.addEventListener('click', () => startIdentityVerification(id));
-  const lic = document.getElementById('t-gs-licence');
+  const lic = document.getElementById('t-gs-license');
   if (lic) lic.addEventListener('click', openLicenseNumberField);
   const prof = document.getElementById('t-gs-profile');
   if (prof) prof.addEventListener('click', () => { profileMode = 'edit'; showTScreen('t-profile'); });
@@ -3977,7 +3989,7 @@ function wireGettingStarted() {
 // Kept as the name the render sites already call.
 function verificationBannerHtml(t) { return gettingStartedHtml(t); }
 
-// The licence number sits inside a collapsed "Additional Details" section of
+// The license number sits inside a collapsed "Additional Details" section of
 // Edit Profile -- findable, but not discoverable. Jump straight to it.
 function openLicenseNumberField() {
   profileMode = 'edit';          /* the editor, not Ideal Client or View */
@@ -4864,7 +4876,40 @@ const MAX_GET_TO_KNOW_PROMPTS = 7;
 // mandatory answers, and optional prompts), interleaved with photos. After this
 // first pass, t.blocks is the single source of truth for the feed and editor.
 function getToKnowBlocks(t) {
-  if (Array.isArray(t.blocks)) return t.blocks;
+  if (Array.isArray(t.blocks)) {
+    /* SELF-HEAL. Prompt photos were dropped when the feed was built, so any
+       profile saved before that fix has a blocks array with no photo blocks
+       in it — and because a saved arrangement short-circuits this function,
+       the photos would stay invisible forever even after the bug was fixed.
+       The uploads are still in optionalPrompts, so put them back.
+
+       Only when there are NO photo blocks at all. A therapist who has three
+       photos and deletes one has a blocks array that still contains photos,
+       and this must not fight them by re-adding it. Zero photos alongside
+       prompts that carry photos is the signature of the bug, not a choice. */
+    const hasAnyPhotoBlock = t.blocks.some(b => b && b.type === 'photo');
+    const orphaned = (t.optionalPrompts || []).filter(p => p && p.photo);
+    if (!hasAnyPhotoBlock && orphaned.length) {
+      const healed = [];
+      t.blocks.forEach(b => {
+        healed.push(b);
+        if (b && b.type === 'prompt') {
+          const match = orphaned.find(p => p.question === b.question && p.photo);
+          if (match && !healed.some(x => x.type === 'photo' && x.src === match.photo)) {
+            healed.push({ type: 'photo', src: match.photo });
+          }
+        }
+      });
+      // any whose prompt is no longer in the feed still belong to them
+      orphaned.forEach(p => {
+        if (!healed.some(x => x.type === 'photo' && x.src === p.photo)) {
+          healed.push({ type: 'photo', src: p.photo });
+        }
+      });
+      t.blocks = healed;
+    }
+    return t.blocks;
+  }
   const prompts = [];
   if (t.persona && t.persona.inOffice)  prompts.push({ type: 'prompt', question: 'Who I am in the office...',  answer: t.persona.inOffice });
   if (t.persona && t.persona.outOfOffice) prompts.push({ type: 'prompt', question: 'Who I am out of the office...', answer: t.persona.outOfOffice });
@@ -5252,7 +5297,7 @@ function renderSignupStepBody() {
       <div class="must-have-toggle" style="margin-top:18px;">
         <div class="toggle-label">
           <strong>Send me occasional Kindred emails</strong>
-          <span>What's working for other therapists, new features, the odd bit of practice-building. Roughly monthly, unsubscribe any time. Nothing to do with your account, billing or licence &mdash; those always send.</span>
+          <span>What's working for other therapists, new features, the odd bit of practice-building. Roughly monthly, unsubscribe any time. Nothing to do with your account, billing or license &mdash; those always send.</span>
         </div>
         <div class="switch ${d.marketingOptIn ? 'on' : ''}" id="ts-marketing-switch"></div>
       </div>`;
@@ -5277,17 +5322,17 @@ function attachSignupHandlers() {
   const d = newTherapistDraft;
 
   /* One place decides whether step 0 can continue. Two copies drifted: the
-     licence field updated the value but never re-checked the button, so
-     filling in a licence last left Continue permanently disabled. */
+     license field updated the value but never re-checked the button, so
+     filling in a license last left Continue permanently disabled. */
   /* One place decides whether step 0 can continue: a name, and at least one
-     licence with a state attached. A number without a state cannot be checked
+     license with a state attached. A number without a state cannot be checked
      against anything. */
   const refreshStep0Next = () => {
     const b = document.getElementById('ts-next');
     const missing = step0Missing(d);
     if (b) b.disabled = missing.length > 0;
     /* A disabled button with no explanation is the same dead end as a broken
-       one -- it was greyed out for a missing licence with nothing on screen
+       one -- it was greyed out for a missing license with nothing on screen
        saying so. Name what is left. */
     const note = document.getElementById('ts-step0-missing');
     if (note) {
@@ -5504,7 +5549,7 @@ function attachSignupHandlers() {
 
 /* ---- partial signup saves -------------------------------------------------
    The therapist row was only written when the wizard FINISHED. Someone who
-   made an account, typed their name, added a licence and then closed the tab
+   made an account, typed their name, added a license and then closed the tab
    left nothing behind but an auth user -- their work was gone, and there was
    no way to tell "started and stalled" from "never began".
 
@@ -5700,7 +5745,7 @@ function finishTherapistSignup() {
 
   if (authSession) {
     saveTherapistProfile(newT)
-      // Licences go to their own table. The DB derives license_states from the
+      // Licenses go to their own table. The DB derives license_states from the
       // verified ones, so these must land before we read the row back.
       .then(() => Promise.all((d.licenses || []).map(l => saveLicense(l.state, l.number))))
       .then(loadTherapistRow)
@@ -6163,7 +6208,7 @@ function startedCardHtml(c, idx) {
 /* ===== EMPTY SCREENS ARE THE BEST PLACE TO SAY WHAT'S MISSING ================
    "Nothing here yet." is true and useless. It reads the same to a therapist
    who went live an hour ago as to one who has never paid, never added a
-   licence, and will never receive anything until they do. These screens are
+   license, and will never receive anything until they do. These screens are
    where a new therapist spends their first week, and they were the only ones
    saying nothing.
 
@@ -6184,18 +6229,18 @@ function nextStepToLive(t) {
     return { why: 'Kindred is no longer free for your account',
              label: 'Keep my profile active', id: 't-empty-activate' };
   }
-  const licences = t.licenses || [];
-  const denied = licences.find(l => l.rejectedAt);
-  if (!licences.length || denied) {
-    return { why: denied ? `your ${denied.state} licence needs correcting` : 'we don’t have a licence to check yet',
-             label: denied ? 'Fix my license' : 'Add my license', id: 't-empty-licence' };
+  const licenses = t.licenses || [];
+  const denied = licenses.find(l => l.rejectedAt);
+  if (!licenses.length || denied) {
+    return { why: denied ? `your ${denied.state} license needs correcting` : 'we don’t have a license to check yet',
+             label: denied ? 'Fix my license' : 'Add my license', id: 't-empty-license' };
   }
   if (!t.identityVerified) {
     return { why: 'your identity isn’t verified yet',
              label: 'Verify my ID', id: 't-empty-identity' };
   }
-  // everything done on their side; the licence check is ours to finish
-  return { why: 'we’re still checking your licence against your state board',
+  // everything done on their side; the license check is ours to finish
+  return { why: 'we’re still checking your license against your state board',
            label: null, id: null };
 }
 
@@ -6230,7 +6275,7 @@ function wireEmptyStateActions(t) {
   const go = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
   go('t-empty-profile',  () => { profileMode = 'edit'; showTScreen('t-profile'); });
   go('t-empty-activate', () => openActivateProfile());
-  go('t-empty-licence',  () => openLicenseNumberField());
+  go('t-empty-license',  () => openLicenseNumberField());
   go('t-empty-identity', () => startIdentityVerification(document.getElementById('t-empty-identity')));
   go('t-empty-ideal',    () => { profileMode = 'ideal'; showTScreen('t-profile'); });
 }
@@ -6432,16 +6477,16 @@ let dragBlockIndex = null; // which get-to-know block is being dragged
 // A drop-down whose options are checkboxes. Selected values also show as
 // removable chips above it. Re-renders on change, but the <details> open state
 // is persisted in editDropdownOpen so the panel stays put.
-/* One licence, and the state it is in.
+/* One license, and the state it is in.
 
-   A DENIED licence used to be a cul-de-sac. The row holds the (user_id, state)
+   A DENIED license used to be a cul-de-sac. The row holds the (user_id, state)
    primary key, and the "add a state" dropdown filters out states you already
    have -- so the one state you needed to correct was the one state you could
-   not pick. The only way through was to delete the licence first, which reads
+   not pick. The only way through was to delete the license first, which reads
    like throwing away the thing being asked about. Denied rows now carry their
    own number + expiry fields and save in place (the POST already upserts).
 
-   Expiry is shown because a licence verified in August is still flagged
+   Expiry is shown because a license verified in August is still flagged
    verified in December, and nobody finds out until a client does. */
 function licenseRowHtml(l) {
   const st    = l.verifiedAt ? 'ok' : l.rejectedAt ? 'denied' : 'pending';
@@ -6481,9 +6526,9 @@ function licenseRowHtml(l) {
 }
 
 /* Returns a message if the date is unusable, or '' if it is fine (including
-   blank -- expiry is optional until 0026 has run everywhere and every licence
+   blank -- expiry is optional until 0026 has run everywhere and every license
    has one). Rejecting an already-expired date at entry is the point: a lapsed
-   licence cannot be verified, and finding that out now beats finding it out
+   license cannot be verified, and finding that out now beats finding it out
    after a hand-check. */
 function licenseExpiryProblem(v) {
   if (!v) return '';
@@ -7098,7 +7143,7 @@ function attachTherapistProfileHandlers(t) {
     renderTherapistProfile();
   }));
   document.getElementById('t-lgbtq-switch').addEventListener('click', () => { t.identity.lgbtqAffirming = !t.identity.lgbtqAffirming; renderTherapistProfile(); });
-  /* Licences are rows in therapist_licenses now, each with its own state,
+  /* Licenses are rows in therapist_licenses now, each with its own state,
      number and verification. Adding or removing one writes straight through --
      the DB derives license_states from the VERIFIED ones, so a new state is
      never matchable until it has been checked. */
@@ -7120,7 +7165,7 @@ function attachTherapistProfileHandlers(t) {
     renderTherapistProfile();
   });
 
-  /* Saving a correction to a licence that already exists: same upsert, keyed on
+  /* Saving a correction to a license that already exists: same upsert, keyed on
      the state, so a denied row is fixed where it sits. */
   document.querySelectorAll('[data-lic-save]').forEach(btn => btn.addEventListener('click', async () => {
     const st  = btn.dataset.licSave;
@@ -7678,7 +7723,7 @@ function openNotifyMe() {
   sheet.innerHTML = `
     <div class="sheet-close"></div>
     <h2>Join the waitlist</h2>
-    <div class="intake-sub">We're verifying our founding therapists now — every licence checked by hand. Leave one way to reach you and you'll hear from us first, the moment they're live.</div>
+    <div class="intake-sub">We're verifying our founding therapists now — every license checked by hand. Leave one way to reach you and you'll hear from us first, the moment they're live.</div>
 
     <div class="t-form-label">Email</div>
     <input type="email" class="t-rate-input" id="notify-email" placeholder="you@example.com" value="${saved.email || ''}">
@@ -7773,7 +7818,7 @@ function renderTherapistSettings() {
     <div class="must-have-toggle">
       <div class="toggle-label">
         <strong>Kindred emails</strong>
-        <span>What's working for other therapists, new features, practice-building. Roughly monthly, and you can turn this off any time. Your account, billing and licence emails are separate and always send.</span>
+        <span>What's working for other therapists, new features, practice-building. Roughly monthly, and you can turn this off any time. Your account, billing and license emails are separate and always send.</span>
       </div>
       <div class="switch ${t.marketingOptIn ? 'on' : ''}" id="t-settings-marketing"></div>
     </div>
@@ -7790,7 +7835,7 @@ function renderTherapistSettings() {
     ${t.name
       /* Same sentence the Home banner shows, from the same function. This used
          to assert "Your profile is live" off `t.listed` alone and print a
-         hardcoded $29.99 beside it -- so a founding member awaiting licence
+         hardcoded $29.99 beside it -- so a founding member awaiting license
          verification was told, on one screen, both that clients couldn't see
          them and that their profile was live at a price they weren't paying.
          No rate is quoted now: nothing in the row records which tier they
