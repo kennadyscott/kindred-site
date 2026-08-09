@@ -2451,7 +2451,10 @@ function renderIntakeStep() {
   } else if (k === 'logistics') {
     html += `
       <h1>A few logistics</h1>
-      <div class="intake-sub">Last one about you &mdash; how you'll pay for sessions.</div>
+      <!-- No "last step" / "last one" framing. Twice now a line here has gone
+           stale because it hard-coded where it sat in a flow that keeps
+           changing length; the step's position is the progress bar's job. -->
+      <div class="intake-sub">How you'll pay for sessions.</div>
       <div class="match-tag-label" style="margin-top:0;">Do you have insurance?</div>
       <div class="option-list" id="has-insurance-list">
         <div class="option-row ${intake.hasInsurance === 'yes' ? 'selected' : ''}" data-has-insurance="yes">Yes</div>
@@ -8142,7 +8145,30 @@ function openTherapistDeleteSheet() {
     showToast("You're paused — no new inquiries until you turn it back on.");
     renderTherapistSettings();
   });
-  document.getElementById('t-delete-final').addEventListener('click', () => {
+  document.getElementById('t-delete-final').addEventListener('click', () => { close(); confirmTherapistDelete(); });
+}
+
+/* The second step the comment above always claimed existed but never had:
+   this sheet used to delete on its own first button, so one tap from Settings
+   -- sitting in the same list as ordinary toggles -- was the whole guard. The
+   client flow has had two steps all along; this now matches it.
+
+   The distinction that matters here is between hiding and going: a therapist
+   who wants to stop new inquiries wants "Appear in matching" off, not this.
+   Both earlier sheets offer that, and the wording keeps it in reach. */
+function confirmTherapistDelete() {
+  const sheet = document.getElementById('confirm-sheet');
+  sheet.innerHTML = `
+    <div class="sheet-close"></div>
+    <h2>This can't be undone</h2>
+    <div class="intake-sub">Your profile, your conversations and your match history are removed permanently. Clients won't be able to find you, and rebuilding means starting from an empty profile.</div>
+    <button class="primary-btn" style="background:var(--coral);color:white;" id="t-delete-cancel">Never mind, keep my account</button>
+    <button class="edit-prefs-btn" id="t-delete-confirm" style="color:#a8443a;">Yes, delete everything</button>
+  `;
+  document.getElementById('confirm-modal').classList.remove('hidden');
+  const close = () => document.getElementById('confirm-modal').classList.add('hidden');
+  document.getElementById('t-delete-cancel').addEventListener('click', close);
+  document.getElementById('t-delete-confirm').addEventListener('click', () => {
     close();
     showToast('Your account has been deleted.');
     logout();
