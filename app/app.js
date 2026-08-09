@@ -4558,7 +4558,7 @@ function finalizeCancellation(m, tier) {
 // A therapist must explicitly agree to the payment/cancellation terms before
 // they can turn On-Demand on for themselves — same policy the client agrees
 // to, but framed from the side that keeps the non-refunded portion.
-function openTherapistOnDemandAgreement(onAgree) {
+function openTherapistOnDemandAgreement(onAgree, onDecline) {
   /* Worked in THEIR number when they have set one. A policy that says "Kindred
      keeps 5% and the client covers Stripe" leaves the therapist to do arithmetic
      on the one screen where they are deciding whether the deal is worth taking
@@ -4619,6 +4619,7 @@ function openTherapistOnDemandAgreement(onAgree) {
   });
   document.getElementById('decline-td-ondemand-btn').addEventListener('click', () => {
     document.getElementById('confirm-modal').classList.add('hidden');
+    if (onDecline) onDecline();
   });
 }
 
@@ -5473,12 +5474,16 @@ function attachSignupHandlers() {
   if (mktSwitch) mktSwitch.addEventListener('click', () => { d.marketingOptIn = !d.marketingOptIn; renderSignupStep(); });
   const ondemandSwitch = document.getElementById('ts-ondemand-switch');
   if (ondemandSwitch) ondemandSwitch.addEventListener('click', () => {
-    if (!d.onDemand && !d.agreedToOnDemandPolicy) {
-      openTherapistOnDemandAgreement(() => { d.agreedToOnDemandPolicy = true; d.onDemand = true; renderSignupStep(); });
-    } else {
-      d.onDemand = !d.onDemand;
-      renderSignupStep();
-    }
+    /* Just the switch. The payment policy — refund tiers, the no-show
+       suspension, the fee — used to open here, in the middle of a signup
+       wizard, before the therapist had a rate, a slot or a profile to hang it
+       on. It is a real agreement and it deserves a moment where it is the
+       only thing on screen.
+       Turning this on records INTENT and deliberately leaves
+       agreedToOnDemandPolicy false, so the On Demand tab asks properly the
+       first time they open it. Nothing can be booked before that. */
+    d.onDemand = !d.onDemand;
+    renderSignupStep();
   });
   /* Slot handlers removed with the field — they bound to nothing. Slots are
      managed on the On Demand tab, which has the real editor. */
@@ -6047,7 +6052,23 @@ function renderTherapistHome() {
   const t = THERAPISTS.find(t => t.id === currentTherapistId);
   document.getElementById('t-home-title').innerHTML = `On Demand <button class="od-info-btn" id="od-info-btn" aria-label="What is On-Demand?">ⓘ</button>`;
   const list = document.getElementById('t-home-list');
-  if (!onDemandInfoShown) { onDemandInfoShown = true; openOnDemandInfo(); }
+  /* THE AGREEMENT LANDS HERE NOW, not in the signup wizard. Someone who
+     switched On-Demand on during signup arrives with onDemand true and
+     agreedToOnDemandPolicy false — intent recorded, terms not yet accepted.
+     This is the first screen where the policy makes sense: they can see the
+     rate, the slots and the earnings it is talking about.
+     Nothing can be booked in between, because this fires before they can add
+     a slot, and declining switches On-Demand back off rather than leaving
+     them listed under terms they refused. */
+  if (t.onDemand && !t.agreedToOnDemandPolicy && !t.onDemandBanned) {
+    openTherapistOnDemandAgreement(
+      () => { t.agreedToOnDemandPolicy = true; persistProfileSoon(t); renderTherapistHome(); },
+      () => { t.onDemand = false; persistProfileSoon(t); renderTherapistHome(); }
+    );
+  } else if (!onDemandInfoShown) {
+    onDemandInfoShown = true;
+    openOnDemandInfo();
+  }
 
   const odBooked = matches.filter(m => m.therapist.id === t.id && m.status === 'ondemand' && m.paymentStatus === 'paid');
   const p = ondemandPricing(t);
