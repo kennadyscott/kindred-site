@@ -3849,6 +3849,16 @@ function gettingStartedHtml(t) {
         ? 'Your therapy style, who you work best with, what sessions feel like.'
         : `Clients can't see you until this has ${gaps.join(' and ')}. Everything else is optional.`,
       action: hasProfile ? null : { label: 'Build my profile', id: 't-gs-profile' } },
+    /* Second, deliberately: it shapes WHO arrives rather than whether anyone
+       can. Asking before the licence paperwork catches a therapist while they
+       are still thinking about their practice rather than their admin.
+       Counted, but it does NOT gate visibility - listingState() is unchanged
+       and the copy says so, because "required" would be the wrong reading. */
+    { key: 'ideal',    done: hasIdeal,            title: 'Create your ideal client', mine: true,
+      body: hasIdeal
+        ? 'Sharpening this over time is the single best thing you can do for your matches.'
+        : 'Private &mdash; only you can see this. Tell us who you connect best with, and clients who match are flagged to you as <strong>&#10022; Ideal Match</strong>. It brings the right people your way without limiting who can find you.',
+      action: hasIdeal ? null : { label: 'Describe my ideal client', id: 't-gs-ideal' } },
     /* THE PAYMENT STEP IS GONE. Signing up costs nothing and the first six
        months are free, so there is nothing to select, nothing to activate and
        no card to take. It used to sit here as step two -- a paywall between a
@@ -3917,16 +3927,9 @@ function gettingStartedHtml(t) {
         ${allDone ? '<button class="gs-dismiss" id="t-gs-dismiss" aria-label="Dismiss">&#10005;</button>' : `<span class="gs-count">${doneCount} of ${steps.length}</span>`}
       </div>
       <ol class="gs-steps">${items}</ol>
-      ${hasIdeal ? '' : `
-      <!-- OUTSIDE the list and outside the count, on purpose. It does not gate
-           anything: a therapist is live without it. Inside the count it made
-           "3 of 6" unreadable, because four of the six were blockers and this
-           one was advice. -->
-      <div class="gs-optional">
-        <p class="gs-optional-title">Optional &mdash; sharpens who reaches you</p>
-        <p class="gs-optional-body">Describe your ideal client: ages, what they're working on, how they want to work. Private to you, and it makes your matches more accurate. This doesn't affect whether you go live.</p>
-        <button class="gs-action gs-action-quiet" id="t-gs-ideal">Describe my ideal client</button>
-      </div>`}
+      <!-- The "Optional - sharpens who reaches you" bar lived here. Removed:
+           the ideal client is a numbered step in the list now, second, so a
+           panel repeating it underneath said the same thing twice on one card. -->
     </div>`;
 }
 
