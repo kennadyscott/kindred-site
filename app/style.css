@@ -2840,3 +2840,22 @@ select.t-rate-input,
                      letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
 .name-confirm-name { font-family: 'Literata', Georgia, serif; font-size: 26px;
                      font-weight: 600; color: var(--ink); line-height: 1.25; word-break: break-word; }
+
+/* Coaching empty states. "Nothing here yet." said the same thing to someone
+   live for an hour and someone who will never receive anything until they
+   finish setup — these say which. */
+.empty-coach { margin: 8px 0; padding: 14px 16px; border-radius: 14px;
+               background: var(--cream-2); border: 1px solid var(--line); }
+.empty-coach.is-blocked { background: var(--rust-light, #FDF2EC);
+                          border: 1px dashed var(--clay, #BE765F); }
+.empty-coach-title { font-family: 'Poppins', sans-serif; font-weight: 700;
+                     font-size: 13.5px; color: #8a5a3c; margin: 0 0 5px; }
+.empty-coach-body  { font-size: 13.5px; line-height: 1.55; color: var(--ink); margin: 0; }
+.empty-coach-sub   { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); margin: 7px 0 0; }
+.empty-coach-btn   { margin-top: 11px; background: var(--aubergine); color: #fff;
+                     border: none; border-radius: 999px; padding: 9px 18px;
+                     font-family: 'Poppins', sans-serif; font-weight: 600;
+                     font-size: 13px; cursor: pointer; }
+.empty-coach-link  { background: none; border: none; padding: 0; cursor: pointer;
+                     font: inherit; color: var(--aubergine); font-weight: 600;
+                     text-decoration: underline; }

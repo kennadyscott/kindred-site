@@ -5813,6 +5813,11 @@ function renderTherapistHome() {
 
   let html = onDemandToggleHtml(t);
   html += `<div class="avail-section-title">⚡ On-demand this week</div>`;
+  /* Leads, before any of the setup below. Slot times and a session price are
+     wasted effort while nobody can see the profile they hang off -- and this
+     screen happily walked a therapist through all of it without mentioning
+     that. Only shown while something is actually blocking them. */
+  html += blockedBannerHtml(t);
   if (t.onDemandBanned) {
     html += `<p class="portal-note">On-demand access is suspended after a reported no-show. Ongoing matching is unaffected.</p>`;
   } else if (!t.onDemand) {
@@ -5846,6 +5851,7 @@ function renderTherapistHome() {
 
   list.innerHTML = html;
 
+  wireEmptyStateActions(t);
   bindOnDemandToggle(t);
   const odInfoBtn = document.getElementById('od-info-btn');
   if (odInfoBtn) odInfoBtn.addEventListener('click', openOnDemandInfo);
@@ -5892,10 +5898,83 @@ function startedCardHtml(c, idx) {
     <button class="text-btn convo-archive-btn" data-${archived ? 'unarchive' : 'archive'}-started="${idx}">${archived ? '↩ Move back to active' : '🗄 Archive'}</button>
   </div>`;
 }
-function inquirySectionHtml(key, title, count, body) {
+/* ===== EMPTY SCREENS ARE THE BEST PLACE TO SAY WHAT'S MISSING ================
+   "Nothing here yet." is true and useless. It reads the same to a therapist
+   who went live an hour ago as to one who has never paid, never added a
+   licence, and will never receive anything until they do. These screens are
+   where a new therapist spends their first week, and they were the only ones
+   saying nothing.
+
+   The single next action on the way to being findable. Same order as the
+   checklist, and returns null once they are live -- at which point an empty
+   screen genuinely is just empty, and pretending otherwise would be nagging. */
+function nextStepToLive(t) {
+  const s = listingState(t);
+  if (s.visible) return null;
+  const gaps = s.gaps;
+  if (gaps.length) {
+    return { why: `your profile still needs ${gaps.join(' and ')}`,
+             label: 'Finish my profile', id: 't-empty-profile' };
+  }
+  if (!t.listed) {
+    return { why: 'your profile isn’t listed yet',
+             label: 'See the plan', id: 't-empty-activate' };
+  }
+  const licences = t.licenses || [];
+  const denied = licences.find(l => l.rejectedAt);
+  if (!licences.length || denied) {
+    return { why: denied ? `your ${denied.state} licence needs correcting` : 'we don’t have a licence to check yet',
+             label: denied ? 'Fix my license' : 'Add my license', id: 't-empty-licence' };
+  }
+  if (!t.identityVerified) {
+    return { why: 'your identity isn’t verified yet',
+             label: 'Verify my ID', id: 't-empty-identity' };
+  }
+  // everything done on their side; the licence check is ours to finish
+  return { why: 'we’re still checking your licence against your state board',
+           label: null, id: null };
+}
+
+/* The blocker, once per SCREEN. It is a fact about the account, not about a
+   section, so repeating it inside each collapsible said the same sentence
+   three times on one page -- the same duplication that had to be removed from
+   Settings. Returns '' when nothing is blocking. */
+function blockedBannerHtml(t) {
+  const next = nextStepToLive(t);
+  if (!next) return '';
+  return `<div class="empty-coach is-blocked">
+    <p class="empty-coach-title">Clients can’t find you yet</p>
+    <p class="empty-coach-body">Nothing will arrive here while ${next.why}.</p>
+    ${next.label ? `<button class="empty-coach-btn" id="${next.id}">${next.label}</button>`
+                 : `<p class="empty-coach-sub">Nothing for you to do &mdash; we’ll email you the moment it clears.</p>`}
+  </div>`;
+}
+
+/* What a given section would hold. Always the section's own description --
+   the banner above already says why it is empty today. */
+function therapistEmptyState(t, what, opts) {
+  const extra = (opts && opts.whenLive) || '';
+  const live = !nextStepToLive(t);
+  return `<div class="empty-coach">
+    <p class="empty-coach-body">${what}</p>
+    ${(extra && live) ? `<p class="empty-coach-sub">${extra}</p>` : ''}
+  </div>`;
+}
+
+/* Buttons inside an empty state, wired wherever one is rendered. */
+function wireEmptyStateActions(t) {
+  const go = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+  go('t-empty-profile',  () => { profileMode = 'edit'; showTScreen('t-profile'); });
+  go('t-empty-activate', () => openActivateProfile());
+  go('t-empty-licence',  () => openLicenseNumberField());
+  go('t-empty-identity', () => startIdentityVerification(document.getElementById('t-empty-identity')));
+  go('t-empty-ideal',    () => { profileMode = 'ideal'; showTScreen('t-profile'); });
+}
+
+function inquirySectionHtml(key, title, count, body, emptyHtml) {
   return `<details class="edit-section inquiry-section" data-inquiry-section="${key}" ${inquiriesOpen[key] ? 'open' : ''}>
     <summary><span class="edit-section-title">${title}</span><span class="edit-section-hint">${count}</span><span class="edit-caret">▾</span></summary>
-    <div class="edit-section-body">${body || `<p class="empty-state" style="margin:8px 0;">Nothing here yet.</p>`}</div>
+    <div class="edit-section-body">${body || emptyHtml || `<p class="empty-state" style="margin:8px 0;">Nothing here yet.</p>`}</div>
   </details>`;
 }
 
@@ -5973,12 +6052,31 @@ function renderRequests() {
   const archivedCount = archivedConvos.length + archivedStarted.length;
 
   let html = '';
+  html += blockedBannerHtml(t);          // once, above all three sections
   if (pendingCount) html += `<div class="hello-banner">✨ ${pendingCount === 1 ? 'A tiny hello has arrived!' : `${pendingCount} tiny hellos have arrived!`}</div>`;
-  html += inquirySectionHtml('active', 'Active conversations', activeCount ? `${activeCount}` : '0', activeBody);
-  html += inquirySectionHtml('waitlist', 'Waitlist', t.waitlist.length ? `${t.waitlist.length} waiting` : '0', waitlistBody);
-  html += inquirySectionHtml('archived', 'Archived', archivedCount ? `${archivedCount}` : '0', archivedBody);
+  /* Each section says what IT would hold, not a shared shrug. Archived is
+     deliberately plain: nothing about an empty archive needs coaching, and a
+     call to action there would be noise. */
+  const idealSet = ['needs','ageBands','fields','genders','modalities','availability','mustHaves']
+    .some(k => Array.isArray((t.idealClient || {})[k]) && t.idealClient[k].length);
+  const emptyActive = therapistEmptyState(t,
+    'When a client whose needs line up with how you work reaches out, their message lands here.',
+    { whenLive: idealSet
+        ? 'You’ll get an email as soon as one arrives.'
+        : 'Describing your ideal client is the single best thing you can do for who reaches you — <button class="empty-coach-link" id="t-empty-ideal">set it up</button>.' });
+  const emptyWaitlist = therapistEmptyState(t,
+    'Clients who wanted you before you had space wait here. You can start a conversation with any of them whenever you reopen.',
+    { whenLive: 'They’re told you’ll be in touch if a space opens — nothing is promised on your behalf.' });
+  const emptyArchived = `<div class="empty-coach">
+      <p class="empty-coach-body">Conversations you archive move here. Nothing is deleted, and you can move any of them back.</p>
+    </div>`;
+
+  html += inquirySectionHtml('active', 'Active conversations', activeCount ? `${activeCount}` : '0', activeBody, emptyActive);
+  html += inquirySectionHtml('waitlist', 'Waitlist', t.waitlist.length ? `${t.waitlist.length} waiting` : '0', waitlistBody, emptyWaitlist);
+  html += inquirySectionHtml('archived', 'Archived', archivedCount ? `${archivedCount}` : '0', archivedBody, emptyArchived);
 
   list.innerHTML = html;
+  wireEmptyStateActions(t);
 
   // remember which sections are open across re-renders
   list.querySelectorAll('details[data-inquiry-section]').forEach(el => el.addEventListener('toggle', () => { inquiriesOpen[el.dataset.inquirySection] = el.open; }));
