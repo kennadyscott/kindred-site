@@ -2169,13 +2169,21 @@ const INTAKE_STEPS = [
   // Let's get to know you
   'careFor', 'knows', 'needs', 'experience', 'aboutYou', 'logistics',
   // What you're looking for in a therapist
-  'who', 'approach', 'guidance', 'anythingElse'
+  'therapistIntro', 'who', 'approach', 'guidance', 'anythingElse'
 ];
 const INTAKE_SECTION = {
   careFor: 'about', knows: 'about', needs: 'about',
   experience: 'about', aboutYou: 'about', logistics: 'about',
+  therapistIntro: 'therapist',
   who: 'therapist', approach: 'therapist', guidance: 'therapist', anythingElse: 'therapist'
 };
+/* Screens that only announce a section change -- no question, just a breath
+   between two halves of the intake. Two consequences, both handled where the
+   eyebrow renders: they suppress the section label (their headline already
+   says it, so printing both stacks the same sentence twice), and they do not
+   count as the section's first step for the `is-new` emphasis, which stays on
+   the first screen that actually asks something. */
+const INTAKE_INTRO_STEPS = new Set(['therapistIntro']);
 const INTAKE_SECTION_LABEL = {
   about: "Let's get to know you",
   therapist: 'What you want in a therapist'
@@ -2202,7 +2210,7 @@ function renderIntakeStep() {
   const k = steps[intakeStep];
   const section = INTAKE_SECTION[k] || 'about';
   // First step of the second half: say plainly that the subject has changed.
-  const firstOfSection = steps.findIndex(x => INTAKE_SECTION[x] === section) === intakeStep;
+  const firstOfSection = steps.findIndex(x => INTAKE_SECTION[x] === section && !INTAKE_INTRO_STEPS.has(x)) === intakeStep;
   /* The "not sure" quiz now closes on "Let's get to know you a little better",
      which IS the section label -- rendering both stacks near-identical
      sentences. The eyebrow exists to tell you which half of the intake you are
@@ -2210,7 +2218,7 @@ function renderIntakeStep() {
   const unsureGroups = new Set(UNSURE_OPTIONS.map(o => o.group)).size;
   const isQuizClose = k === 'needs' && intake.knowsNeeds === 'no'
     && Math.min(intake.quizStage || 0, unsureGroups) >= unsureGroups;
-  const eyebrow = isQuizClose
+  const eyebrow = (isQuizClose || INTAKE_INTRO_STEPS.has(k))
     ? ''
     : '<p class="intake-section ' + (firstOfSection ? 'is-new' : '') + '">' + INTAKE_SECTION_LABEL[section] + '</p>';
   let html = `<div class="intake-progress">${steps.map((x, i) =>
@@ -2277,6 +2285,14 @@ function renderIntakeStep() {
         <h1>Let's get to know you a little better</h1>
         <div class="intake-sub">That's the hardest part done. We'll use what you shared to find therapists who work with what you're carrying &mdash; a few more questions and we're there.</div>`;
     }
+  } else if (k === 'therapistIntro') {
+    /* A breath between the two halves. Everything before this was about the
+       client; everything after is about who they want sitting across from
+       them. Without a marker the subject changes mid-scroll and the intake
+       feels like it wanders. No eyebrow here -- see INTAKE_INTRO_STEPS. */
+    html += `
+      <h1>Next, let's hone in on what you want in your therapist</h1>
+      <div class="intake-sub">You've told us about you. Now the other half &mdash; who you'd actually feel comfortable talking to.</div>`;
   } else if (k === 'needs') {
     const extraSelected = intake.needs.filter(n => !NEED_OPTIONS.includes(n));
     html += `
@@ -2435,7 +2451,7 @@ function renderIntakeStep() {
   } else if (k === 'logistics') {
     html += `
       <h1>A few logistics</h1>
-      <div class="intake-sub">Last step — how you'll pay for sessions.</div>
+      <div class="intake-sub">Last one about you &mdash; how you'll pay for sessions.</div>
       <div class="match-tag-label" style="margin-top:0;">Do you have insurance?</div>
       <div class="option-list" id="has-insurance-list">
         <div class="option-row ${intake.hasInsurance === 'yes' ? 'selected' : ''}" data-has-insurance="yes">Yes</div>
