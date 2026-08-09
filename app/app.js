@@ -603,6 +603,72 @@ function listingPricing() {
   };
 }
 
+/* ===== NAMES ==================================================================
+   A therapist's name is the single most personal thing on the card, and
+   "Kennady SCott" shipped to the public profile because nothing ever looked at
+   it. But a name checker is one of the easiest things in software to get
+   wrong, and getting it wrong on a therapy product means telling someone their
+   own name is a mistake.
+
+   SO: SUGGEST, NEVER SILENTLY CORRECT. Every one of these is a real name --
+     McDonald  MacLeod  DeShawn  JoAnn  O'Brien  d'Angelo  van der Berg
+     IJsselstein (the Dutch IJ digraph is genuinely two capitals)
+     bell hooks (deliberately lowercase)
+   Title-casing that list would mangle most of it. Nothing here rewrites a name
+   on its own; it offers, and "keep it as I typed it" is always one tap away.
+
+   The one pattern worth flagging is a shift-key slip: two or more capitals at
+   the START of a word followed by lowercase -- SCott, KEnnady, THomas. That is
+   distinct from McDonald (cap, lower, cap) and from initials like "JW Smith"
+   (all caps, no lowercase tail). It still catches IJsselstein, which is why
+   the escape hatch exists rather than being an edge case nobody thought about.
+
+   Whitespace IS normalised silently -- collapsing a double space and trimming
+   the ends cannot mangle anybody's name, and a trailing space is never
+   deliberate. */
+function tidyNameWhitespace(s) {
+  return String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+}
+
+/* "Keep what I typed", remembered against the exact spelling. Deliberately NOT
+   a column: this is a UI acknowledgement, and profileGaps() has to keep
+   mirroring the SQL publish gate exactly -- adding a browser-only condition to
+   it would let localStorage and the database disagree about whether someone is
+   live, which is the bug this whole stretch of work has been about. Worst case
+   on a new device is being asked once more and tapping keep. */
+const NAME_OK_KEY = 'kindred-name-accepted';
+function nameAccepted(name) {
+  try { return localStorage.getItem(NAME_OK_KEY) === tidyNameWhitespace(name); } catch (e) { return false; }
+}
+function rememberNameAccepted(name) {
+  try { localStorage.setItem(NAME_OK_KEY, tidyNameWhitespace(name)); } catch (e) {}
+}
+
+function nameIssue(raw) {
+  const name = tidyNameWhitespace(raw);
+  if (!name) return null;
+  if (nameAccepted(name)) return null;      // they have already said it is right
+
+  // shift held a beat too long: SCott, KEnnady
+  const slip = name.split(' ').find(w => /^[A-Z]{2,}[a-z]/.test(w));
+  if (slip) {
+    const fixed = name.split(' ')
+      .map(w => /^[A-Z]{2,}[a-z]/.test(w) ? w[0] + w.slice(1).toLowerCase() : w)
+      .join(' ');
+    return { suggestion: fixed, why: `“${slip}” looks like the shift key stayed down.` };
+  }
+
+  // whole name shouting -- common paste artefact, but AGNES or initials could
+  // be deliberate, so it is still only ever a suggestion
+  if (/[A-Z]/.test(name) && name === name.toUpperCase() && name.replace(/[^A-Za-z]/g, '').length > 3) {
+    const fixed = name.split(' ')
+      .map(w => w.length > 1 ? w[0] + w.slice(1).toLowerCase() : w)
+      .join(' ');
+    if (fixed !== name) return { suggestion: fixed, why: 'This is in all capitals.' };
+  }
+  return null;
+}
+
 /* ===== WHAT A PROFILE NEEDS BEFORE A CLIENT SHOULD SEE IT ====================
    The bar was `name is not null` -- client-side and in the database. So a
    therapist could pay, verify, go live, and be shown to clients as a name, a
@@ -5425,9 +5491,60 @@ function finishTherapistSignup() {
 
 // The "pay to list" gate. Therapists can build everything, but the profile only
 // enters the match pool once they start a listing subscription.
+/* One question, at the only moment it matters: the name is about to stop being
+   a draft. Shows the name at card size, because "Kennady SCott" is easy to
+   scroll past in a text input and hard to miss as a headline. */
+function confirmNameThenActivate(t, issue) {
+  const esc = v => String(v).replace(/[<>&"]/g, '');
+  const sheet = document.getElementById('confirm-sheet');
+  sheet.innerHTML = `
+    <div class="sheet-close"></div>
+    <h2>Is your name right?</h2>
+    <div class="intake-sub">This is how it will appear to every client who sees you. ${esc(issue.why)}</div>
+    <div class="name-confirm-card">
+      <div class="name-confirm-as">As typed</div>
+      <div class="name-confirm-name">${esc(t.name)}</div>
+    </div>
+    <button class="primary-btn" style="margin-top:14px;background:var(--coral);color:white;" id="name-confirm-fix">Use “${esc(issue.suggestion)}” instead</button>
+    <button class="primary-btn" style="background:white;border:1.5px solid var(--coral);color:var(--coral-dark);" id="name-confirm-keep">That's correct &mdash; continue</button>
+    <button class="text-btn" id="name-confirm-edit" style="color:var(--ink-soft);">Let me edit it myself</button>
+  `;
+  document.getElementById('confirm-modal').classList.remove('hidden');
+  const close = () => document.getElementById('confirm-modal').classList.add('hidden');
+  const sc = sheet.querySelector('.sheet-close'); if (sc) sc.addEventListener('click', close);
+
+  document.getElementById('name-confirm-fix').addEventListener('click', () => {
+    t.name = issue.suggestion;
+    rememberNameAccepted(t.name);
+    persistProfileSoon(t);
+    close(); openActivateProfile();            // straight on to the offer
+  });
+  document.getElementById('name-confirm-keep').addEventListener('click', () => {
+    rememberNameAccepted(t.name);              // asked and answered; never again for this spelling
+    close(); openActivateProfile();
+  });
+  document.getElementById('name-confirm-edit').addEventListener('click', () => {
+    close();
+    profileMode = 'edit';
+    editSectionsOpen.first = true;
+    showTScreen('t-profile');
+    setTimeout(() => {
+      const el = document.getElementById('t-name-input');
+      if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); el.select(); }
+    }, 120);
+  });
+}
+
 function openActivateProfile() {
   const t = THERAPISTS.find(t => t.id === currentTherapistId);
   if (!t || t.listed) return;
+  /* Last look at the name before it becomes public. Activating is the moment
+     it stops being a draft and starts being how strangers read them, so a
+     spelling nobody has confirmed gets one question here rather than living on
+     the card until someone notices. Only fires when nameIssue() has something
+     to say, so a normal name never sees this screen. */
+  const issue = nameIssue(t.name);
+  if (issue) { confirmNameThenActivate(t, issue); return; }
   const p = listingPricing();
   const sheet = document.getElementById('confirm-sheet');
   sheet.innerHTML = `
@@ -6166,6 +6283,19 @@ function renderTherapistProfileBody() {
 
         <div class="t-form-label">Name</div>
         <input type="text" class="t-rate-input" id="t-name-input" placeholder="Your name as clients see it" value="${t.name || ''}">
+        <!-- Offered, never applied on its own. See nameIssue(). -->
+        ${(() => {
+          const issue = nameIssue(t.name);
+          if (!issue) return '';
+          const esc = v => String(v).replace(/[<>&"]/g, '');
+          return `<div class="name-check">
+            <p class="name-check-lead">${esc(issue.why)} Clients will see it exactly as written.</p>
+            <div class="name-check-actions">
+              <button type="button" class="name-check-fix" data-name-fix="${esc(issue.suggestion)}">Use “${esc(issue.suggestion)}”</button>
+              <button type="button" class="name-check-keep" id="t-name-keep">Keep what I typed</button>
+            </div>
+          </div>`;
+        })()}
         <div class="must-have-toggle">
           <div class="toggle-label"><strong>List under a practice or company name</strong><span>Shows instead of your personal name to clients</span></div>
           <div class="switch ${t.useCompanyName ? 'on' : ''}" id="t-use-company-switch"></div>
@@ -6375,7 +6505,29 @@ function attachTherapistProfileHandlers(t) {
     });
   });
   const tNameInput = document.getElementById('t-name-input');
-  if (tNameInput) tNameInput.addEventListener('input', () => { t.name = tNameInput.value; });
+  if (tNameInput) {
+    /* Typing must not re-render -- that would steal the caret mid-word -- so
+       the suggestion appears on blur, once they have stopped. */
+    tNameInput.addEventListener('input', () => { t.name = tNameInput.value; });
+    tNameInput.addEventListener('blur', () => {
+      const tidy = tidyNameWhitespace(tNameInput.value);
+      const changed = tidy !== t.name;
+      t.name = tidy;                       // whitespace only: safe to just do
+      if (changed || nameIssue(tidy)) renderTherapistProfile();
+    });
+  }
+  document.querySelectorAll('[data-name-fix]').forEach(btn => btn.addEventListener('click', () => {
+    t.name = btn.dataset.nameFix;
+    showToast('Name updated to “' + t.name + '”');
+    renderTherapistProfile();
+  }));
+  const nameKeep = document.getElementById('t-name-keep');
+  if (nameKeep) nameKeep.addEventListener('click', () => {
+    /* Their name, their call. Remembered against this exact spelling, so
+       changing it later asks again and keeping it never asks twice. */
+    rememberNameAccepted(t.name);
+    renderTherapistProfile();
+  });
   const tWebsiteInput = document.getElementById('t-website-input');
   if (tWebsiteInput) tWebsiteInput.addEventListener('input', () => { t.website = tWebsiteInput.value.trim().replace(/^https?:\/\//, ''); });
   const tSlidingSwitch = document.getElementById('t-sliding-switch');

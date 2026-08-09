@@ -2819,3 +2819,24 @@ select.t-rate-input,
 .req-pill { font-size: 10px; font-weight: 700; text-transform: uppercase;
             letter-spacing: .05em; color: #8a5a3c; background: #F7E2D5;
             border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 1px; }
+
+/* Name check — a suggestion, never an edit. See nameIssue() in app.js for why
+   nothing here rewrites a name on its own. */
+.name-check { margin: -2px 0 10px; padding: 10px 12px; border-radius: 12px;
+              background: var(--rust-light, #FDF2EC); border: 1px dashed var(--clay, #BE765F); }
+.name-check-lead { font-size: 12.5px; color: #8a5a3c; line-height: 1.5; margin: 0 0 8px; }
+.name-check-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.name-check-fix, .name-check-keep {
+  border-radius: 999px; padding: 7px 14px; font-family: 'Poppins', sans-serif;
+  font-weight: 600; font-size: 12.5px; cursor: pointer; border: 1.5px solid var(--aubergine);
+}
+.name-check-fix  { background: var(--aubergine); color: #fff; }
+.name-check-keep { background: transparent; color: var(--aubergine); }
+
+/* The same question at card size, on the way to going live. */
+.name-confirm-card { margin-top: 14px; padding: 18px 16px; border-radius: 16px;
+                     background: var(--cream-2); border: 1px solid var(--line); text-align: center; }
+.name-confirm-as   { font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+                     letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
+.name-confirm-name { font-family: 'Literata', Georgia, serif; font-size: 26px;
+                     font-weight: 600; color: var(--ink); line-height: 1.25; word-break: break-word; }
