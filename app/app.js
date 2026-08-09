@@ -8168,11 +8168,52 @@ function confirmTherapistDelete() {
   document.getElementById('confirm-modal').classList.remove('hidden');
   const close = () => document.getElementById('confirm-modal').classList.add('hidden');
   document.getElementById('t-delete-cancel').addEventListener('click', close);
-  document.getElementById('t-delete-confirm').addEventListener('click', () => {
+  const finalBtn = document.getElementById('t-delete-confirm');
+  finalBtn.addEventListener('click', async () => {
+    finalBtn.disabled = true;
+    finalBtn.textContent = 'Deleting…';
+    const ok = await deleteTherapistAccountOnServer();
+    if (!ok) {
+      /* Say so and stay put. Logging them out here would look exactly like
+         success while the account carried on existing -- which is the bug
+         this whole change is fixing, just moved one step later. */
+      finalBtn.disabled = false;
+      finalBtn.textContent = 'Yes, delete everything';
+      showToast("Couldn't delete your account just now. Nothing was changed — please try again.");
+      return;
+    }
     close();
     showToast('Your account has been deleted.');
     logout();
   });
+}
+
+/* Deletes the therapists row server-side. Returns true only if a row actually
+   went away, so the UI never claims a deletion that did not happen.
+
+   authRest, NOT dbRpc: dbRpc sends the anon key as the bearer token, so
+   auth.uid() inside the function would be null and it would raise 28000. The
+   whole guard is "you can only delete yourself", and that identity rides on
+   the therapist's own access token. */
+async function deleteTherapistAccountOnServer() {
+  if (!authReady() || !loadAuthSession()) {
+    // Demo/offline therapist -- no server row to remove. Local sign-out only.
+    return true;
+  }
+  try {
+    const res = await authRest('/rpc/delete_my_therapist_account', { method: 'POST', body: '{}' });
+    if (!res.ok) return false;
+    const deleted = Number(await res.json());
+    if (!Number.isFinite(deleted) || deleted < 1) return false;
+    /* The unsaved-profile stash is a local copy of everything they just asked
+       us to destroy. Left behind, the next login on this device offers to
+       restore the deleted profile -- "picking up the profile you already
+       wrote" -- which would resurrect it from the dead. */
+    try { localStorage.removeItem('kindred-profile-unsaved'); } catch (e) {}
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // ===== THERAPIST SEARCH =====
