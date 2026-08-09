@@ -2248,6 +2248,15 @@ select.t-rate-input,
    reads as a stop. is-note = we are only checking they meant it, so it must
    NOT look like an error -- a therapist who swears deliberately should not
    feel told off by their own dashboard. */
+/* Deliberately quiet. A report link that competes with "Message" would get
+   mis-tapped, and it should read as available rather than encouraged. */
+.report-profile-link {
+  display: block; margin: 18px auto 4px; background: none; border: none;
+  font: inherit; font-size: 12px; color: var(--ink-soft); cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px; opacity: .75;
+}
+.report-profile-link:hover { opacity: 1; }
+
 .content-warn { border-radius:16px; padding:14px 16px; margin-bottom:14px; }
 .content-warn.is-block { background:#fdf1ef; border:1.5px solid #f0cabf; }
 .content-warn.is-note  { background:#fffaf0; border:1.5px solid #e8d9b5; }

@@ -7,146 +7,78 @@
 
    >>> THE ONLY THING YOU NEED TO EDIT IS THE `PAYMENT_LINKS` BLOCK BELOW. <<<
 
-   >>> SIGNING UP IS FREE. The first SIX MONTHS are free, with no card taken.
-       Nothing on this page is part of therapist onboarding any more.
+   >>> KINDRED IS FREE FOR EVERY THERAPIST UNTIL 1 MARCH 2027. One date, the
+       same for everyone, whenever they joined. No card is taken at signup and
+       nothing on this page is part of therapist onboarding.
 
-   What this file is now: the RENEWAL checkout, reached at the end of those six
-   months (?checkout=now&email=…, sent by the app's Keep-it-active modal), plus
+   What this file is now: the RENEWAL checkout, reached at the end of the free
+   period (?checkout=now&email=…, sent by the app's Keep-it-active modal), plus
    an offer page for cold outreach whose only button goes to /app/#therapist-signup.
 
-   THE LADDER BELOW IS EFFECTIVELY DEAD and kept only so existing subscriptions
-   are described correctly. Nobody pays at signup, and the last tier closed on
-   Dec 1 2026 — six months after the paywall was removed is February 2027 at
-   the earliest, by which time listingPricing() returns the standard rate. What
-   the renewal actually costs is an open product decision; when it is made, it
-   is decided HERE and read from here, not restated per page.
-       (historical) by Sep 1 → $9.99/mo   by Nov 1 → $16.99/mo
-                    by Oct 1 → $14.99/mo  by Dec 1 → $19.99/mo   after → $29.99/mo
+   THE FOUNDING LADDER IS GONE (2026-08-09). It was $9.99–$19.99/month locked
+   for twelve months, on a tier that stepped up by signup date. It could not
+   apply to anyone any more — its last tier closed 1 Dec 2026 and the first
+   renewal is March 2027 — and every surface that still described it was
+   quoting a rate no checkout would honour. One price now: $29.99/month, the
+   same $29.99 already behind the Stripe links.
 
-   HOW TO BUILD THIS IN STRIPE (~15 minutes):
+   Nothing here reaches into Stripe. If STANDARD_RATE moves, a new Stripe price
+   and new payment links have to move with it.
+
+   HOW TO BUILD THIS IN STRIPE (~10 minutes):
      1. Products → Add product → "Kindred Listing".
-        Add a RECURRING price: $29.99 USD / month. (Everyone lands here; the
-        founding discounts ride on top of it, which is what makes the step-up
-        to $29.99 automatic.)
-     2. Product catalog → Coupons → New coupon. Make FOUR, each with
-        Duration = "Multiple months" = 12, and a "Redeem by" date:
-             $20.00 off → $9.99/mo   · redeem by Sep 1
-             $15.00 off → $14.99/mo  · redeem by Oct 1
-             $13.00 off → $16.99/mo  · redeem by Nov 1
-             $10.00 off → $19.99/mo  · redeem by Dec 1
-        The Redeem-by dates are what actually enforce the ladder, since the
-        promo-code box is visible at checkout.
+        Add a RECURRING price: $29.99 USD / month.
+     2. Payment links → New → that price → Create link → paste as PAYMENT_LINK.
+     3. Payment links → New → the SAME price → under Subscription options set a
+        free trial of 30 days → leave "collect payment method" ON, or nothing
+        charges at day 31 → paste as PAYMENT_LINK_TRIAL.
+     4. Both links need the same After-payment redirect to welcome.html; that
+        is a per-link setting in the dashboard.
 
-        TWELVE, AND WHAT THAT COSTS. Stripe starts the coupon clock when
-        the subscription is CREATED, not at the first payment -- on the trial
-        link that is day 0 of the free month, so a 12-month coupon covers 12
-        calendar months but only ELEVEN paid invoices. 13-month coupons were
-        considered and rejected (2026-08-08): not worth rebuilding four
-        coupons and four promotion codes for one billed month.
-        Consequence to preserve: "locked for 12 months" is true in calendar
-        terms, but any SAVING quoted anywhere must count eleven billed months
-        plus the free one at standard price. Both surfaces derive it rather
-        than hardcode it -- see kt-offer-save below and the activate modal in
-        app/app.js. Do not "correct" either to rate x 12.
-
-        COUPONS ARE IMMUTABLE. Stripe lets you edit a coupon's name and
-        metadata and nothing else -- not duration, not amount. Changing the
-        duration later means NEW coupons and NEW promotion codes; the old ones
-        stay valid for anyone already on them, which is correct, since a live
-        discount should never be shortened underneath someone.
-     3. Create a PROMOTION CODE for each coupon (FOUNDINGSEPT, FOUNDINGOCT,
-        FOUNDINGNOV, FOUNDINGDEC) and put them in PRICING_TIERS below.
-     4. Payment links → New → the $29.99/month price → tick "Allow promotion
-        codes" → Create link. ONE link is all we need; paste it as
-        PAYMENT_LINK. (Stripe Payment Links have no attach-a-coupon option,
-        which is why tiers are promo codes pre-applied via the URL.)
+   No coupons and no promotion codes are involved any more. If you ever add one
+   back, remember Stripe coupons are IMMUTABLE — duration and amount cannot be
+   edited after creation, only the name and metadata.
 
    Leave PAYMENT_LINK as null and this page gracefully shows the "opening soon"
    note instead of a broken checkout button.
    =========================================================================== */
 
-/* ONE Stripe Payment Link for the $29.99/mo price, with "Allow promotion codes"
-   enabled on it. Each founding tier is a promotion code we pre-apply via the
-   URL (?prefilled_promo_code=…), so the therapist never types anything and the
-   discount is already applied when checkout opens.
-   Stripe Payment Links have no attach-a-coupon option, which is why this is
-   done with promo codes rather than five separate links. */
+/* The Stripe Payment Link for the $29.99/mo price. No promotion code is
+   pre-applied any more — there is one rate, so there is nothing to discount. */
 const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
 
-/* ---- 30 days free, for outreach -------------------------------------------
-   Stripe applies ONE promotion code per checkout, and the founding tier
-   already uses it. So a "first month free" coupon cannot be stacked on top of
-   FOUNDINGSEPT -- one would replace the other.
+/* ---- the renewal link, which carries 30 days free -------------------------
+   The SAME $29.99/month price on a second link with a 30-day free trial set
+   under Subscription options. A trial is a property of the link, not a coupon.
 
-   A free trial is not a promotion code, it is a property of the payment link,
-   so the two compose. This is the SAME $29.99 price and the SAME tier promo
-   code, on a second link that carries a 30-day trial:
+   This is a grace period on the RENEWAL decision, not a second free offer on
+   top of the free period: the only people who reach checkout are therapists
+   whose free-until-March window has run out and who are choosing to carry on.
 
-       days 1-30    free
-       months 1-12  the founding rate they'd have got anyway
-       month 13+    $29.99
-
-   Reached by ?offer=trial30, so it is only ever what you send in outreach --
-   the public activate page is untouched.
-
-   SETUP (Stripe -> Payment links -> New):
-     1. Same $29.99/month price as the link above
-     2. Tick "Allow promotion codes"  (the founding code still has to apply)
-     3. Under Subscription options, set a free trial of 30 days
-     4. Leave "collect payment method" ON, or nothing charges at day 31
-     5. Paste the link here. Until then the offer falls back to the normal
-        founding flow rather than showing a dead button. */
+   Leave it null and everyone falls back to PAYMENT_LINK — that is the kill
+   switch for the trial, and no other edit is needed. Both links need the same
+   After-payment redirect to welcome.html. */
 const PAYMENT_LINK_TRIAL = 'https://buy.stripe.com/fZu6oH1B8cyP4pZ6hNfjG01';
 const TRIAL_DAYS = 30;
 /* Free until this date, the same for every therapist. Mirrors
    FREE_UNTIL_LABEL in app/app.js and the free_until default in 0032. */
 const FREE_UNTIL_LABEL = 'March 2027';
 
-/* The ladder. `promo` is the Stripe PROMOTION CODE for that tier; each points
-   at a coupon set to "Multiple months / 12" so the rate is locked for a year
-   and then steps up to $29.99 automatically.
-   Keep the dates in sync with PRICING_TIERS in the app (app/app.js).
-
-   THE Z MATTERS. These were `new Date('2026-09-01T00:00:00')`, which JavaScript
-   parses in the VIEWER'S timezone -- so the page decided whether to send
-   FOUNDINGSEPT by the therapist's own clock, while Stripe enforces redeem-by
-   on the account's. A therapist in Hawaii at 11pm on August 31st is still
-   inside the window locally and it is already 5am on the 1st in Eastern: the
-   page sends the code, Stripe refuses it, and they are charged $29.99 on a
-   screen that just promised $9.99. Silently, and only to the people furthest
-   west.
-   Parsing as UTC makes the client the STRICTER gate in every US timezone --
-   Sep 1 00:00 UTC is Aug 31 8pm Eastern -- so a code is never offered after
-   Stripe has stopped honouring it. The cost is that the last few hours of a
-   tier roll early, which is visible and consistent rather than a surprise at
-   checkout. Fixing it the other way would mean new coupons, and coupons are
-   immutable. */
-const PRICING_TIERS = [];   // retired — see the note below
-/* THE PRICE AFTER THE FREE PERIOD. One number, one place.
-
-   The escalating founding ladder that used to live here is gone. It could no
-   longer apply to anybody: nobody pays at signup, and its last tier closed
-   Dec 1 2026, while the first renewal is March 2027. Leaving it in meant
-   listingPricing() quietly returning a rate nobody had decided on.
-
-   Matches the $29.99/month price already behind the Stripe payment links, so
-   what the product promises and what the card is charged are the same number.
-   If this constant ever moves, a new Stripe price and link have to move with
-   it — they are separate systems and nothing here reaches into Stripe. */
+/* THE PRICE AFTER THE FREE PERIOD. One number, one place, and it matches the
+   $29.99 already behind both Stripe links — what the product promises and what
+   the card is charged are the same figure. */
 const STANDARD_RATE = 29.99;
 /* Declared AFTER the rate it reads — a const referenced before its
    declaration is a TDZ throw at load, not a syntax error, so it would have
    taken the whole page down without node --check noticing. */
 const AFTER_FREE_RATE = '$' + STANDARD_RATE.toFixed(2) + '/month';
-const FOUNDING_LOCK_MONTHS = 12;
 
 /* ---------------------------------------------------------------------------
    checkout=now -- leave before this page paints.
 
    The app's Activate modal sends people here purely to have the Stripe URL
-   built, because the founding ladder and the trial link live in this file.
-   Everything needed for that is above: the links, the tiers, and the email in
-   the query string. Waiting for initAccount's profile lookup meant the page
+   built, because the payment links live in this file. Everything needed for
+   that is above: the links and the email in the query string. Waiting for initAccount's profile lookup meant the page
    rendered first, so a therapist saw the landing page flash past on the way to
    paying -- which reads like a misclick.
 
@@ -160,14 +92,10 @@ const FOUNDING_LOCK_MONTHS = 12;
   const email = q.get('email');
   if (!email) return;                        // nothing to tie the payment to; fall through
 
-  const now = new Date();
-  const i = PRICING_TIERS.findIndex(t => now < t.until);
-  const tier = i !== -1 ? PRICING_TIERS[i] : null;
   const link = PAYMENT_LINK_TRIAL || PAYMENT_LINK;   // see ONE LINK note in initActivate
   if (!link) return;
 
   const u = new URL(link);
-  if (tier && tier.promo) u.searchParams.set('prefilled_promo_code', tier.promo);
   u.searchParams.set('prefilled_email', email);
   u.searchParams.set('client_reference_id', email);   // what the webhook matches on
   /* Nothing of this page should be visible even for a frame. */
@@ -176,7 +104,6 @@ const FOUNDING_LOCK_MONTHS = 12;
 })();
 
 (function initActivate() {
-  const now = new Date();
   /* Outreach offer. Falls back silently if the trial link isn't configured
      yet, so a half-finished setup can never produce a broken checkout. */
   /* ---- ONE LINK ------------------------------------------------------------
@@ -197,14 +124,7 @@ const FOUNDING_LOCK_MONTHS = 12;
      edit needed. Both Stripe links still need the same After-payment redirect
      to welcome.html, since that is a per-link setting in the dashboard. */
   const trial = !!PAYMENT_LINK_TRIAL;
-  const idx = PRICING_TIERS.findIndex(t => now < t.until);
-  const founding = idx !== -1;
-  const tier = founding ? PRICING_TIERS[idx] : null;
-  const nextRate = founding
-    ? (PRICING_TIERS[idx + 1] ? PRICING_TIERS[idx + 1].rate : STANDARD_RATE)
-    : null;
-  const rate = founding ? tier.rate : STANDARD_RATE;
-  const fmt = d => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const rate = STANDARD_RATE;
 
   // ---- render the offer ----
   const offer = document.getElementById('kt-offer');
@@ -213,55 +133,30 @@ const FOUNDING_LOCK_MONTHS = 12;
   const terms = document.getElementById('kt-offer-terms');
 
   if (trial) {
-    /* Lead with the free month, but never hide what happens after it -- the
-       whole point of the offer is that the price afterwards is already good. */
-    badge.textContent = `★ ${TRIAL_DAYS} days free`;
-    /* The span is inline with no margin -- it works for `$9.99<span>/month`
-       because a slash needs no space, and renders "Freefor 30 days" here. */
-    price.innerHTML = `Free<span>&nbsp;for ${TRIAL_DAYS} days</span>`;
-    terms.textContent = founding
-      ? `then $${rate.toFixed(2)}/month, locked in for ${FOUNDING_LOCK_MONTHS} months · cancel anytime`
-      : `then $${STANDARD_RATE.toFixed(2)}/month · cancel anytime`;
+    /* Lead with the free period, but never hide what happens after it -- the
+       whole point of the offer is that the date is far off and the price
+       afterwards is already good. */
+    badge.textContent = `\u2605 Free until ${FREE_UNTIL_LABEL}`;
+    /* The span is inline with no margin -- a slash needs no space, so it works
+       for `$29.99<span>/month`, and here it needs the &nbsp;. */
+    price.innerHTML = `Free<span>&nbsp;until ${FREE_UNTIL_LABEL}</span>`;
+    terms.textContent = `then ${AFTER_FREE_RATE} \u00b7 cancel anytime`;
     const was = document.getElementById('kt-offer-was');
     if (was) was.hidden = true;
-    /* This used to refuse to name a figure at all -- "the trial shifts every
-       billing date, so any 'you save $X in year one' would be off by a month".
-       That was true of a YEAR-ONE number and only of a year-one number. The
-       saving per BILLED month is exact, and so is the total across the twelve
-       of them, because the coupons were deliberately cut to 13 months so the
-       trial cohort still gets a full twelve invoices at the founding rate.
-       So say it in billed months and the number is right: $20 a month, $240
-       over twelve. Refusing to state a saving on the page whose whole job is
-       to present one was the more expensive kind of caution. */
-    /* The coupon runs FOUNDING_LOCK_MONTHS calendar months from subscription
-       creation and the trial burns the first of them, so the rate is locked
-       for twelve months but only ELEVEN carry an invoice. An earlier version
-       of this line multiplied $20 by twelve and claimed $240 across "12 billed
-       months" -- two errors that happened to point the same way, and the kind
-       of wrong that ends up quoted back at you by someone reading their card
-       statement.
-       Counted properly the year is better, not worse: a free month is worth
-       the STANDARD rate, not the founding one. */
-    const perMonth = STANDARD_RATE - rate;
-    const billedAtRate = FOUNDING_LOCK_MONTHS - 1;                 // the trial takes month 1
-    const yearOne = Math.floor(STANDARD_RATE + perMonth * billedAtRate);
+    /* No saving to quote. There is one rate and no discount running against
+       it, and an invented "was" price on the screen where somebody decides to
+       pay is the kind of thing that gets read back to you later. Say what the
+       trial actually does instead, since that IS the thing they are agreeing
+       to at checkout. */
     const save = document.getElementById('kt-offer-save');
     if (save) {
-      save.textContent = founding
-        ? `You save $${perMonth.toFixed(2)} a month — $${yearOne} across your first year, counting the ${TRIAL_DAYS} days free.`
-        : `Nothing to pay today. Cancel before day ${TRIAL_DAYS + 1} and you're never charged.`;
+      save.textContent = `Nothing to pay today. Cancel before day ${TRIAL_DAYS + 1} and you're never charged.`;
     }
-  } else if (founding) {
-    badge.textContent = '★ Founding Therapist offer';
-    price.innerHTML = `$${rate.toFixed(2)}<span>/month</span>`;
-    terms.textContent = `locked in for your first ${FOUNDING_LOCK_MONTHS} months`;
-    const save = document.getElementById('kt-offer-save');
-    if (save) save.textContent = `You save $${Math.round((STANDARD_RATE - rate) * FOUNDING_LOCK_MONTHS)} in your first year.`;
   } else {
     offer.classList.add('standard');
     badge.textContent = 'Kindred Membership';
     price.innerHTML = `$${STANDARD_RATE.toFixed(2)}<span>/month</span>`;
-    terms.textContent = 'billed monthly · cancel anytime';
+    terms.textContent = 'billed monthly \u00b7 cancel anytime';
     /* no discount running — don't show a comparison that isn't real */
     ['kt-offer-was', 'kt-offer-save'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
   }
@@ -281,10 +176,6 @@ const FOUNDING_LOCK_MONTHS = 12;
   }
 
   const url = new URL(link);
-  // Pre-apply this tier's promotion code so the founding rate is already on the
-  // invoice when checkout opens — the therapist never has to type a code.
-  if (founding && tier.promo) url.searchParams.set('prefilled_promo_code', tier.promo);
-
   // Carry the therapist's email through so Stripe prefills it and the
   // resulting subscription can be matched back to their Kindred account.
   /* A session on this browser is more trustworthy than a query string anyone
@@ -302,8 +193,8 @@ const FOUNDING_LOCK_MONTHS = 12;
   }
   btn.href = url.toString();
   /* On the trial the price on the button contradicted the whole card above it:
-     "Free for 30 days / nothing to pay today", then a button asking for $9.99.
-     The trial version names what the click actually does instead. */
+     "nothing to pay today", then a button naming a monthly figure. The trial
+     version names what the click actually does instead. */
   btn.textContent = trial
     ? 'Secure my spot and build my profile'
     : `Continue to secure checkout — $${rate.toFixed(2)}/mo`;
@@ -311,19 +202,17 @@ const FOUNDING_LOCK_MONTHS = 12;
   /* "You'll be billed monthly" is also wrong on the trial, and the card IS
      collected at checkout -- saying so here is better than letting them meet
      a card form they were not expecting one screen later. */
-  /* The hero carries the same offer, so it has to tell the same story -- a
-     hero promising "$9.99/month" above a card promising 30 days free is the
-     mismatch we just removed from the button, one section higher. */
+  /* The hero carries the same offer, so it has to tell the same story. This
+     used to overwrite the static hero with "then $29.99/month for your first
+     12 months" -- a twelve-month lock that no longer existed, printed over
+     correct markup by the script meant to keep it in sync. */
   const heroRate = document.getElementById('kt-hero-rate');
   const heroOffer = document.getElementById('kt-hero-offer');
   const heroName = document.querySelector('.kt-offer-name');
-  if (heroRate) heroRate.textContent = `$${rate.toFixed(2)}`;
-  if (trial && heroOffer) {
-    heroOffer.innerHTML = `<b>Free for ${TRIAL_DAYS} days</b>, then $${rate.toFixed(2)}/month for your first ${FOUNDING_LOCK_MONTHS} months`;
-    if (heroName) heroName.textContent = `${TRIAL_DAYS} days free \u00b7 Founding Therapist offer`;
-  } else if (!founding && heroOffer) {
-    heroOffer.innerHTML = `<b>$${STANDARD_RATE.toFixed(2)}</b>/month &middot; cancel anytime`;
-    if (heroName) heroName.textContent = 'Kindred Membership';
+  if (heroRate) heroRate.textContent = `Free until ${FREE_UNTIL_LABEL}`;
+  if (heroOffer) {
+    heroOffer.innerHTML = `<b>Free until ${FREE_UNTIL_LABEL}</b> &mdash; then ${AFTER_FREE_RATE}`;
+    if (heroName) heroName.textContent = 'Kindred for therapists';
   }
 
   /* The heading names the offer they actually clicked, so the page they land
@@ -331,9 +220,7 @@ const FOUNDING_LOCK_MONTHS = 12;
   const headTitle = document.getElementById('kt-head-title');
   const headSub   = document.getElementById('kt-head-sub');
   if (headTitle) {
-    headTitle.textContent = trial ? `Start your ${TRIAL_DAYS} days free`
-                          : founding ? 'Claim your founding rate'
-                          : 'Join Kindred';
+    headTitle.textContent = 'Join Kindred';
   }
   if (headSub && trial) {
     headSub.textContent = `A sign-in, then your card — about two minutes, and nothing is charged for ${TRIAL_DAYS} days. Your profile comes next, and you go live once we've checked your licence and identity.`;
@@ -426,7 +313,7 @@ async function authPost(path, body) {
     }
     /* checkout=now: the app already showed them the offer in its own modal, so
        rendering it again here and asking them to press Continue a second time
-       is one screen too many. The Stripe URL is built above -- the founding
+       is one screen too many. The Stripe URL is built above -- the payment
        ladder and the trial link live in this file, deliberately in one place
        -- so go straight there.
        replace() so Back does not land them on a page that immediately

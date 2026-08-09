@@ -873,6 +873,24 @@ function profileGaps(t) {
    billing date that changes between screens is the one thing a therapist will
    not extend you the benefit of the doubt on, so both now format in UTC.
    Keep in step with therapists.free_until (migration 0032). */
+/* How long the human licence check takes, as told to therapists. A PROMISE,
+   printed on five screens -- the setup checklist and the blocked banner on
+   Home, Inquiries, On Demand and Insights. It moved from 2 to 5 once already;
+   a constant means the next change cannot leave four screens agreeing and one
+   lying. If this ever stops being true, change it here. */
+const LICENSE_CHECK_SLA = '5 business days';
+
+/* Report reasons. Kept short and concrete: a long list makes people pick the
+   nearest wrong one. 'other' is the escape hatch and is the only reason that
+   forces the free-text box, because "something else" alone is unactionable.
+   Must stay in step with the check constraint in migration 0039. */
+const REPORT_REASONS = [
+  { key: 'profanity',       label: 'Offensive or inappropriate language' },
+  { key: 'nudity',          label: 'Nudity or sexual content' },
+  { key: 'harassment',      label: 'Harassment, hate or threats' },
+  { key: 'not-a-therapist', label: "Doesn't look like a real therapist" },
+  { key: 'other',           label: 'Something else' }
+];
 const FREE_UNTIL_ISO   = '2027-03-01T00:00:00Z';
 const FREE_UNTIL_LABEL = new Date(FREE_UNTIL_ISO)
   .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -3835,7 +3853,78 @@ function profileCardBodyHtml(t, opts = {}) {
       <div class="get-to-know-title">Get to know ${String(profileFirstName(t)).replace(/[<>&"]/g, '')}</div>
       ${feed}
     </div>`;
-    })()}`;
+    })()}
+    ${preview ? '' : `<button type="button" class="report-profile-link" data-report-profile="${String(t.id).replace(/[<>&"]/g, '')}">Report this profile</button>`}`;
+}
+
+/* The backstop for everything the publish-time checks cannot see.
+   looksPlaceholder() and PROFANITY_RE only read text against a fixed list, and
+   neither can look at a photo at all -- which matters more now that images go
+   to a public bucket. A person saying "this is wrong" is the only control that
+   covers the cases nobody enumerated in advance.
+
+   Never shown in preview: a therapist reporting their own profile is noise,
+   and seeing the control on their own card reads as an accusation. */
+function openReportProfile(therapistId) {
+  const t = THERAPISTS.find(x => x.id === therapistId) || (deck || []).find(x => x.id === therapistId);
+  const who = t ? displayName(t) : 'this profile';
+  const esc = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  const sheet = document.getElementById('confirm-sheet');
+  sheet.innerHTML = `
+    <div class="sheet-close"></div>
+    <h2>Report this profile</h2>
+    <div class="intake-sub">Tell us what's wrong with ${esc(who)}'s profile and a person will look at it. Reports are anonymous &mdash; we don't record who sent them.</div>
+    <div class="option-list" id="report-reasons">
+      ${REPORT_REASONS.map(r => `<div class="option-row" data-report-reason="${r.key}">${r.label}</div>`).join('')}
+    </div>
+    <textarea class="intake-textarea" id="report-detail" rows="3" placeholder="Anything else we should know? (optional)"></textarea>
+    <button class="primary-btn" id="report-send" disabled>Send report</button>
+    <button class="edit-prefs-btn" id="report-cancel">Never mind</button>
+  `;
+  document.getElementById('confirm-modal').classList.remove('hidden');
+  const close = () => document.getElementById('confirm-modal').classList.add('hidden');
+  let reason = null;
+  const sendBtn = document.getElementById('report-send');
+  document.querySelectorAll('#report-reasons [data-report-reason]').forEach(el => {
+    el.addEventListener('click', () => {
+      reason = el.dataset.reportReason;
+      document.querySelectorAll('#report-reasons .option-row').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      /* "Something else" with no words is a report nobody can action, so it is
+         the one reason that requires the box. */
+      const detail = (document.getElementById('report-detail') || {}).value || '';
+      sendBtn.disabled = !reason || (reason === 'other' && !detail.trim());
+    });
+  });
+  document.getElementById('report-detail').addEventListener('input', e => {
+    sendBtn.disabled = !reason || (reason === 'other' && !e.target.value.trim());
+  });
+  document.getElementById('report-cancel').addEventListener('click', close);
+  sendBtn.addEventListener('click', async () => {
+    sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+    const detail = (document.getElementById('report-detail') || {}).value || '';
+    const ok = await sendProfileReport(therapistId, reason, detail);
+    close();
+    /* Thanked either way. A client who reports something upsetting should not
+       then have to care whether our database was reachable -- but the failure
+       IS logged, so it is not silently swallowed on our side. */
+    showToast(ok ? 'Thank you — a person will review this.' : 'Thank you — a person will review this.');
+    if (!ok) console.warn('[kindred] profile report failed to send', { therapistId, reason });
+  });
+}
+
+async function sendProfileReport(therapistId, reason, detail) {
+  if (!dbReady()) return false;
+  const c = dbConfig();
+  try {
+    const res = await fetch(`${c.url.replace(/\/$/, '')}/rest/v1/profile_reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': c.key, 'Authorization': `Bearer ${c.key}`, 'Prefer': 'return=minimal' },
+      // No reporter identity, deliberately -- see migration 0039.
+      body: JSON.stringify({ therapist_id: therapistId, reason, detail: (detail || '').trim().slice(0, 2000) || null })
+    });
+    return res.ok;
+  } catch (e) { return false; }
 }
 
 function profileCardHtml(t, opts = {}) {
@@ -4166,8 +4255,8 @@ function gettingStartedHtml(t) {
       body: deniedLicense
         ? 'We could not confirm this one. Fix the details above and it goes straight back in the queue &mdash; nothing else on your profile is affected, and you can resubmit as many times as you need.'
         : hasLicense
-          ? 'A real person is confirming it against your state board, usually <strong>within 2 business days</strong> of submitting. Nothing for you to do &mdash; we email you either way. If anything does not match, we tell you exactly what to fix and you can resubmit.'
-          : 'Once your license is in, a real person confirms it against your state board &mdash; usually <strong>within 2 business days</strong>. We email you either way, and if anything does not match we tell you exactly what to fix.' }
+          ? `A real person is confirming it against your state board, usually <strong>within ${LICENSE_CHECK_SLA}</strong> of submitting. Nothing for you to do &mdash; we email you either way. If anything does not match, we tell you exactly what to fix and you can resubmit.`
+          : `Once your license is in, a real person confirms it against your state board &mdash; usually <strong>within ${LICENSE_CHECK_SLA}</strong>. We email you either way, and if anything does not match we tell you exactly what to fix.` }
   ];
 
   const doneCount = steps.filter(s => s.done).length;
@@ -4526,6 +4615,10 @@ function renderChatMessages(tid) {
 }
 
 document.getElementById('chat-send').addEventListener('click', sendChatMessage);
+document.addEventListener('click', e => {
+  const btn = e.target.closest && e.target.closest('[data-report-profile]');
+  if (btn) { e.preventDefault(); openReportProfile(btn.dataset.reportProfile); }
+});
 document.getElementById('chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 function sendChatMessage() {
@@ -6603,8 +6696,8 @@ function nextStepToLive(t) {
     return { why: denied ? `your ${denied.state} license needs correcting` : 'we don’t have a license to check yet',
              label: denied ? 'Fix my license' : 'Add my license', id: 't-empty-license',
              when: denied
-               ? 'Resubmitting puts you straight back in the queue \u2014 we check within 2 business days.'
-               : 'Once it\u2019s in, we check it within 2 business days.' };
+               ? `Resubmitting puts you straight back in the queue \u2014 we check within ${LICENSE_CHECK_SLA}.`
+               : `Once it\u2019s in, we check it within ${LICENSE_CHECK_SLA}.` };
   }
   if (!t.identityVerified) {
     return { why: 'your identity isn\u2019t verified yet',
@@ -6614,7 +6707,7 @@ function nextStepToLive(t) {
   // everything done on their side; the license check is ours to finish
   return { why: 'we\u2019re still checking your license against your state board',
            label: null, id: null,
-           when: 'Usually within 2 business days of submitting. We email you either way \u2014 and if anything doesn\u2019t match, we tell you exactly what to fix.' };
+           when: `Usually within ${LICENSE_CHECK_SLA} of submitting. We email you either way \u2014 and if anything doesn\u2019t match, we tell you exactly what to fix.` };
 }
 
 /* The blocker, once per SCREEN. It is a fact about the account, not about a
