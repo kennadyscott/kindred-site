@@ -6689,10 +6689,16 @@ function renderTherapistProfileBody() {
       <div class="t-form-label">Type of Therapy</div>
       ${checkboxDropdownHtml(ic.modalities, modalityAll(), 'ideal-modalities', 'Choose the therapy types…')}
 
-      <div class="t-form-label">Payment <span class="ideal-hard">practical — must line up</span></div>
+      <!-- The "practical — must line up" tags were removed from here and from
+           "When you'd see them". They described how the MATCHING WEIGHTS these
+           two answers, which is our concern rather than the therapist's: read
+           from the outside it looks like a warning that a wrong answer breaks
+           something. The fields ask a plain question; the algorithm can keep
+           its own opinion of them to itself. -->
+      <div class="t-form-label">Payment</div>
       <div class="chip-grid">${PAYMENT_TYPE_OPTIONS.map(p => `<div class="chip-option ${ic.payment === p ? 'selected' : ''}" data-ideal-pay="${p}">${p}</div>`).join('')}</div>
 
-      <div class="t-form-label">When you'd see them <span class="ideal-hard">practical — must line up</span></div>
+      <div class="t-form-label">When you'd see them</div>
       <div class="chip-grid">${AVAILABILITY_OPTIONS.map(a => `<div class="chip-option ${ic.availability.includes(a) ? 'selected' : ''}" data-ideal="availability" data-val="${a}">${a}</div>`).join('')}</div>
 
       <div class="t-form-label">Must-haves <span class="ideal-hint">pick up to ${MAX_MUST_HAVES} — these count double, but still never filter anyone out</span></div>

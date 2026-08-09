@@ -2063,7 +2063,9 @@ select.t-rate-input,
   background: #5b4415; color: #f6e3b0; padding: 3px 8px; border-radius: 999px;
 }
 .ideal-section-sub { font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); margin: 8px 0 4px; }
-.ideal-hard, .ideal-hint {
+/* .ideal-hard was dropped with the "practical — must line up" tags; only
+   .ideal-hint remains, for the genuinely useful asides like "star up to 3". */
+.ideal-hint {
   font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0;
   color: #8a7a55; background: #f3e9d2; padding: 2px 7px; border-radius: 999px; margin-left: 6px;
 }
