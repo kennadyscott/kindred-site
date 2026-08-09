@@ -844,6 +844,10 @@ function listingLead(t, opts) {
   const because = !s.complete
     ? `Clients can't see you while ${blocker}.`
     : `Clients can't see you until ${blocker}.`;
+  /* The same fact said forwards, for the free-and-not-yet-live case. */
+  const becausePositive = !s.complete
+    ? `Clients can see you once your profile has ${s.gaps.join(' and ')}.`
+    : `Clients can see you once your licence and identity are verified.`;
 
   /* "You're being billed" is only true of someone actually subscribed. With
      the paywall gone that is nobody at signup, so the alarming version now
@@ -856,7 +860,11 @@ function listingLead(t, opts) {
   if (s.subscribed) {
     return `<strong>You're being billed but clients can't see you yet.</strong> ${because}`;
   }
-  return `<strong>Almost there.</strong> ${because} Nothing to pay &mdash; Kindred is free for therapists until ${FREE_UNTIL_LABEL}.`;
+  /* Order matters here. This used to lead with what they CAN'T do — "clients
+     can't see you until…" — and tuck the good news behind it. The restriction
+     is real and stays, but it is a step in progress, not the headline. Lead
+     with the offer, then say what is left, in the positive. */
+  return `<strong>Almost there.</strong> Kindred is free for therapists until ${FREE_UNTIL_LABEL} &mdash; nothing to pay. ${becausePositive}`;
 }
 
 function normalizeTherapist(t) {
