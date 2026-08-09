@@ -1003,8 +1003,33 @@ function listingLead(t, opts) {
   return `<strong>Almost there.</strong> Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}. ${becausePositive}`;
 }
 
+/* Video upload is OFF until there is somewhere to put a video.
+   URL.createObjectURL() returns a `blob:` URL scoped to the tab that made it.
+   It was being written into media.video and into feed blocks and then SAVED,
+   so what landed in Postgres was a permanently dead pointer: gone on reload
+   for the therapist, and meaningless to every client, forever. The code
+   comment beside it read "object URL keeps big videos out of data URLs" --
+   right about data URLs, wrong that this was the alternative.
+
+   Flip to true the moment uploads go to Supabase Storage and the handlers
+   store the returned public URL. Nothing else needs to change: playback works
+   fine for any real http(s) URL and always did. */
+const VIDEO_UPLOAD_ENABLED = false;
+const isDeadBlobUrl = v => typeof v === 'string' && v.startsWith('blob:');
+
 function normalizeTherapist(t) {
   if (!t.media) t.media = {};
+  /* Scrub dead pointers on the way in, so a row written before this stops
+     rendering a video element that can never load. Only `blob:` -- seeded and
+     future http(s) videos are untouched. */
+  if (isDeadBlobUrl(t.media.video)) t.media.video = null;
+  if (Array.isArray(t.blocks)) {
+    t.blocks = t.blocks.filter(b => {
+      if (!b || b.type !== 'video') return true;
+      if (!isDeadBlobUrl(b.src)) return true;
+      return false;                 // drop it: it was never playable by anyone
+    });
+  }
   if (!Array.isArray(t.media.photos)) t.media.photos = [t.media.office, t.media.outOfOffice].filter(Boolean).slice(0, 4);
   if (!t.topSpecialties || !t.topSpecialties.length) t.topSpecialties = (t.tags || []).slice(0, 3);
   if (t.selfPayNote === undefined) t.selfPayNote = '';
@@ -2269,6 +2294,7 @@ function computeDeck() {
   dbRpc('match_therapists', matchParams())
     .then(rows => {
       if (seq !== deckFetchSeq) return;
+      assertMatchRowContract(rows[0]);
       deck = rows.map(dbRowToTherapist);
       // The real roster is still filling up, so an empty result would mean a
       // blank app for demos and previews. Fall back to the seeded therapists —
@@ -2283,6 +2309,37 @@ function computeDeck() {
     })
     .then(() => refreshRosterCount())   // so an empty deck can explain itself honestly
     .then(() => { if (seq === deckFetchSeq) { deckLoading = false; renderStack(); } });
+}
+
+/* The seam that produced the invisible-feed bug: match_therapists() hard-codes
+   a column list, dbRowToTherapist() reads whatever it likes, and the two live
+   4,000 lines and one language apart. `blocks` was added to the table in 0024
+   and to the client, but never to the RPC -- so every therapist's feed photos,
+   video and chosen order were dropped on the way to the client, silently, for
+   as long as that has been true.
+
+   This cannot catch a field nobody reads yet, but it catches the case that
+   actually happens: someone adds a column to therapists and the app, and
+   forgets the function in between. Runs once per session on the first real
+   match row. */
+const MATCH_ROW_EXPECTED = [
+  'user_id', 'name', 'credentials', 'pronouns', 'show_pronouns', 'license_states',
+  'website', 'photo', 'traits', 'specialties', 'modalities', 'style', 'practice_type',
+  'gender', 'lgbtq_affirming', 'ethnicity', 'affinities', 'faith', 'prompt_fit',
+  'optional_prompts', 'best_for', 'persona', 'media', 'formats', 'insurance',
+  'languages', 'rate_min', 'location', 'blocks', 'license_verified',
+  'payment_options', 'match_score', 'is_ideal'
+];
+let matchContractChecked = false;
+function assertMatchRowContract(row) {
+  if (matchContractChecked || !row) return;
+  matchContractChecked = true;
+  const missing = MATCH_ROW_EXPECTED.filter(k => !(k in row));
+  if (missing.length) {
+    console.warn('[kindred] match_therapists() is not returning fields the client renders: '
+      + missing.join(', ') + '. Clients will silently see a degraded profile. '
+      + 'Add them to the RPC — see supabase/migrations/0037_match_returns_full_profile.sql');
+  }
 }
 
 function computeOnDemandList() {
@@ -7164,7 +7221,9 @@ function renderTherapistProfileBody() {
                 <div class="feed-block-head">${handle}<span class="feed-block-tag">🎬 Quick video</span>${remove}</div>
                 <div class="feed-block-video-body">
                   ${b.src ? `<video src="${b.src}" controls preload="metadata" playsinline></video>` : '<div class="video-empty">A 15–30s hello — clients hear your voice first</div>'}
-                  <label class="media-upload-btn">${b.src ? 'Replace' : 'Add'}<input type="file" accept="video/*" data-replace-block-video="${i}" hidden></label>
+                  ${VIDEO_UPLOAD_ENABLED
+                    ? `<label class="media-upload-btn">${b.src ? 'Replace' : 'Add'}<input type="file" accept="video/*" data-replace-block-video="${i}" hidden></label>`
+                    : '<p class="portal-note" style="margin:8px 0 0;">Swapping your video is coming back with proper video hosting.</p>'}
                 </div>
               </div>`;
             }
@@ -7177,7 +7236,9 @@ function renderTherapistProfileBody() {
           const addPhoto = blockPhotoCount(t) < MAX_PHOTOS
             ? `<label class="media-add-row"><span class="media-thumb"><span>＋</span></span><span class="media-row-text"><strong>Add a photo</strong><span>Your office, life outside work, and one more that's you. Up to ${MAX_PHOTOS}.</span></span><input type="file" accept="image/*" data-add-block-photo hidden></label>`
             : `<p class="portal-note">Photo limit reached (${MAX_PHOTOS}). Remove one to add another.</p>`;
-          const addVideo = blockHasVideo(t)
+          // Hidden entirely rather than shown-and-refused: an affordance that
+          // always says no is worse than one that is not there.
+          const addVideo = (blockHasVideo(t) || !VIDEO_UPLOAD_ENABLED)
             ? ''
             : `<label class="media-add-row"><span class="media-thumb"><span>🎬</span></span><span class="media-row-text"><strong>Add a quick video</strong><span>A 15–30s hello — it becomes a draggable block too.</span></span><input type="file" accept="video/*" data-add-block-video hidden></label>`;
 
@@ -7403,7 +7464,9 @@ function attachTherapistProfileHandlers(t) {
     if (!file) return;
     const slot = el.dataset.mediaUpload;
     if (slot === 'video') {
-      t.media.video = URL.createObjectURL(file); // object URL keeps big videos out of data URLs
+      // See VIDEO_UPLOAD_ENABLED. Storing a blob: URL looked like it worked
+      // and shipped a dead link to every client, so we say so instead.
+      if (!VIDEO_UPLOAD_ENABLED) { el.value = ''; showToast('Video is coming soon \u2014 photos and words for now.'); return; }
       renderTherapistProfile();
     } else { // lead photo
       readPhoto(file).then(src => { if (src) { t.photo = src; renderTherapistProfile(); } });
@@ -7452,19 +7515,13 @@ function attachTherapistProfileHandlers(t) {
   if (addBlockVideo) addBlockVideo.addEventListener('change', () => {
     const file = addBlockVideo.files[0];
     if (!file || blockHasVideo(t)) return;
-    const src = URL.createObjectURL(file);      // object URL keeps big videos out of data URLs
-    t.media.video = src;
-    getToKnowBlocks(t).push({ type: 'video', src });
+    if (!VIDEO_UPLOAD_ENABLED) { addBlockVideo.value = ''; showToast('Video is coming soon \u2014 photos and words for now.'); return; }
     renderTherapistProfile({ revealLastBlock: true });
   });
   document.querySelectorAll('[data-replace-block-video]').forEach(el => el.addEventListener('change', () => {
     const file = el.files[0];
     if (!file) return;
-    const src = URL.createObjectURL(file);
-    const blocks = getToKnowBlocks(t);
-    const b = blocks[Number(el.dataset.replaceBlockVideo)];
-    if (b) b.src = src;
-    t.media.video = src;
+    if (!VIDEO_UPLOAD_ENABLED) { el.value = ''; showToast('Video is coming soon \u2014 photos and words for now.'); return; }
     renderTherapistProfile();
   }));
   // ----- drag & drop with a live drop indicator (container-level = robust) -----
