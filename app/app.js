@@ -4868,13 +4868,32 @@ function getToKnowBlocks(t) {
   if (t.persona && t.persona.inOffice)  prompts.push({ type: 'prompt', question: 'Who I am in the office...',  answer: t.persona.inOffice });
   if (t.persona && t.persona.outOfOffice) prompts.push({ type: 'prompt', question: 'Who I am out of the office...', answer: t.persona.outOfOffice });
   if (Array.isArray(t.mandatoryPromptAnswers)) MANDATORY_PROMPTS.forEach((q, i) => { if (t.mandatoryPromptAnswers[i]) prompts.push({ type: 'prompt', question: q, answer: t.mandatoryPromptAnswers[i] }); });
-  (t.optionalPrompts || []).forEach(p => { if (p.question) prompts.push({ type: 'prompt', question: p.question, answer: p.answer || '' }); });
+  /* CARRY THE PHOTO. Signup attaches a photo to each prompt as
+     optionalPrompts[i].photo — "something that shows what you just wrote" —
+     and this builder read `question` and `answer` and dropped it on the
+     floor. The uploads were never lost: they save to the database inside
+     optional_prompts and are still there. Nothing ever rendered them, so a
+     therapist who added three photos during signup opened their feed and
+     found none of them. */
+  (t.optionalPrompts || []).forEach(p => {
+    if (p.question) prompts.push({ type: 'prompt', question: p.question, answer: p.answer || '', photo: p.photo || null });
+  });
   const kept = prompts.slice(0, MAX_GET_TO_KNOW_PROMPTS);
-  const photos = therapistPhotos(t).map(src => ({ type: 'photo', src }));
-  // default arrangement: blurb, photo, blurb, photo…
+
+  /* Each prompt is followed by its OWN photo, which is what the therapist was
+     choosing when they attached it — and it produces the blurb/photo/blurb
+     alternation the hint recommends without having to zip two lists that were
+     never related. Standalone media photos follow. Deduped by src so a photo
+     that is both attached and in media cannot appear twice. */
   const out = [];
-  const n = Math.max(kept.length, photos.length);
-  for (let i = 0; i < n; i++) { if (kept[i]) out.push(kept[i]); if (photos[i]) out.push(photos[i]); }
+  const used = new Set();
+  kept.forEach(p => {
+    out.push({ type: 'prompt', question: p.question, answer: p.answer });
+    if (p.photo && !used.has(p.photo)) { used.add(p.photo); out.push({ type: 'photo', src: p.photo }); }
+  });
+  therapistPhotos(t).forEach(src => {
+    if (src && !used.has(src)) { used.add(src); out.push({ type: 'photo', src }); }
+  });
   // the quick-hello video is a draggable block too — slot it right after the
   // first block by default so words still lead
   if (t.media && t.media.video) out.splice(Math.min(1, out.length), 0, { type: 'video', src: t.media.video });
