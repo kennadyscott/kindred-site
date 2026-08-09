@@ -640,7 +640,7 @@ h1, h2, .logo, .chat-name, .nav-btn span:last-child {
 .prompt-photo {
   width: 100%;
   height: auto;
-  max-height: 620px;
+  max-height: 700px;
   object-fit: contain;
   border-radius: 14px;
   margin-top: 2px;
@@ -673,7 +673,9 @@ h1, h2, .logo, .chat-name, .nav-btn span:last-child {
   object-fit: contain;
   background: var(--cream-2);
 }
-.feed-media img { max-height: 620px; }
+/* 9:16 at a 390px column is ~693px, so anything lower letterboxes a
+   perfectly ordinary phone photo. */
+.feed-media img { max-height: 700px; }
 .feed-video video { background: var(--ink); max-height: 480px; }
 .feed-caption {
   font-size: 11.5px;
@@ -2336,6 +2338,31 @@ select.t-rate-input,
 #t-profile-content[data-mode="view"]  .pm-edit,
 #t-profile-content[data-mode="view"]  .pm-ideal { display: none; }
 .pm-view .primary-btn { display: none; } /* it's a preview here, not the swipe card */
+
+/* ---------------------------------------------------------------------------
+   VIEW PROFILE IS A PHONE PREVIEW.
+
+   Above 900px the app becomes a real web layout and screens get a 780px
+   measure — right for the editor, wrong for this. View Profile is showing
+   what a CLIENT sees, and a client is on a phone: at 780px every photo
+   rendered nearly a metre tall on a laptop, the whole thing was a chore to
+   scroll, and none of it was what the client would actually get. So it was
+   both unpleasant AND inaccurate, which is the worse half.
+
+   Constrained to phone width and centred, with a soft frame so it reads as a
+   device preview rather than a broken column.
+--------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  #t-profile-content[data-mode="view"] .pm-view {
+    max-width: 390px;
+    margin: 8px auto 0;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 10px;
+    background: var(--paper);
+    box-shadow: 0 10px 30px rgba(43, 34, 51, .07);
+  }
+}
 
 /* ===== "I booked this client" (inquiries) ===== */
 .booked-btn { background: #eaf3ea !important; color: #3f6b46 !important; }
