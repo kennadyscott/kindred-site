@@ -885,6 +885,11 @@ function normalizeTherapist(t) {
   if (t.selfPayNote === undefined) t.selfPayNote = '';
   if (t.acceptsSlidingScale === undefined) t.acceptsSlidingScale = /sliding/i.test(t.selfPayNote || '');
   if (t.offerWaitlist === undefined) t.offerWaitlist = !t.acceptingOngoing;
+  /* The two are mutually exclusive — see the toggle handlers. A row written
+     before that rule existed could hold both, so settle it here rather than
+     rendering a contradiction: accepting wins, because it is the state that
+     keeps a therapist reachable. Both OFF is left alone; that one is real. */
+  if (t.acceptingOngoing && t.offerWaitlist) t.offerWaitlist = false;
   if (!Array.isArray(t.waitlist)) t.waitlist = [];
   if (!Array.isArray(t.startedConversations)) t.startedConversations = [];
   if (!Array.isArray(t.licensedStates)) t.licensedStates = (t.location && t.location.state) ? [t.location.state] : [];
@@ -6047,16 +6052,34 @@ function renderTherapistInsights() {
   wireGettingStarted();
   const shareProfileBtn = document.getElementById('t-share-profile-btn');
   if (shareProfileBtn) shareProfileBtn.addEventListener('click', openShareMyProfile);
+  /* MUTUALLY EXCLUSIVE, BUT BOTH CAN BE OFF.
+     Accepting clients and running a waitlist are answers to the same
+     question — do you have room — and they contradict each other: a waitlist
+     for a therapist who is taking bookings is a queue nobody needs to stand
+     in. Both off is a real third state, though: closed, and not collecting
+     names either. So turning one ON turns the other off, and turning either
+     one OFF is always just off.
+     Enforced in the handlers rather than by disabling a switch, because a
+     dead toggle makes someone wonder what they did wrong. Every tap does
+     something visible. */
   const insOngoingSwitch = document.getElementById('t-insights-ongoing-switch');
   if (insOngoingSwitch) insOngoingSwitch.addEventListener('click', () => {
     t.acceptingOngoing = !t.acceptingOngoing;
+    if (t.acceptingOngoing) t.offerWaitlist = false;   // room, so no queue
     t.nextAvailableRank = t.acceptingOngoing ? 1 : null;
     t.nextAvailableLabel = t.acceptingOngoing ? 'This week' : 'Not accepting new ongoing clients';
+    persistProfileSoon(t);
     renderTherapistInsights();
   });
   const insWaitlistSwitch = document.getElementById('t-insights-waitlist-switch');
   if (insWaitlistSwitch) insWaitlistSwitch.addEventListener('click', () => {
     t.offerWaitlist = !t.offerWaitlist;
+    if (t.offerWaitlist) {                              // full, so stop taking bookings
+      t.acceptingOngoing = false;
+      t.nextAvailableRank = null;
+      t.nextAvailableLabel = 'Not accepting new ongoing clients';
+    }
+    persistProfileSoon(t);
     renderTherapistInsights();
   });
 }
