@@ -578,12 +578,11 @@ const PRICING_TIERS = [];   // retired — see the note below
    Dec 1 2026, while the first renewal is March 2027. Leaving it in meant
    listingPricing() quietly returning a rate nobody had decided on.
 
-   NOTE FOR WHOEVER TOUCHES BILLING NEXT: this constant is what the PRODUCT
-   says. Stripe is a separate system and still has a $29.99/month price behind
-   the payment links. A new price and link must exist in Stripe before the
-   first renewal, or the app will promise $24.99 and the card will be charged
-   $29.99. */
-const STANDARD_RATE = 24.99;
+   Matches the $29.99/month price already behind the Stripe payment links, so
+   what the product promises and what the card is charged are the same number.
+   If this constant ever moves, a new Stripe price and link have to move with
+   it — they are separate systems and nothing here reaches into Stripe. */
+const STANDARD_RATE = 29.99;
 const FOUNDING_LOCK_MONTHS = 12;
 /* Mirrors TRIAL_DAYS in activate.js, which owns the Stripe links. Everyone
    activating gets the trial, so this appears in the Activate modal and in
@@ -4581,10 +4580,16 @@ function openTherapistOnDemandAgreement(onAgree) {
       <div class="od-example-head">${usingOwnRate
         ? `At your rate of ${m(ex.price)} a session`
         : `For example, at ${m(ex.price)} a session`}</div>
-      <div class="od-example-row"><span>Client pays</span><b>${m(ex.clientTotal)}</b></div>
-      <div class="od-example-row"><span>Processing fee</span><b>&minus;${m(ex.stripeFee + ex.kindredCut)}</b></div>
-      <div class="od-example-sub">card processing and platform costs</div>
-      <div class="od-example-row is-total"><span>You receive</span><b>${m(ex.therapistNet)}</b></div>
+      <!-- Earnings first, and big. This was a three-line ledger with a minus
+           sign in the middle, which reads like an invoice being served on
+           them rather than money they are making. Same numbers, same
+           disclosure, opposite feeling: what lands in their account is the
+           headline, and the fee is one quiet sentence underneath. -->
+      <div class="od-earn">
+        <span class="od-earn-num">${m(ex.therapistNet)}</span>
+        <span class="od-earn-label">lands in your account</span>
+      </div>
+      <p class="od-earn-note">The client pays ${m(ex.clientTotal)} &mdash; ${m(ex.stripeFee + ex.kindredCut)} of that covers card processing and platform costs.</p>
     </div>
     <p class="modality-info-text">Clients authorize payment when they request a slot, and the charge processes when you accept. If a client cancels a confirmed session:</p>
     <ul class="policy-list">

@@ -129,12 +129,11 @@ const PRICING_TIERS = [];   // retired — see the note below
    Dec 1 2026, while the first renewal is March 2027. Leaving it in meant
    listingPricing() quietly returning a rate nobody had decided on.
 
-   NOTE FOR WHOEVER TOUCHES BILLING NEXT: this constant is what the PRODUCT
-   says. Stripe is a separate system and still has a $29.99/month price behind
-   the payment links. A new price and link must exist in Stripe before the
-   first renewal, or the app will promise $24.99 and the card will be charged
-   $29.99. */
-const STANDARD_RATE = 24.99;
+   Matches the $29.99/month price already behind the Stripe payment links, so
+   what the product promises and what the card is charged are the same number.
+   If this constant ever moves, a new Stripe price and link have to move with
+   it — they are separate systems and nothing here reaches into Stripe. */
+const STANDARD_RATE = 29.99;
 /* Declared AFTER the rate it reads — a const referenced before its
    declaration is a TDZ throw at load, not a syntax error, so it would have
    taken the whole page down without node --check noticing. */

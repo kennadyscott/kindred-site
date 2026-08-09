@@ -2885,3 +2885,14 @@ select.t-rate-input,
 .od-example-row.is-total { border-top: 1px solid var(--line); margin-top: 4px;
                            padding-top: 9px; font-weight: 700; }
 .od-example-row.is-total b { color: var(--moss, #687A65); font-size: 16px; }
+
+/* On-Demand earnings. Was a three-line ledger with a deduction in the middle,
+   which reads like a bill. The number a therapist earns is the headline; the
+   fee is one quiet sentence under it. Same disclosure, opposite feeling. */
+.od-earn { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+           margin: 2px 0 6px; }
+.od-earn-num { font-family: 'Poppins', sans-serif; font-weight: 700;
+               font-size: 34px; line-height: 1.05; color: var(--moss, #687A65);
+               font-variant-numeric: tabular-nums; }
+.od-earn-label { font-size: 14px; color: var(--ink); font-weight: 600; }
+.od-earn-note { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
