@@ -557,56 +557,38 @@ const LICENSE_SEED = { t1: ['TX', 'CA'] };
 // listingPricing() while this module is still evaluating, so a `const`
 // declared after that loop would throw on load (temporal dead zone).
 // ===== LISTING SUBSCRIPTION (therapists pay to list) =====
-// Escalating founding ladder: the earlier you join, the lower your rate — and
-// you KEEP that rate for 12 months before it moves to the standard rate. The
-// long lock is what makes the urgency real (joining in Sept vs Dec saves $120
-// over the year), and it fairly rewards the therapists who fill a cold-start
-// marketplace. Billing starts immediately on signup.
+// Kindred is FREE for every therapist until 1 March 2027 — the same date
+// whoever you are and whenever you joined (FREE_UNTIL_ISO below, and the
+// free_until default in migration 0032). Nobody is charged at signup, so this
+// block only describes what happens after that date.
 // Paid on the WEBSITE (Stripe web checkout), never in-app — keeps Apple's cut
 // at 0% and avoids any IAP surface in the App Store build.
 const THERAPIST_BILLING_URL = '/activate.html';
-/* UTC, matching activate.js — see the long note there. Without the Z these
-   parse in the viewer's timezone, and this list has to agree with the one that
-   picks the Stripe promo code or the app quotes a rate the checkout won't
-   honour. Same instant on both sides is the only version of "in sync" worth
-   having. */
-const PRICING_TIERS = [];   // retired — see the note below
 /* THE PRICE AFTER THE FREE PERIOD. One number, one place.
 
-   The escalating founding ladder that used to live here is gone. It could no
-   longer apply to anybody: nobody pays at signup, and its last tier closed
-   Dec 1 2026, while the first renewal is March 2027. Leaving it in meant
-   listingPricing() quietly returning a rate nobody had decided on.
+   The escalating founding ladder that used to live here is gone (2026-08-09).
+   It was $9.99–$19.99/month locked for twelve months, stepped by signup date,
+   and it could no longer apply to anybody: nobody pays at signup, and its last
+   tier closed 1 Dec 2026 while the first renewal is March 2027. What it still
+   did was keep `founding` branches alive across three screens, each ready to
+   quote a rate no checkout would honour.
 
    Matches the $29.99/month price already behind the Stripe payment links, so
    what the product promises and what the card is charged are the same number.
    If this constant ever moves, a new Stripe price and link have to move with
    it — they are separate systems and nothing here reaches into Stripe. */
 const STANDARD_RATE = 29.99;
-const FOUNDING_LOCK_MONTHS = 12;
-/* Mirrors TRIAL_DAYS in activate.js, which owns the Stripe links. Everyone
-   activating gets the trial, so this appears in the Activate modal and in
-   every sentence about billing state. */
+/* Mirrors TRIAL_DAYS in activate.js, which owns the Stripe links. The renewal
+   link carries a 30-day trial, so this appears in the Activate modal and in
+   every sentence about billing state. It is a grace period on the RENEWAL
+   decision, not a second free offer on top of the free period. */
 const TRIAL_DAYS = 30;
-const dateLabel = d => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
+/* One rate for everyone. Kept as a function returning an object because the
+   seed loop and three screens already call it, and a shape is easier to add a
+   field back to than a bare constant is to un-inline. */
 function listingPricing() {
-  const now = new Date();
-  const i = PRICING_TIERS.findIndex(t => now < t.until);
-  if (i === -1) {
-    // ladder has closed — standard rate for everyone
-    return { founding: false, introRate: STANDARD_RATE, introMonths: 0, standardRate: STANDARD_RATE, nextRate: null, nextDateLabel: null };
-  }
-  const tier = PRICING_TIERS[i];
-  const next = PRICING_TIERS[i + 1];
-  return {
-    founding: true,
-    introRate: tier.rate,
-    introMonths: FOUNDING_LOCK_MONTHS,
-    standardRate: STANDARD_RATE,
-    nextRate: next ? next.rate : STANDARD_RATE,   // what it becomes after this deadline
-    nextDateLabel: dateLabel(tier.until)          // when this rate goes away
-  };
+  return { standardRate: STANDARD_RATE };
 }
 
 /* ===== NAMES ==================================================================
@@ -962,6 +944,16 @@ function listingLead(t, opts) {
   const allDone = !!(opts && opts.allDone);
   const s = listingState(t);
 
+  /* BEFORE everything else, including lapsed. An open report hides the profile
+     server-side (0040) whatever the billing or completeness state says, so any
+     other lead here would be false -- and "You're live" on a hidden profile is
+     the precise contradiction this function was written to end.
+
+     No reason and no quoted text: see my_review_status() in 0040. */
+  if (reviewStatus.underReview) {
+    return `<strong>Your profile is under review.</strong> Someone reported it, so it is hidden from clients while a person looks at it. We aim to review within ${LICENSE_CHECK_SLA} and we'll email you the outcome &mdash; most reports are resolved with no change, and nothing on your profile has been altered.`;
+  }
+
   /* The free period ran out and nobody renewed. Their profile and everything
      in it is intact -- it is simply not being shown -- and saying so plainly
      matters more than the offer does. */
@@ -1074,12 +1066,9 @@ function normalizeTherapist(t) {
   if (t.licenseVerified === undefined) t.licenseVerified = false;   // never assume verified
   if (t.identityVerified === undefined) t.identityVerified = false;
   if (t.subscription === undefined) {
-    // Derive from the live ladder rather than hard-coding. A literal here drifts
-    // the moment the ladder rolls over, and omitting introMonths printed
-    // "for your first undefined months" in Settings.
-    const p = listingPricing();
-    t.subscription = { plan: p.founding ? 'founding' : 'standard', founding: p.founding,
-                       introRate: p.introRate, introMonths: p.introMonths, standardRate: p.standardRate };
+    // Read the rate rather than hard-coding it, so this cannot drift from
+    // STANDARD_RATE the way the old ladder-derived literal did.
+    t.subscription = { plan: 'standard', standardRate: listingPricing().standardRate };
   }
   /* The Ideal Client editor reads eight arrays with no guards --
      `t.idealClient.ageBands.includes(...)` and seven more. A therapist object
@@ -2131,6 +2120,24 @@ async function deleteLicense(state) {
   return res.ok;
 }
 
+/* Whether an open report is hiding this therapist. Kept OUT of the therapists
+   row on purpose (0040 derives it from profile_reports, so resolving a report
+   restores the profile with nothing to keep in sync) -- which means it needs
+   its own read. Fails to `false`: a network blip must not tell a therapist
+   they are under review when they are not. */
+let reviewStatus = { underReview: false, since: null };
+async function loadReviewStatus() {
+  if (!authReady() || !loadAuthSession()) return reviewStatus;
+  try {
+    const res = await authRest('/rpc/my_review_status', { method: 'POST', body: '{}' });
+    if (!res.ok) return reviewStatus;
+    const rows = await res.json();
+    const r = Array.isArray(rows) ? rows[0] : rows;
+    reviewStatus = { underReview: !!(r && r.under_review), since: (r && r.since) || null };
+  } catch (e) { /* leave the last known value */ }
+  return reviewStatus;
+}
+
 async function loadTherapistRow() {
   const s = loadAuthSession();
   if (!authReady() || !s) return null;
@@ -2187,13 +2194,13 @@ function dbRowToTherapist(row) {
        was simply never read, which is why the app could not tell a therapist
        on a free trial from one being charged. */
     subscriptionStatus: row.subscription_status || null,
-    /* End of the six free months. Null until they first go live — the clock
-       starts at findability, not signup, so nobody burns free time waiting on
-       a hand-checked license. See migration 0029. */
+    /* End of the free period — a fixed 2027-03-01 for everyone, per-row so it
+       can be extended for an individual without a deploy. 0029's rolling six
+       months from go-live was replaced by the fixed date in 0032. */
     freeUntil: row.free_until || null,
     /* Was: a hardcoded {founding:false, standardRate:29.99} for every row that
-       came back published. Settings printed it verbatim, so a founding member
-       paying $9.99 was told "Listed — $29.99/mo" by their own account page.
+       came back published, which Settings printed verbatim — so anyone on a
+       discounted rate was told the standard one by their own account page.
        There is no rate column to read, so the honest thing is to carry no rate
        at all rather than a confident wrong one. */
     subscription: row.published ? { status: row.subscription_status || null } : null,
@@ -4278,7 +4285,10 @@ function gettingStartedHtml(t) {
      clients are already seeing them. */
   const s = listingState(t);
   const stuck = s.stuck;    // subscribed and invisible: the leak
-  const live  = s.visible;  // the only outcome that serves a client
+  /* An open report hides them server-side (0040), so "live" here has to agree
+     or Home announces a profile clients cannot see -- the exact contradiction
+     listingState() was written to end. */
+  const live  = s.visible && !reviewStatus.underReview;
   if (stuck) kTrack('app_paying_but_invisible', true);
   if (live) kTrack('app_therapist_live', true);
   if (allDone) kTrack('app_setup_complete', true);
@@ -5083,6 +5093,7 @@ document.getElementById('login-submit-btn').addEventListener('click', async () =
   try {
     await authSignIn(email, password);
       const row = await loadTherapistRow();
+      await loadReviewStatus();          // an open report hides them; see 0040
       // 0013 creates a stub row the moment someone pays, so "a row exists" no
       // longer means "they have a profile". A stub has no name -- send those
       // people through signup rather than into an empty portal.
@@ -6247,32 +6258,21 @@ function openActivateProfile() {
       ? `Your profile and everything in it is saved. Clients stop seeing it until you keep it active.`
       : `${ls.daysLeft} day${ls.daysLeft === 1 ? '' : 's'} left. Keep it active and nothing changes &mdash; same profile, same matches.`}</div>
     <!-- This screen is the RENEWAL offer now, not onboarding. Nobody pays to
-         sign up, so the only people who reach it are six months in and
-         deciding whether to carry on. The 30-day trial stays because the
-         Stripe link carries it — it is a grace period on the decision, not a
-         second free trial on top of the six months. -->
-    <div class="activate-plan ${p.founding ? 'founding' : ''}">
-      <!-- The badge used to count down to the next price rise. It read as a
-           threat on the one screen where someone is deciding to pay, and it
-           made the deadline the story instead of the rate. Same offer, stated
-           as what they get: $20 a month less than the standard rate. -->
-      ${p.founding ? `<div class="activate-badge">🌟 Founding rate — $${p.introRate.toFixed(2)}/mo instead of $${p.standardRate.toFixed(2)}</div>` : ''}
-      <div class="activate-price">Free<span> for 30 days</span></div>
-      ${p.founding
-        ? `<div class="activate-terms">then $${p.introRate.toFixed(2)}/mo, locked for ${p.introMonths} months · cancel anytime</div>`
-        : `<div class="activate-terms">then $${p.standardRate.toFixed(2)}/mo · cancel anytime</div>`}
+         sign up, so the only people who reach it are at the end of the free
+         period and deciding whether to carry on. The 30-day trial stays
+         because the Stripe link carries it — it is a grace period on the
+         decision, not a second free offer on top of the free period. -->
+    <div class="activate-plan">
+      <div class="activate-price">Free<span> for ${TRIAL_DAYS} days</span></div>
+      <div class="activate-terms">then $${p.standardRate.toFixed(2)}/mo · cancel anytime</div>
     </div>
     <ul class="policy-list">
-      <li><strong>Nothing is charged for 30 days.</strong> Your card is saved now; cancel before day 31 and you're never billed</li>
+      <li><strong>Nothing is charged for ${TRIAL_DAYS} days.</strong> Your card is saved now; cancel before day ${TRIAL_DAYS + 1} and you're never billed</li>
       <li>Your profile, your prompts, your photos and your conversations all stay exactly as they are</li>
       <li>Cancel anytime — your profile just unlists, nothing is deleted</li>
-      <!-- The coupon's 12 months run from signup and the trial burns the
-           first, so only 11 carry an invoice -- $20 x 12 was the wrong sum.
-           Counted right the year is better: a free month is worth the STANDARD
-           rate. Must stay identical to the figure activate.js puts on the
-           website; two different savings numbers for one offer is worse than
-           either of them being slightly conservative. -->
-      ${p.founding ? `<li>Your $${p.introRate.toFixed(2)} rate is locked for a full ${p.introMonths} months — $${Math.floor(p.standardRate + (p.standardRate - p.introRate) * (p.introMonths - 1))} less than the standard $${p.standardRate.toFixed(2)}/mo across your first year</li>` : ''}
+      <!-- No saving to quote and no "was" price. There is one rate, and an
+           invented comparison on the screen where somebody decides to pay is
+           the kind of thing that gets read back to you off a card statement. -->
     </ul>
     <div id="activate-status"></div>
     <button class="primary-btn" style="margin-top:14px;background:var(--coral);color:white;" id="activate-pay-btn">Continue to secure checkout →</button>
@@ -6288,8 +6288,7 @@ function openActivateProfile() {
   document.getElementById('activate-pay-btn').addEventListener('click', () => {
     const btn = document.getElementById('activate-pay-btn');
     const status = document.getElementById('activate-status');
-    const founding = p.founding;
-    const plan = founding ? 'founding' : 'standard';
+    const plan = 'standard';
 
     // Never simulate activation in a shipped build — that would hand out free
     // listings. Production ALWAYS goes to the web checkout; the simulated path
@@ -6304,7 +6303,7 @@ function openActivateProfile() {
       const sess = authReady() && loadAuthSession();
       const email = sess && sess.user && sess.user.email ? `&email=${encodeURIComponent(sess.user.email)}` : '';
       /* checkout=now tells activate.html to build the Stripe URL -- which is
-         where the founding-rate ladder and the trial link live, in ONE place
+         where the payment links live, in ONE place
          -- and go there immediately rather than rendering the offer a second
          time. The therapist sees this modal, then Stripe. */
       btn.disabled = true; btn.textContent = 'Taking you to checkout…';
@@ -6318,11 +6317,11 @@ function openActivateProfile() {
     status.innerHTML = `<div class="portal-note" style="margin-bottom:8px;">Redirecting to the Kindred website…</div>`;
     setTimeout(() => {
       t.listed = true;
-      t.subscription = { plan, founding, introRate: p.introRate, standardRate: p.standardRate, introMonths: p.introMonths };
+      t.subscription = { plan, standardRate: p.standardRate };
       t.published = true;
       if (authReady() && loadAuthSession()) saveTherapistProfile(t).catch(e => console.warn('listing save deferred:', e.message));
       close();
-      showToast(founding ? "You're a founding member — your profile is live! 🌟" : 'Your profile is live!');
+      showToast('Your profile is live!');
       renderTherapistInsights();
     }, 1200);
   });
@@ -6677,6 +6676,15 @@ function startedCardHtml(c, idx) {
    checklist, and returns null once they are live -- at which point an empty
    screen genuinely is just empty, and pretending otherwise would be nagging. */
 function nextStepToLive(t) {
+  /* FIRST, above everything else. A reported profile is hidden no matter how
+     finished or verified it is, so telling them to add a licence would be
+     answering a question they did not ask and hiding the one that matters. */
+  if (reviewStatus.underReview) {
+    return { why: 'your profile is under review',
+             label: null, id: null,
+             when: 'Someone reported your profile, so it is hidden from clients while a person looks at it. We aim to review within '
+                   + LICENSE_CHECK_SLA + ' and we will email you the outcome. Most reports are resolved with no change.' };
+  }
   const s = listingState(t);
   if (s.visible) return null;
   const gaps = s.gaps;
@@ -7326,8 +7334,17 @@ function renderTherapistProfileBody() {
             </div>`;
           }).join('');
 
+          /* Consent and attestation stated AT the upload, not buried in terms.
+             Two different things, both needed:
+               - the licence to host and display (we resize and serve it)
+               - the attestation that it is theirs to publish and safe to show
+             Photos go to a public bucket and no automated check can read an
+             image, so the person uploading is the only control that exists
+             before a client sees it. Saying it here is also what makes the
+             report flow fair -- they were told the rule. */
+          const photoTerms = `<p class="photo-terms">By adding a photo you confirm it is of you, your practice or your own space &mdash; that it contains no client, no identifying client information and nothing explicit &mdash; and you give Kindred permission to host, resize and display it on your public profile. You can remove it at any time.</p>`;
           const addPhoto = blockPhotoCount(t) < MAX_PHOTOS
-            ? `<label class="media-add-row"><span class="media-thumb"><span>＋</span></span><span class="media-row-text"><strong>Add a photo</strong><span>Your office, life outside work, and one more that's you. Up to ${MAX_PHOTOS}.</span></span><input type="file" accept="image/*" data-add-block-photo hidden></label>`
+            ? `<label class="media-add-row"><span class="media-thumb"><span>＋</span></span><span class="media-row-text"><strong>Add a photo</strong><span>Your office, life outside work, and one more that's you. Up to ${MAX_PHOTOS}.</span></span><input type="file" accept="image/*" data-add-block-photo hidden></label>${photoTerms}`
             : `<p class="portal-note">Photo limit reached (${MAX_PHOTOS}). Remove one to add another.</p>`;
           // Hidden entirely rather than shown-and-refused: an affordance that
           // always says no is worse than one that is not there.
@@ -8273,6 +8290,7 @@ async function restoreSession() {
   if (!s || !s.user) return false;
   try {
     const row = await loadTherapistRow();
+    await loadReviewStatus();            // session restore: same reason
     if (!row || !row.name || !String(row.name).trim()) return false;  // stub or none: let them sign in
     const t = normalizeTherapist(dbRowToTherapist(row));
     t.licenses = await loadLicenses();     // per-state, with their own verification

@@ -349,8 +349,8 @@ async function authPost(path, body) {
          card" -- which is now the opposite of what happens next. */
       const ht = document.getElementById('kt-head-title');
       const hs = document.getElementById('kt-head-sub');
-      /* SIX MONTHS FREE. There is no checkout in onboarding any more, so a
-         cold visitor is never being sold anything here -- this page is now an
+      /* FREE UNTIL MARCH 2027. There is no checkout in onboarding any more, so
+         a cold visitor is never being sold anything here -- this page is now an
          offer page whose only button goes to the app. The Stripe machinery
          below still exists for RENEWALS, which reach this file with
          ?checkout=now and never render this branch. */
@@ -416,8 +416,8 @@ async function authPost(path, body) {
         if (whoB) whoB.hidden = false;
         const ht2 = document.getElementById('kt-head-title');
         const hs2 = document.getElementById('kt-head-sub');
-        if (ht2) ht2.textContent = 'Activate your profile';
-        if (hs2) hs2.textContent = 'Sign in and we\u2019ll start your membership — 30 days free, nothing charged until day 31.';
+        if (ht2) ht2.textContent = 'Build your profile';
+        if (hs2) hs2.textContent = 'Sign in and pick up where you left off — free until 1 March 2027, no card required.';
         if (mode === 'signup') toggle.click();          // open on sign-in, not signup
         document.getElementById('ka-email')?.focus();
       });
@@ -482,7 +482,7 @@ async function authPost(path, body) {
       const ht = document.getElementById('kt-head-title');
       const hs = document.getElementById('kt-head-sub');
       if (ht) ht.textContent = 'Your profile is ready';
-      if (hs) hs.textContent = 'Activate to go live. We check your licence and identity next, and nothing is charged for 30 days.';
+      if (hs) hs.textContent = 'We check your licence and identity next. Free until 1 March 2027, then $29.99/month — no card required now.';
 
       const f = document.getElementById('ka-email');
       if (f) f.value = fromApp;

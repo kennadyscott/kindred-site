@@ -183,7 +183,7 @@
   <div class="adm-grid">
     <div class="adm-tile"><h3>Front door answered</h3><strong id="t-frontdoor">0</strong><span>audience pop-up choices</span></div>
     <div class="adm-tile"><h3>Founding signups</h3><strong id="t-subs">0</strong><span>therapists who claimed a spot</span></div>
-    <div class="adm-tile"><h3>Founding members</h3><strong id="t-founding">&mdash;</strong><span>therapists paying, from the database</span></div>
+    <div class="adm-tile"><h3>Founding members</h3><strong id="t-founding">&mdash;</strong><span>therapists on the platform, from the database</span></div>
     <div class="adm-tile"><h3>Cancellations</h3><strong id="t-cancels">0</strong><span>memberships canceled</span></div>
     <!-- These three come from admin_review_counts(), i.e. the database -- unlike
          "Front door answered" and "Founding signups" above, which read this
@@ -415,9 +415,10 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
       return;
     }
     const c = counts.counts || {};
-    /* Real, from the database: everyone whose subscription is active, whether or
-       not they have finished verification. No cap, because the founding offer
-       is date-based -- there is no quantity to run out of. */
+    /* Real, from the database: every therapist on the platform, whether or not
+       they have finished verification. NOT a count of payers -- nobody is
+       charged until March 2027, so "paying" would read zero and look broken.
+       No cap either, because the offer is a date, not a quantity. */
     const foundingEl = document.getElementById('t-founding');
     if (foundingEl) foundingEl.textContent = (c.live || 0) + (c.paying_but_hidden || 0);
     /* 0 is a real answer and has to look different from "not loaded" -- an
@@ -457,9 +458,9 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
       const live = r.license_verified && r.identity_verified;
 
       /* Billing state, straight from Stripe via the webhook. 'trialing' means
-         they came through the 30-day outreach link and have not been charged
-         yet -- worth seeing at a glance, since a trial that lapses looks
-         exactly like a cancellation from every other angle. */
+         they came through the renewal link, which carries 30 days, and have
+         not been charged yet -- worth seeing at a glance, since a trial that
+         lapses looks exactly like a cancellation from every other angle. */
       const st = r.subscription_status || '';
       const billing =
         st === 'trialing'  ? '<span class="rev-chip chip-trial">free trial</span>' :

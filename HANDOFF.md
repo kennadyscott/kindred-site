@@ -50,37 +50,45 @@ select * from admin_marketing_list();    -- therapists who opted in
 select * from therapist_stage();         -- where each therapist stalled
 ```
 
-### 2. The founding coupons — DECIDED: keep the existing 12-month ones
-Considered replacing them with 13-month versions so the trial cohort would get
-a full twelve invoices at the founding rate. Decided against it on 2026-08-08 —
-not worth rebuilding four coupons and four promotion codes for one billed month.
+### 2. The founding coupons — RETIRED (2026-08-09)
+The escalating ladder is gone. It was $9.99 / $14.99 / $16.99 / $19.99 a month
+locked for twelve months, stepped by signup date, with a Stripe promotion code
+(`FOUNDINGSEPT` / `OCT` / `NOV` / `DEC`) pre-applied per tier.
 
-What that means, so nobody "fixes" it later thinking it is a bug:
+**The offer now: free for every therapist until 1 March 2027, then $29.99/month.**
+One date and one rate, the same whoever you are and whenever you joined.
+
+Why it had to go rather than just being left alone: the last tier closed
+1 Dec 2026 and the first renewal is March 2027, so no tier could ever apply to
+anybody again — but `PRICING_TIERS` was still consulted on three screens, and
+`activate.js` was overwriting the correct hero with "then $29.99/month for your
+first 12 months" every time the page loaded. Dead pricing code does not stay
+quiet; it quotes rates the checkout will not honour.
+
+What was removed:
 
 | | |
 |---|---|
-| Coupon window | 12 calendar months from subscription creation |
-| Month 1 | the free trial — burns a coupon month, no invoice |
-| Months 2–12 | **11** invoices at the founding rate |
-| Month 13+ | $29.99 |
+| `PRICING_TIERS` | emptied, then deleted, in `activate.js` and `app/app.js` |
+| `FOUNDING_LOCK_MONTHS` | gone from both |
+| `prefilled_promo_code` | no longer set on either checkout URL |
+| `p.founding` branches | gone from the activate modal, the offer card, the hero and the heading |
+| `t.subscription` | now `{plan, standardRate}` — no `founding`, `introRate`, `introMonths` |
 
-So "locked for 12 months" is true in calendar terms and stays. Any claim about
-a saving must count ELEVEN billed months, not twelve. The copy on both
-surfaces is derived, not typed:
+**The Stripe coupons and promotion codes still exist and are still valid.**
+Nothing here deletes them, which is correct: anyone already on one keeps it,
+and a live discount should never be shortened underneath someone. They are
+simply never handed out again. Coupons are immutable anyway — Stripe lets you
+edit a coupon's name and metadata and nothing else.
 
-    STANDARD_RATE + (STANDARD_RATE - rate) * (FOUNDING_LOCK_MONTHS - 1)
-    = 29.99 + 20.00 * 11 = $249
+**Both payment links stay**, on the same $29.99/month price:
+`PAYMENT_LINK` and `PAYMENT_LINK_TRIAL` (30-day trial set under Subscription
+options). The trial is now a grace period on the RENEWAL decision, not a second
+free offer stacked on the free period — the only people who reach checkout are
+therapists whose free-until-March window has ended.
 
-`FOUNDINGSEPT` / `OCT` / `NOV` / `DEC` stay exactly as they are in
-`PRICING_TIERS`. Nothing to do before September — the ladder is date-driven
-and rolls itself to $14.99.
-
-**One live risk left.** The tier cutoffs in `PRICING_TIERS` are evaluated in
-the THERAPIST'S browser timezone; Stripe's redeem-by runs on the account's. A
-therapist west of you late on August 31st can still be sent `FOUNDINGSEPT`
-after Stripe has stopped honouring it — Stripe rejects the code and they are
-charged $29.99 on a page that just promised $9.99. Pushing each coupon's
-redeem-by one day past its cutoff closes it.
+The timezone risk that used to live here is gone with the ladder: there are no
+redeem-by dates left to evaluate in the wrong clock.
 
 ### 2b. Migration 0026 — license expiry date
 `alter table therapist_licenses add column expires_on date` plus
@@ -112,7 +120,7 @@ $0.00. That confirms the redirect AND finally exercises
   attaches the money to nobody, logs an error, and never self-heals — even if
   they create that account later. `activate.html` prevents it by requiring an
   account first. **Only ever send `activate.html?offer=trial30`, never the raw
-  `buy.stripe.com` link** (which also drops the founding discount). The fix is
+  `buy.stripe.com` link.** The fix is
   a `pending_activations` table claimed at signup; roughly an hour.
 - **Analytics are per-browser.** `analytics.js` only posts to the database in a
   browser where you pasted the config by hand, so the review page's "Front door
@@ -142,7 +150,7 @@ looks exactly like a broken code change. Currently `kindred-v19`.
 **Verify by looking, not only by measuring.** Three bugs today passed every DOM
 check and were only visible on screen: a hero crushed to 241px inside a 620px
 column, tracker labels drawn as 26px circles by an unscoped `span` rule, and a
-button promising $9.99 above a checkout saying $0.00.
+button promising a monthly rate above a checkout saying $0.00.
 
 **The preview pane lies in specific ways.** Zero-height viewport (all layout
 measures 0), blank frames after a smooth scroll, `:focus` styles not applying,
