@@ -6717,7 +6717,7 @@ function renderTherapistProfileBody() {
         <h3>✦ Your ideal client</h3>
         <span class="ideal-private">Private — only you see this</span>
       </div>
-      <p class="ideal-section-sub">Describe who you're the strongest fit for. When a client lines up, they're flagged <strong>✦ Ideal match</strong> on your requests. This never limits who can find you — everything below this section is your "I also work with" profile, and that's what clients see.</p>
+      <p class="ideal-section-sub">Describe who you're the strongest fit for. When a client lines up, they're flagged <strong>✦ Ideal match</strong> on your requests. This never limits who can find you — everything under <strong>Your Wider Net</strong> is what clients actually see.</p>
 
       <div class="t-form-label">Ages <span class="ideal-hint">life stages — clients enter their exact age, we match it here</span></div>
       <div class="chip-grid">${IDEAL_AGE_BANDS.map(a => `<div class="chip-option ${ic.ageBands.includes(a.label) ? 'selected' : ''}" data-ideal="ageBands" data-val="${a.label}">${a.label} <span class="chip-sub">${a.sub}</span></div>`).join('')}</div>
@@ -6764,7 +6764,18 @@ function renderTherapistProfileBody() {
     </div></div>
 
     <div class="pm-edit">
-    <div class="edit-public-bar">🌐 Public — this is what clients see</div>
+    <!-- The public counterpart to the ideal-client block above. Same shape on
+         purpose: the two sections do opposite jobs and the pairing is the
+         explanation. Amber + "private" there, lilac + "public" here. -->
+    <div class="wider-section">
+      <div class="wider-section-head">
+        <h3>✦ Your Wider Net</h3>
+        <span class="wider-public">🌐 Public — clients see this</span>
+      </div>
+      <p class="wider-section-lead">Tell us everything you can help with</p>
+      <p class="wider-section-sub">This is where you can showcase the full range of your experience, skills, specialties, and the types of clients you’re comfortable working with. These selections help your profile reach a wider range of clients who may be looking for support.</p>
+      <p class="wider-section-pair">Your <strong>Ideal Client</strong> helps Kindred find your best matches. Your <strong>Wider Net</strong> helps clients find you for everything else you offer.</p>
+    </div>
 
     <!-- ===== SECTION 1 · FIRST GLANCE ===== -->
     <details class="edit-section" data-edit-section="first" ${editSectionsOpen.first ? 'open' : ''}>
