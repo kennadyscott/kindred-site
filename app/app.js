@@ -1804,6 +1804,23 @@ async function saveTherapistProfile(t) {
   if (res.ok) kTrack('app_profile_saved');
   if (!res.ok) {
     const body = await res.text();
+    /* 23505 on therapists_slug_key: the upsert's speculative insert proposed a
+       slug that already exists — almost always the therapist's OWN, because
+       ON CONFLICT (user_id) does not cover a conflict on a different unique
+       index. Migration 0031 stops it happening at all; until that is applied,
+       send the slug explicitly so the trigger leaves it alone and the row
+       resolves on user_id. Costs one extra request only on the failure path. */
+    if (/23505/.test(body) && /slug/i.test(body)) {
+      console.warn('slug conflict on upsert — retrying with an explicit slug (run migration 0031)');
+      const retry = await authRest('/therapists', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(Object.assign(therapistToDbRow(t, s.user.id), {
+          slug: slugifyName(displayName(t)) + '-' + String(s.user.id).replace(/-/g, '').slice(0, 6)
+        }))
+      });
+      if (retry.ok) { kTrack('app_profile_saved'); return true; }
+    }
     const missing = PENDING_COLUMNS.find(c => !unavailableColumns.has(c) && body.includes(c));
     if (missing && /42703|does not exist|schema cache/i.test(body)) {
       console.warn(`${missing} column not present yet — saving without it. Run the migration.`);
@@ -5161,16 +5178,12 @@ function renderSignupStepBody() {
         <div class="toggle-label"><strong>Offering on-demand this week</strong><span>Shown in On-Demand for one-time sessions</span></div>
         <div class="switch ${d.onDemand ? 'on' : ''}" id="ts-ondemand-switch"></div>
       </div>
-      <div id="ts-slots-section" style="${d.onDemand ? '' : 'display:none;'}">
-        <div class="t-form-label">Open slots this week</div>
-        <div class="slot-row" id="ts-slots-list">
-          ${d.onDemandSlots.map((s, i) => `<span class="slot-btn booked" style="cursor:pointer;" data-remove-slot="${i}">${s.label} ✕</span>`).join('')}
-        </div>
-        <div class="add-slot-row">
-          <input type="text" id="ts-new-slot-input" placeholder="e.g. Mon 3:00pm">
-          <button id="ts-add-slot-btn">Add</button>
-        </div>
-      </div>
+      <!-- "Open slots this week" was here. Removed from signup: asking someone
+           to commit to specific times before their profile even exists is the
+           one answer that goes stale fastest, and the On Demand tab already
+           has a proper editor for it — day picker, time picker, price, the
+           earnings split — that they will use every week anyway. Nothing is
+           lost; the field simply starts empty. -->
 
       <!-- The only place consent is asked for. Deliberately OFF by default: a
            pre-ticked box is not consent, and it is the fastest way to lose a
@@ -5410,18 +5423,8 @@ function attachSignupHandlers() {
       renderSignupStep();
     }
   });
-  const addSlotBtn = document.getElementById('ts-add-slot-btn');
-  if (addSlotBtn) addSlotBtn.addEventListener('click', () => {
-    const input = document.getElementById('ts-new-slot-input');
-    const label = input.value.trim();
-    if (!label) return;
-    const rank = d.onDemandSlots.length ? Math.max(...d.onDemandSlots.map(s => s.rank)) + 1 : 1;
-    d.onDemandSlots.push({ label, rank });
-    renderSignupStep();
-  });
-  document.querySelectorAll('#ts-slots-list [data-remove-slot]').forEach(el => {
-    el.addEventListener('click', () => { d.onDemandSlots.splice(Number(el.dataset.removeSlot), 1); renderSignupStep(); });
-  });
+  /* Slot handlers removed with the field — they bound to nothing. Slots are
+     managed on the On Demand tab, which has the real editor. */
 
   const backBtn = document.getElementById('ts-back');
   if (backBtn) backBtn.addEventListener('click', () => { signupStep--; renderSignupStep(); });
