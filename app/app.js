@@ -7151,9 +7151,19 @@ function attachTherapistProfileHandlers(t) {
     else if (blockPromptCount(t) < MAX_GET_TO_KNOW_PROMPTS) blocks.push({ type: 'prompt', question: q, answer: '' });
     renderTherapistProfile();
   }));
-  document.querySelectorAll('textarea[data-block-answer]').forEach(el => el.addEventListener('input', () => {
-    getToKnowBlocks(t)[Number(el.dataset.blockAnswer)].answer = el.value;
-  }));
+  /* Grow to fit. rows="3" was sized against the old 740px editor; at the
+     phone column the same answer needs about five, so a saved blurb rendered
+     clipped mid-word until you clicked into it. A therapist cannot judge
+     writing they cannot see. Safe to do in place -- this handler does not
+     re-render, so the caret stays put. */
+  const fitBlockText = el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
+  document.querySelectorAll('textarea[data-block-answer]').forEach(el => {
+    fitBlockText(el);
+    el.addEventListener('input', () => {
+      getToKnowBlocks(t)[Number(el.dataset.blockAnswer)].answer = el.value;
+      fitBlockText(el);
+    });
+  });
   document.querySelectorAll('[data-remove-block]').forEach(el => el.addEventListener('click', () => {
     const blocks = getToKnowBlocks(t);
     const [removed] = blocks.splice(Number(el.dataset.removeBlock), 1);

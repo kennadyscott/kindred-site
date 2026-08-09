@@ -2272,7 +2272,11 @@ select.t-rate-input,
 /* Same rule as .prompt-photo — the editor must show a therapist exactly what
    a client will see, and it was cropping to 4:5 AND capping at 220px, so the
    block was both the wrong shape and too small to judge. */
-.feed-block-photo-body img { width:100%; height:auto; max-height:520px; object-fit:contain; border-radius:10px; display:block; margin:0 auto; background:var(--cream-2); }
+/* 700px matches .prompt-photo / .feed-media img on the client side. At the
+   390px column a 9:16 phone photo is ~693px tall, so the old 520px cap
+   letterboxed ordinary portrait shots here while the same photo rendered
+   full-bleed in View -- the editor showed a crop the client never gets. */
+.feed-block-photo-body img { width:100%; height:auto; max-height:700px; object-fit:contain; border-radius:10px; display:block; margin:0 auto; background:var(--cream-2); }
 .feed-block-video-body { display:flex; flex-direction:column; gap:8px; }
 .feed-block-video-body video { width:100%; max-height:200px; border-radius:10px; background:#000; }
 .feed-block-video-body .video-empty { font-size:12px; color:var(--ink-soft); padding:14px; text-align:center; background:var(--cream); border-radius:10px; }
@@ -2375,6 +2379,24 @@ select.t-rate-input,
     padding: 10px;
     background: var(--paper);
     box-shadow: 0 10px 30px rgba(43, 34, 51, .07);
+  }
+
+  /* The editor gets the same column. Two reasons, and the second is the one
+     that matters:
+
+     1. Switching Edit -> View snapped the layout 740px -> 390px, so every
+        photo visibly resized at the moment you went to check it.
+     2. The blocks in "Get to know you" ARE the feed. Composing them two
+        columns wide meant judging crops, photo order and how much text fits
+        against a layout no client will ever load. Same accuracy problem the
+        View fix solved, one screen earlier -- and this is the screen where
+        the decisions actually get made.
+
+     No device frame here: View is a preview of a client's screen, the editor
+     is not, and framing a form would only imply it was one. */
+  #t-profile-content[data-mode="edit"] .pm-edit {
+    max-width: 390px;
+    margin: 0 auto;
   }
 }
 
