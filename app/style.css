@@ -2381,22 +2381,22 @@ select.t-rate-input,
     box-shadow: 0 10px 30px rgba(43, 34, 51, .07);
   }
 
-  /* The editor gets the same column. Two reasons, and the second is the one
-     that matters:
+  /* Only "Get to know you" narrows -- not the whole editor.
 
-     1. Switching Edit -> View snapped the layout 740px -> 390px, so every
-        photo visibly resized at the moment you went to check it.
-     2. The blocks in "Get to know you" ARE the feed. Composing them two
-        columns wide meant judging crops, photo order and how much text fits
-        against a layout no client will ever load. Same accuracy problem the
-        View fix solved, one screen earlier -- and this is the screen where
-        the decisions actually get made.
+     Those blocks ARE the feed, so composing them two columns wide meant
+     judging crops, photo order and how much text fits against a layout no
+     client will ever load. Everything else in the editor (name, credentials,
+     licences, chip grids) is an ordinary form that is easier to fill in wide,
+     and squeezing it to phone width just made the top of the page look
+     broken for no gain.
 
-     No device frame here: View is a preview of a client's screen, the editor
-     is not, and framing a form would only imply it was one. */
-  #t-profile-content[data-mode="edit"] .pm-edit {
+     No device frame: View is a preview of a client's screen, this is still an
+     editor, and framing it would imply otherwise. The section hint says
+     "shown at phone width" so the narrow card reads as deliberate. */
+  #t-profile-content[data-mode="edit"] .edit-section[data-edit-section="getToKnow"] {
     max-width: 390px;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 

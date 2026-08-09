@@ -6859,7 +6859,7 @@ function renderTherapistProfileBody() {
 
     <!-- ===== SECTION 2 · ADDITIONAL DETAILS ===== -->
     <details class="edit-section" data-edit-section="getToKnow" ${editSectionsOpen.getToKnow ? 'open' : ''}>
-      <summary><span class="edit-section-title">Get to know you</span><span class="edit-section-hint">your story, in words &amp; photos</span><span class="edit-caret">▾</span></summary>
+      <summary><span class="edit-section-title">Get to know you</span><span class="edit-section-hint">your story, in words &amp; photos &mdash; shown at phone width</span><span class="edit-caret">▾</span></summary>
       <div class="edit-section-body">
 
         ${(() => {
