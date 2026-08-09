@@ -740,10 +740,39 @@ function profileGaps(t) {
    BOTH 'active' and 'trialing' -- so it has never meant "a client can see you",
    and reading it as though it did is the whole bug.
    ========================================================================== */
+const FREE_MONTHS = 6;
+const FREE_ENDING_SOON_DAYS = 30;
+
+/* Days until the free period ends. Infinity when it has not started -- they
+   have never been findable, so nothing is running down. */
+function fmtFreeUntil(t) {
+  if (!t || !t.freeUntil) return '';
+  const d = new Date(t.freeUntil);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function freeDaysLeft(t) {
+  if (!t || !t.freeUntil) return Infinity;
+  const end = new Date(t.freeUntil);
+  if (isNaN(end)) return Infinity;
+  return Math.ceil((end - Date.now()) / 86400000);
+}
+
 function listingState(t) {
-  const paying   = !!t.listed;
-  const checked  = !!(t.licenseVerified && t.identityVerified);
-  const trialing = t.subscriptionStatus === 'trialing';
+  /* ENTITLEMENT, NOT PAYMENT. `t.listed` used to mean "Stripe says they are
+     paying", and it was the only route to being visible -- so removing the
+     paywall could not be done in the app alone. Now: inside the six free
+     months, or subscribed. Null free_until means the clock has not started
+     (never verified), which counts as entitled -- see migration 0029 for why
+     it has to. */
+  const subscribed = t.subscriptionStatus === 'active' || t.subscriptionStatus === 'trialing';
+  const daysLeft   = freeDaysLeft(t);
+  const inFree     = !subscribed && daysLeft > 0;
+  const lapsed     = !subscribed && daysLeft <= 0;
+  const paying     = subscribed || inFree;      // "entitled" — kept the name so callers still read
+  const checked    = !!(t.licenseVerified && t.identityVerified);
+  const trialing   = t.subscriptionStatus === 'trialing';
   /* Content is a publishing condition too, not just a nudge -- so it has to be
      part of `visible`, or the banner would announce someone as live while an
      empty profile kept them out of the results. That is the same contradiction
@@ -752,9 +781,14 @@ function listingState(t) {
   const complete = gaps.length === 0;
   return {
     paying, checked, trialing, gaps, complete,
+    subscribed, inFree, lapsed, daysLeft,
+    endingSoon: inFree && daysLeft <= FREE_ENDING_SOON_DAYS,
     visible: paying && checked && complete,
+    /* Lapsed is NOT "stuck". Stuck means finish something; lapsed means the
+       free period ran out and there is one decision to make. Different
+       sentence, different button. */
     stuck:   paying && !(checked && complete),
-    money:   !paying ? 'none' : trialing ? 'trial' : 'charging'
+    money:   lapsed ? 'lapsed' : subscribed ? (trialing ? 'trial' : 'charging') : 'free'
   };
 }
 
@@ -767,11 +801,22 @@ function listingState(t) {
 function listingLead(t, opts) {
   const allDone = !!(opts && opts.allDone);
   const s = listingState(t);
-  if (!s.paying) return "<strong>Getting set up.</strong> About ten minutes of your time, then it's on us.";
 
+  /* The free period ran out and nobody renewed. Their profile and everything
+     in it is intact -- it is simply not being shown -- and saying so plainly
+     matters more than the offer does. */
+  if (s.lapsed) {
+    return `<strong>Your free ${FREE_MONTHS} months have ended.</strong> Your profile is saved exactly as you left it, and clients stop seeing it until you keep it active.`;
+  }
+
+  const freeNote = s.endingSoon
+    ? ` Your free ${FREE_MONTHS} months end in ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'}.`
+    : s.inFree && s.daysLeft !== Infinity
+      ? ` You're in your free ${FREE_MONTHS} months &mdash; nothing to pay until ${fmtFreeUntil(t)}.`
+      : '';
   const trialNote = s.trialing
     ? ` Nothing has been charged yet &mdash; your free ${TRIAL_DAYS} days are still running.`
-    : '';
+    : freeNote;
 
   if (s.visible) {
     return allDone
@@ -794,9 +839,18 @@ function listingLead(t, opts) {
     ? `Clients can't see you while ${blocker}.`
     : `Clients can't see you until ${blocker}.`;
 
-  return s.trialing
-    ? `<strong>Your membership is active and nothing has been charged yet</strong> &mdash; you're in your free ${TRIAL_DAYS} days. ${because}`
-    : `<strong>You're being billed but clients can't see you yet.</strong> ${because}`;
+  /* "You're being billed" is only true of someone actually subscribed. With
+     the paywall gone that is nobody at signup, so the alarming version now
+     fires only for a therapist who renewed after their six months and is
+     somehow still hidden. Everyone else is simply not finished yet, which is
+     a smaller and more accurate thing to say. */
+  if (s.trialing) {
+    return `<strong>Your membership is active and nothing has been charged yet</strong> &mdash; you're in your free ${TRIAL_DAYS} days. ${because}`;
+  }
+  if (s.subscribed) {
+    return `<strong>You're being billed but clients can't see you yet.</strong> ${because}`;
+  }
+  return `<strong>Almost there.</strong> ${because} Nothing to pay &mdash; your first ${FREE_MONTHS} months are free, and they don't start until you're live.`;
 }
 
 function normalizeTherapist(t) {
@@ -1375,9 +1429,11 @@ function hasSlidingScale(t) {
   return !!t.acceptsSlidingScale || /sliding/i.test(t.selfPayNote || '');
 }
 function isCompatible(t, mode) {
-  // A profile only reaches clients once it's listed (subscription active) and
-  // license-verified — both are the floor, not ranking signals.
-  if (t.listed === false) return false;
+  /* A profile only reaches clients once it is ENTITLED (inside the six free
+     months, or subscribed) and license-verified — both are the floor, not
+     ranking signals. This used to read `t.listed === false`, i.e. "has not
+     paid", which is no longer a thing anyone does to sign up. */
+  if (!listingState(t).paying) return false;
   if (!t.licenseVerified) return false;
   // Not-accepting therapists still show (with a "save for later" banner) unless
   // the client asked to see only those open to new clients right now.
@@ -1863,6 +1919,10 @@ function dbRowToTherapist(row) {
        was simply never read, which is why the app could not tell a therapist
        on a free trial from one being charged. */
     subscriptionStatus: row.subscription_status || null,
+    /* End of the six free months. Null until they first go live — the clock
+       starts at findability, not signup, so nobody burns free time waiting on
+       a hand-checked licence. See migration 0029. */
+    freeUntil: row.free_until || null,
     /* Was: a hardcoded {founding:false, standardRate:29.99} for every row that
        came back published. Settings printed it verbatim, so a founding member
        paying $9.99 was told "Listed — $29.99/mo" by their own account page.
@@ -3317,7 +3377,7 @@ function openShareMyProfile() {
     <h2>Share your profile</h2>
     <div class="intake-sub">Your profile has a public page anyone can open — no app needed. Post it, email it, put it on your website. Everyone who lands there gets matched with you first.</div>
 
-    ${!t.listed ? `<p class="portal-note" style="background:#fdf1ed;border-radius:12px;padding:10px 12px;">Your profile isn't listed yet, so this link won't be live until you activate it.</p>` : ''}
+    ${!listingState(t).visible ? `<p class="portal-note" style="background:#fdf1ed;border-radius:12px;padding:10px 12px;">This link won't be live until your profile is &mdash; ${(nextStepToLive(t) || {}).why || 'verification is still in progress'}.</p>` : ''}
 
     <div class="t-form-label">Your profile link</div>
     <div class="share-link-row">
@@ -3737,15 +3797,14 @@ function gettingStartedHtml(t) {
         ? 'Your therapy style, who you work best with, what sessions feel like.'
         : `Clients can't see you until this has ${gaps.join(' and ')}. Everything else is optional.`,
       action: hasProfile ? null : { label: 'Build my profile', id: 't-gs-profile' } },
-    /* Renamed from "Activate your profile". That title claimed this single step
-       did the activating, so ticking it while the banner said clients still
-       could not see you read as a contradiction. It is the payment step; the
-       whole list is what activates. */
-    { key: 'pay',      done: !!t.listed,          title: 'Select a payment plan', mine: true,
-      body: t.listed
-        ? 'Your founding rate is locked for your first 12 months.'
-        : 'Everything above is free. Start with 30 days free — nothing is charged until day 31, and you can cancel before then.',
-      action: t.listed ? null : { label: 'See the plan', id: 't-gs-activate' } },
+    /* THE PAYMENT STEP IS GONE. Signing up costs nothing and the first six
+       months are free, so there is nothing to select, nothing to activate and
+       no card to take. It used to sit here as step two -- a paywall between a
+       therapist and the thing they came to do.
+       Renewal is not a checklist item either: it happens once, six months
+       later, and lives in the banner and in Settings where a billing decision
+       belongs. A list called "what's left before clients see you" should only
+       ever contain things that are actually left. */
     { key: 'licence',  done: licenceDone, title: 'Add your license(s)', mine: true,
       body: deniedLicence
         ? `${deniedLicence.state}: ${String(deniedLicence.rejectedReason || '').replace(/[<>&]/g, '')}`
@@ -5506,6 +5565,7 @@ function finishTherapistSignup() {
         newT.licenseVerified    = row.license_verified  === true;
         newT.identityVerified   = row.identity_verified === true;
         newT.subscriptionStatus = row.subscription_status || null;
+        newT.freeUntil          = row.free_until || null;
         // No invented rate here either -- see dbRowToTherapist.
         newT.subscription       = row.published ? { status: row.subscription_status || null } : null;
       })
@@ -5564,7 +5624,11 @@ function confirmNameThenActivate(t, issue) {
 
 function openActivateProfile() {
   const t = THERAPISTS.find(t => t.id === currentTherapistId);
-  if (!t || t.listed) return;
+  /* Now the RENEWAL offer, not onboarding. Only reachable once the free
+     period is ending or over — there is nothing to buy before that. */
+  if (!t) return;
+  const ls = listingState(t);
+  if (ls.subscribed || !(ls.lapsed || ls.endingSoon)) return;
   /* Last look at the name before it becomes public. Activating is the moment
      it stops being a draft and starts being how strangers read them, so a
      spelling nobody has confirmed gets one question here rather than living on
@@ -5576,11 +5640,15 @@ function openActivateProfile() {
   const sheet = document.getElementById('confirm-sheet');
   sheet.innerHTML = `
     <div class="sheet-close"></div>
-    <h2>Activate your profile</h2>
-    <div class="intake-sub">Your profile is built. List it on Kindred to start being matched with clients.</div>
-    <!-- Everyone activating gets the 30 days free, so the headline is the trial
-         and the rate is what happens after it. Leading with $9.99 asked for
-         money on a screen where none is due. -->
+    <h2>${ls.lapsed ? 'Keep your profile active' : 'Your free ' + FREE_MONTHS + ' months are ending'}</h2>
+    <div class="intake-sub">${ls.lapsed
+      ? `Your profile and everything in it is saved. Clients stop seeing it until you keep it active.`
+      : `${ls.daysLeft} day${ls.daysLeft === 1 ? '' : 's'} left. Keep it active and nothing changes &mdash; same profile, same matches.`}</div>
+    <!-- This screen is the RENEWAL offer now, not onboarding. Nobody pays to
+         sign up, so the only people who reach it are six months in and
+         deciding whether to carry on. The 30-day trial stays because the
+         Stripe link carries it — it is a grace period on the decision, not a
+         second free trial on top of the six months. -->
     <div class="activate-plan ${p.founding ? 'founding' : ''}">
       <!-- The badge used to count down to the next price rise. It read as a
            threat on the one screen where someone is deciding to pay, and it
@@ -5594,7 +5662,7 @@ function openActivateProfile() {
     </div>
     <ul class="policy-list">
       <li><strong>Nothing is charged for 30 days.</strong> Your card is saved now; cancel before day 31 and you're never billed</li>
-      <li>Your profile goes live in client matching once your licence and identity are verified</li>
+      <li>Your profile, your prompts, your photos and your conversations all stay exactly as they are</li>
       <li>Cancel anytime — your profile just unlists, nothing is deleted</li>
       <!-- The coupon's 12 months run from signup and the trial burns the
            first, so only 11 carry an invoice -- $20 x 12 was the wrong sum.
@@ -5686,7 +5754,7 @@ function showTherapistView() {
      in front of the checklist that was the only thing they needed to see.
      Nothing to report is not a reason to interrupt. */
   const t = THERAPISTS.find(x => x.id === currentTherapistId);
-  const everLive = !!(t && t.listed && t.licenseVerified && t.identityVerified);
+  const everLive = !!(t && listingState(t).visible);
   if (!therapistWelcomeShown && everLive) {
     therapistWelcomeShown = true;
     openTherapistWelcome();
@@ -5753,7 +5821,13 @@ function renderTherapistInsights() {
     { label: 'On-Demand sessions booked', value: (t.stats.onDemandBooked || 0) + odBookedCount, delta: 'all time' }
   ];
   container.innerHTML = `
-    ${!t.listed ? `<div class="activate-banner"><div><strong>Your profile isn't listed yet</strong><span>Activate it to appear in client matching.</span></div><button class="activate-banner-btn" id="t-activate-btn">Activate</button></div>` : ''}
+    <!-- Was "Your profile isn't listed yet — Activate", shown to anyone who
+         had not paid. Nobody pays to sign up now, so the only version of this
+         worth showing is at the far end: the free period running out. -->
+    ${(() => { const s = listingState(t);
+      if (s.lapsed) return `<div class="activate-banner"><div><strong>Your free ${FREE_MONTHS} months have ended</strong><span>Your profile is saved — clients stop seeing it until you keep it active.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
+      if (s.endingSoon) return `<div class="activate-banner"><div><strong>${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left of your free ${FREE_MONTHS} months</strong><span>Keep your profile active and nothing changes for your clients.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
+      return ''; })()}
     ${verificationBannerHtml(t)}
     <div class="intake-sub" style="margin-bottom:14px;">How clients are finding and responding to your profile.</div>
     <div class="stat-grid">
@@ -5943,9 +6017,11 @@ function nextStepToLive(t) {
     return { why: `your profile still needs ${gaps.join(' and ')}`,
              label: 'Finish my profile', id: 't-empty-profile' };
   }
-  if (!t.listed) {
-    return { why: 'your profile isn’t listed yet',
-             label: 'See the plan', id: 't-empty-activate' };
+  /* No payment step: signing up is free and the first six months are too.
+     A lapsed free period is the one money-shaped blocker left. */
+  if (listingState(t).lapsed) {
+    return { why: `your free ${FREE_MONTHS} months have ended`,
+             label: 'Keep my profile active', id: 't-empty-activate' };
   }
   const licences = t.licenses || [];
   const denied = licences.find(l => l.rejectedAt);
@@ -7547,7 +7623,10 @@ function renderTherapistSettings() {
 
     <div class="settings-group-title">Your listing</div>
     ${listingCard}
-    ${t.listed
+    <!-- Was t.listed, i.e. "has paid". Nobody pays to sign up now, so the
+         branch is whether they have an account at all - which they do, if
+         they are reading this. Kept as a guard for a half-built row. -->
+    ${t.name
       /* Same sentence the Home banner shows, from the same function. This used
          to assert "Your profile is live" off `t.listed` alone and print a
          hardcoded $29.99 beside it -- so a founding member awaiting licence
@@ -7561,8 +7640,18 @@ function renderTherapistSettings() {
          the completed checklist would otherwise have no statement of their
          listing state anywhere in Settings. */
       ? `${listingCard ? '' : `<p class="portal-note" style="margin-top:0;">${listingLead(t)}</p>`}
-         <p class="portal-note" style="margin-top:0;">Your rate and next charge date are on the Stripe receipt emailed to you when you activated.</p>`
-      : `<p class="portal-note" style="margin-top:0;">Your profile isn't listed yet.</p><button class="edit-prefs-btn" id="t-settings-activate-btn" style="color:var(--coral-dark);">Activate my profile</button>`}
+         ${(() => { const ls = listingState(t);
+           if (ls.subscribed) return `<p class="portal-note" style="margin-top:0;">Your rate and next charge date are on the Stripe receipt emailed to you.</p>`;
+           if (ls.lapsed) return `<p class="portal-note" style="margin-top:0;">Your free ${FREE_MONTHS} months ended on ${fmtFreeUntil(t)}.</p>
+             <button class="edit-prefs-btn" id="t-settings-activate-btn" style="color:var(--coral-dark);">Keep my profile active</button>`;
+           if (ls.daysLeft !== Infinity) return `<p class="portal-note" style="margin-top:0;">Free until <strong>${fmtFreeUntil(t)}</strong> &mdash; ${ls.daysLeft} day${ls.daysLeft === 1 ? '' : 's'} left. No card on file, nothing to cancel.</p>
+             ${ls.endingSoon ? `<button class="edit-prefs-btn" id="t-settings-activate-btn" style="color:var(--coral-dark);">Keep my profile active</button>` : ''}`;
+           /* Clock not started: they have never been findable, so the six
+              months have not begun. Saying "free until —" with no date would
+              read as a bug. */
+           return `<p class="portal-note" style="margin-top:0;">Your free ${FREE_MONTHS} months start the day your profile goes live, not today &mdash; time spent waiting on your licence check doesn't count against it.</p>`;
+         })()}`
+      : `<p class="portal-note" style="margin-top:0;">Your profile isn't live yet.</p>`}
 
     <div class="settings-group-title">Account</div>
     <button class="edit-prefs-btn" id="t-settings-profile-btn">Edit my profile</button>
