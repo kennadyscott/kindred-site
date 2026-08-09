@@ -7204,28 +7204,100 @@ function attachTherapistProfileHandlers(t) {
   const feedContainer = document.querySelector('.feed-blocks');
   if (feedContainer) {
     const clearIndicators = () => feedContainer.querySelectorAll('.drop-before, .drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
-    feedContainer.querySelectorAll('[data-block-index]').forEach(el => {
-      el.addEventListener('dragstart', e => {
-        dragBlockIndex = Number(el.dataset.blockIndex);
-        el.classList.add('dragging');
-        if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(dragBlockIndex)); } catch (_) {} }
-      });
-      el.addEventListener('dragend', () => { dragBlockIndex = null; el.classList.remove('dragging'); clearIndicators(); });
-    });
-    feedContainer.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+
+    /* Where the line goes for a given pointer Y. Pulled out of the dragover
+       handler because the auto-scroller below has to recompute it too --
+       while the page is scrolling under a stationary cursor, dragover does
+       not fire, and the line would otherwise freeze mid-drag. */
+    const updateIndicator = clientY => {
       clearIndicators();
       const others = [...feedContainer.querySelectorAll('[data-block-index]:not(.dragging)')];
       let marked = false;
       for (const b of others) {
         const rect = b.getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) { b.classList.add('drop-before'); marked = true; break; }
+        if (clientY < rect.top + rect.height / 2) { b.classList.add('drop-before'); marked = true; break; }
       }
       if (!marked && others.length) others[others.length - 1].classList.add('drop-after');
+    };
+
+    /* ----- edge auto-scroll -----
+       HTML5 drag and drop does not scroll the page for you. With seven blocks
+       the list is taller than the window, so moving a block from the bottom to
+       the top was simply impossible: you would hit the edge of the screen
+       still holding it, and nothing moved. Reordering is the whole point of
+       the feature, so it was broken rather than awkward.
+
+       Driven by a timer off the last known pointer Y rather than by dragover,
+       because dragover stops firing the moment the cursor stops moving --
+       which is exactly what happens when you hold a block against the top
+       edge and wait for the page to come to you.
+
+       setInterval rather than requestAnimationFrame: rAF is tied to painting,
+       so it stops in a backgrounded or otherwise non-rendering tab and leaves
+       the drag stuck with no way to tell. A 16ms timer keeps running and is
+       indistinguishable at this speed. */
+    let autoTimer = null;
+    let pointerY = 0;
+    const trackPointer = e => { pointerY = e.clientY; };
+    const scrollerFor = el => {
+      let sc = el.parentElement;
+      while (sc && sc.scrollHeight <= sc.clientHeight + 2) sc = sc.parentElement;
+      return sc || document.scrollingElement;
+    };
+    const stopAutoScroll = () => {
+      if (autoTimer) clearInterval(autoTimer);
+      autoTimer = null;
+      document.removeEventListener('dragover', trackPointer);
+    };
+    const startAutoScroll = fromEl => {
+      const sc = scrollerFor(fromEl);
+      if (!sc) return;
+      /* Never stack timers. A dragstart without its matching dragend (drop
+         handled elsewhere, drag cancelled by the OS, a second dragstart
+         before cleanup) would otherwise leave an orphan interval scrolling
+         the page on its own with nothing left holding a reference to stop it. */
+      stopAutoScroll();
+      document.addEventListener('dragover', trackPointer);
+      const EDGE = 100;      // px from the edge where scrolling kicks in
+      const MAX  = 16;       // px per tick at the very edge (~960px/s at 60Hz)
+      const isDoc = sc === document.scrollingElement || sc === document.documentElement || sc === document.body;
+      const step = () => {
+        const box     = isDoc ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect();
+        const fromTop = pointerY - box.top;
+        const fromBot = box.bottom - pointerY;
+        let dy = 0;
+        // Ramp with distance so it creeps near the threshold and races at the edge.
+        if (fromTop < EDGE)      dy = -MAX * (1 - Math.max(0, fromTop) / EDGE);
+        else if (fromBot < EDGE) dy =  MAX * (1 - Math.max(0, fromBot) / EDGE);
+        if (!dy) return;
+        const before = sc.scrollTop;
+        sc.scrollTop += dy;
+        if (sc.scrollTop !== before) updateIndicator(pointerY);
+      };
+      autoTimer = setInterval(step, 16);
+    };
+
+    feedContainer.querySelectorAll('[data-block-index]').forEach(el => {
+      el.addEventListener('dragstart', e => {
+        dragBlockIndex = Number(el.dataset.blockIndex);
+        el.classList.add('dragging');
+        if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(dragBlockIndex)); } catch (_) {} }
+        pointerY = e.clientY;
+        startAutoScroll(el);
+      });
+      el.addEventListener('dragend', () => { dragBlockIndex = null; el.classList.remove('dragging'); clearIndicators(); stopAutoScroll(); });
+    });
+    feedContainer.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      updateIndicator(e.clientY);
     });
     feedContainer.addEventListener('drop', e => {
       e.preventDefault();
+      /* Explicitly, not just in dragend: the drop re-renders and replaces the
+         dragged element, so dragend can be lost with the node it was bound to
+         -- leaving a rAF loop scrolling the page forever. */
+      stopAutoScroll();
       if (dragBlockIndex === null) { clearIndicators(); return; }
       const blocks = getToKnowBlocks(t);
       const beforeEl = feedContainer.querySelector('.drop-before');
