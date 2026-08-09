@@ -4567,9 +4567,8 @@ function openTherapistOnDemandAgreement(onAgree) {
         ? `At your rate of ${m(ex.price)} a session`
         : `For example, at ${m(ex.price)} a session`}</div>
       <div class="od-example-row"><span>Client pays</span><b>${m(ex.clientTotal)}</b></div>
-      <div class="od-example-sub">your ${m(ex.price)} plus Stripe's ${m(ex.stripeFee)}</div>
-      <div class="od-example-row"><span>Kindred keeps</span><b>${m(ex.kindredCut)}</b></div>
-      <div class="od-example-sub">5% of your price</div>
+      <div class="od-example-row"><span>Processing fee</span><b>&minus;${m(ex.stripeFee + ex.kindredCut)}</b></div>
+      <div class="od-example-sub">card processing and platform costs</div>
       <div class="od-example-row is-total"><span>You receive</span><b>${m(ex.therapistNet)}</b></div>
     </div>
     <p class="modality-info-text">Clients authorize payment when they request a slot, and the charge processes when you accept. If a client cancels a confirmed session:</p>
@@ -4580,11 +4579,16 @@ function openTherapistOnDemandAgreement(onAgree) {
     </ul>
     <div class="t-form-label">Fees</div>
     <ul class="policy-list">
-      <li><strong>Kindred keeps a 5% processing fee</strong> on each on-demand session cost.</li>
-      <li>The client also covers the Stripe processing fee (2.9% + $0.30) on top of your price.</li>
+      <!-- The worked example above shows ONE combined processing fee, which is
+           what a therapist needs to decide with. The breakdown stays here
+           because this is an agreement screen: they are consenting to these
+           terms, and a fee you agree to should be one you can see. Summarised,
+           not buried. -->
+      <li><strong>A processing fee is deducted from each on-demand session</strong> &mdash; card processing (2.9% + $0.30) plus a 5% platform fee.</li>
+      <li>Nothing is deducted from your ongoing clients. On-Demand is the only place a fee applies.</li>
     </ul>
     <p class="modality-info-text"><strong>Showing up is the deal:</strong> if you miss a confirmed session, the client is refunded in full and your On-Demand access is permanently suspended.</p>
-    <p class="modality-info-text">By continuing, you agree to these terms — including Kindred's 5% fee — and to honor confirmed sessions.</p>
+    <p class="modality-info-text">By continuing, you agree to these terms &mdash; including the processing fee above &mdash; and to honor confirmed sessions.</p>
     <button class="primary-btn" style="margin-top:12px;background:var(--coral);color:white;" id="agree-td-ondemand-btn">I Agree</button>
     <button class="text-btn" id="decline-td-ondemand-btn" style="color:var(--ink-soft);">Not Now</button>
   `;
@@ -6024,7 +6028,7 @@ function renderTherapistHome() {
     // ----- price (talks to what the client is charged) -----
     html += `<div class="t-form-label">Your On-Demand session price ($)</div>
       <input type="number" class="t-rate-input" id="od-rate-input" value="${t.onDemandRate}">
-      <p class="portal-note" style="margin-top:4px;">The client pays <strong>$${p.clientTotal.toFixed(2)}</strong> — your $${p.price.toFixed(2)} plus the Stripe fee $${p.stripeFee.toFixed(2)}. Kindred keeps 5%; you net <strong>$${p.therapistNet.toFixed(2)}</strong>.</p>`;
+      <p class="portal-note" style="margin-top:4px;">The client pays <strong>$${p.clientTotal.toFixed(2)}</strong>; after the processing fee you receive <strong>$${p.therapistNet.toFixed(2)}</strong>.</p>`;
 
     // ----- weekly calendar picker (buttons, not free text) -----
     html += `<div class="t-form-label" style="margin-top:16px;">Add openings for this week</div>`;
@@ -7179,7 +7183,7 @@ function openOnDemandInfo() {
       <li><strong>Cash-pay only.</strong> No insurance is billed for On-Demand sessions.</li>
       <li><strong>Clients pay up front.</strong> The client's card is authorized when they request a slot and charged the moment you accept — you never chase payment.</li>
       <li><strong>You meet outside the app.</strong> Kindred handles the request and payment; you schedule and hold the actual session on your own platform.</li>
-      <li><strong>5% processing fee.</strong> Kindred keeps 5% of the session cost to run On-Demand; the client also covers the Stripe processing fee.</li>
+      <li><strong>One processing fee.</strong> Card processing and platform costs come out of each On-Demand session &mdash; you see the exact figure, and your take-home, before you agree.</li>
     </ul>
     <button class="primary-btn" style="margin-top:12px;background:var(--coral);color:white;" id="od-info-ok-btn">Got it</button>
   `;
