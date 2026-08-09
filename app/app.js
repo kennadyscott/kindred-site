@@ -2885,7 +2885,15 @@ function credentialsLabel(t) {
 
 function insuranceDisplayLabel(t, opts = {}) {
   if (!opts.preview && intake.hasInsurance === 'yes' && intake.insurance !== 'any') return `Accepts ${intake.insurance}`;
-  if (t.insuranceList.length) return `Accepts ${t.insuranceList.join(', ')}`;
+  /* Named explicitly in the therapist's own preview. "Accepts Aetna, BCBS"
+     is unambiguous to a client reading a stranger's card, but a therapist
+     looking at their own needs to recognise it as THEIR list -- the thing
+     they typed -- rather than wonder whose insurance is being described. */
+  if (t.insuranceList.length) {
+    return opts.preview
+      ? `Accepts insurance: ${t.insuranceList.join(', ')}`
+      : `Accepts ${t.insuranceList.join(', ')}`;
+  }
   /* How they take payment is often what a self-pay client most needs to know
      before reaching out -- a superbill or an HSA card changes the real cost,
      and "Self-pay" alone says none of it. */
@@ -2907,9 +2915,19 @@ function detailFactsHtml(t, opts = {}) {
   // Derive format + rate from the LIVE fields so edits show up for clients
   // immediately (the seeded t.meta could be stale after a profile change).
   const meta = buildTherapistMeta(t);
-  // Insurance is a match requirement, so if this therapist is showing to a
-  // client with insurance, they accept it — show it as a verified checkmark.
-  const insFact = (opts.preview || (intake.hasInsurance === 'yes' && intake.insurance !== 'any'))
+  /* Insurance is a match requirement, so a client with insurance only ever
+     sees a therapist who takes it -- hence the verified tick and the
+     personalised wording for them.
+
+     PREVIEW MUST NOT GET THAT. `opts.preview` used to be ORed into the
+     condition, which forced the personalised phrasing on the one screen where
+     there is no "your": a therapist previewing their own card was told
+     "Accepts your insurance" and had no way to tell which plans it meant, or
+     whose. Preview shows the stored list instead -- and note that
+     insuranceDisplayLabel already handled preview correctly, so the wrong
+     branch was reaching past a function that had the right answer. */
+  const personalised = !opts.preview && intake.hasInsurance === 'yes' && intake.insurance !== 'any';
+  const insFact = personalised
     ? ['✅', 'Accepts your insurance']
     : ['🛡️', insuranceDisplayLabel(t, opts)];
   const facts = [
@@ -2934,9 +2952,14 @@ function languageBadgeHtml(t) {
 // The 3 specialties a client sees: 2 from the therapist's chosen top three, and
 // 1 that overlaps what the client said they need. If the client named nothing,
 // just the therapist's top three.
-function displayedSpecialties(t) {
+function displayedSpecialties(t, opts = {}) {
   const top = ((t.topSpecialties && t.topSpecialties.length) ? t.topSpecialties : t.tags).slice(0, 3);
-  const needs = intake.needs || [];
+  /* Same rule as the insurance line: a preview must not be personalised to
+     whoever happens to be in `intake` on this device. A therapist checking
+     their own card would otherwise see a third specialty chosen by a client's
+     answers -- their starred three are what they control, so their preview
+     shows exactly those. */
+  const needs = opts.preview ? [] : (intake.needs || []);
   const overlap = t.tags.filter(x => needs.includes(x));
   if (!needs.length || !overlap.length) return top.slice(0, 3);
   const two = top.slice(0, 2);
@@ -3402,7 +3425,7 @@ function profileCardBodyHtml(t, opts = {}) {
          honest preview of an unfinished profile is exactly what tells them
          what is missing. An empty heading is never the useful version. -->
     ${(() => {
-      const specs = displayedSpecialties(t);
+      const specs = displayedSpecialties(t, { preview });
       return specs.length
         ? `<div class="section-title spec-title">Specialties</div>
            <div class="tag-row spec-tags">${specs.map(tagHtml).join('')}</div>`
