@@ -2870,3 +2870,18 @@ select.t-rate-input,
   color: #8a5a3c; font-size: 12.5px; line-height: 1.45;
 }
 .ts-photo-row.is-required { border-color: var(--clay, #BE765F); background: var(--rust-light, #FDF2EC); }
+
+/* On-Demand: the fee split worked out in real money. "Kindred keeps 5% and the
+   client covers Stripe" is arithmetic homework on the one screen where a
+   therapist is deciding whether to take the deal. */
+.od-example { margin: 10px 0 14px; padding: 12px 14px; border-radius: 12px;
+              background: var(--cream-2); border: 1px solid var(--line); }
+.od-example-head { font-size: 11px; font-weight: 700; text-transform: uppercase;
+                   letter-spacing: .05em; color: var(--ink-soft); margin-bottom: 8px; }
+.od-example-row { display: flex; justify-content: space-between; align-items: baseline;
+                  gap: 12px; font-size: 14px; color: var(--ink); }
+.od-example-row b { font-variant-numeric: tabular-nums; }
+.od-example-sub { font-size: 11.5px; color: var(--ink-soft); margin: 1px 0 7px; }
+.od-example-row.is-total { border-top: 1px solid var(--line); margin-top: 4px;
+                           padding-top: 9px; font-weight: 700; }
+.od-example-row.is-total b { color: var(--moss, #687A65); font-size: 16px; }

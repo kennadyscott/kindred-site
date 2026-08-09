@@ -4514,9 +4514,33 @@ function finalizeCancellation(m, tier) {
 // they can turn On-Demand on for themselves — same policy the client agrees
 // to, but framed from the side that keeps the non-refunded portion.
 function openTherapistOnDemandAgreement(onAgree) {
+  /* Worked in THEIR number when they have set one. A policy that says "Kindred
+     keeps 5% and the client covers Stripe" leaves the therapist to do arithmetic
+     on the one screen where they are deciding whether the deal is worth taking
+     -- and the answer is better than the fees sound, so it is worth showing
+     rather than making them work out. Falls back to $150 before they have set a
+     rate, clearly labelled as an example. */
+  const t = THERAPISTS.find(x => x.id === currentTherapistId);
+  const own = t ? ondemandPricing(t) : null;
+  const usingOwnRate = !!(own && own.price);
+  const ex = usingOwnRate ? own : ondemandPricing({ onDemandRate: 150 });
+  const m = n => '$' + Number(n).toFixed(2);
+
   document.getElementById('confirm-sheet').innerHTML = `
     <div class="sheet-close"></div>
     <h2>On-Demand Payment Policy</h2>
+    <div class="t-form-label">You set the price</div>
+    <p class="modality-info-text">You choose what a one-time session costs, and you can change it whenever you like. Kindred never prices your time.</p>
+    <div class="od-example">
+      <div class="od-example-head">${usingOwnRate
+        ? `At your rate of ${m(ex.price)} a session`
+        : `For example, at ${m(ex.price)} a session`}</div>
+      <div class="od-example-row"><span>Client pays</span><b>${m(ex.clientTotal)}</b></div>
+      <div class="od-example-sub">your ${m(ex.price)} plus Stripe's ${m(ex.stripeFee)}</div>
+      <div class="od-example-row"><span>Kindred keeps</span><b>${m(ex.kindredCut)}</b></div>
+      <div class="od-example-sub">5% of your price</div>
+      <div class="od-example-row is-total"><span>You receive</span><b>${m(ex.therapistNet)}</b></div>
+    </div>
     <p class="modality-info-text">Clients authorize payment when they request a slot, and the charge processes when you accept. If a client cancels a confirmed session:</p>
     <ul class="policy-list">
       <li>48+ hours before the session: they get a full refund</li>
