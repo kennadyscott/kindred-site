@@ -2887,6 +2887,20 @@ function practiceBadgeHtml(t) {
 function displayName(t) {
   return (t.useCompanyName && t.companyName) ? t.companyName : t.name;
 }
+/* Who the "Get to know ___" heading is about.
+   A person gets their first name -- "Get to know Kennady" is what a client
+   would say, and "Get to Know Them" read like a directory listing about a
+   stranger rather than an introduction.
+   A practice keeps its full name: splitting "Bright Path Counseling" on the
+   first space gives "Bright", which is nobody. Falls back to "Them" so the
+   heading still reads if the name is missing -- possible in the therapist's
+   own preview, which renders before the profile is complete. */
+function profileFirstName(t) {
+  const shown = String(displayName(t) || '').trim();
+  if (!shown) return 'Them';
+  if (t.useCompanyName && t.companyName) return shown;
+  return shown.replace(/^Dr\.?\s*/i, '').split(/\s+/)[0] || 'Them';
+}
 
 function avatarHtml(t, sizeClass) {
   return t.photo
@@ -3582,7 +3596,7 @@ function profileCardBodyHtml(t, opts = {}) {
           : '';
       }
       return `<div class="get-to-know">
-      <div class="get-to-know-title">Get to Know Them</div>
+      <div class="get-to-know-title">Get to know ${String(profileFirstName(t)).replace(/[<>&"]/g, '')}</div>
       ${feed}
     </div>`;
     })()}`;
@@ -6859,7 +6873,7 @@ function renderTherapistProfileBody() {
 
     <!-- ===== SECTION 2 · ADDITIONAL DETAILS ===== -->
     <details class="edit-section" data-edit-section="getToKnow" ${editSectionsOpen.getToKnow ? 'open' : ''}>
-      <summary><span class="edit-section-title">Get to know you</span><span class="edit-section-hint">your story, in words &amp; photos &mdash; shown at phone width</span><span class="edit-caret">▾</span></summary>
+      <summary><span class="edit-section-title">Get to know you</span><span class="edit-section-hint">your story, in words &amp; photos</span><span class="edit-caret">▾</span></summary>
       <div class="edit-section-body">
 
         ${(() => {
@@ -6928,7 +6942,13 @@ function renderTherapistProfileBody() {
             ? ''
             : `<label class="media-add-row"><span class="media-thumb"><span>🎬</span></span><span class="media-row-text"><strong>Add a quick video</strong><span>A 15–30s hello — it becomes a draggable block too.</span></span><input type="file" accept="video/*" data-add-block-video hidden></label>`;
 
-          return picker + media + hint + `<div class="feed-blocks">${cards}</div>` + addPhoto + addVideo;
+          /* The feed column gets its own framed "stage" on desktop so it can be
+             composed at the width a client actually loads it at. See .feed-stage. */
+          const stage = `<div class="feed-stage">
+            <p class="feed-stage-cap">\u{1F4F1} Phone width \u2014 how clients will see it</p>
+            <div class="feed-blocks">${cards}</div>
+          </div>`;
+          return picker + media + hint + stage + addPhoto + addVideo;
         })()}
       </div>
     </details>

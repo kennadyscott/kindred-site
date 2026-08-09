@@ -2242,6 +2242,15 @@ select.t-rate-input,
 
 /* ===== Get-to-know draggable feed blocks ===== */
 .feed-blocks { display:flex; flex-direction:column; gap:14px; margin-top:6px; }
+/* The phone stage only exists on desktop -- on a real phone the editor is
+   already phone width, so a frame around it would be a box inside a box and
+   the caption would be stating the obvious. Both switch on at >=900px. */
+.feed-stage-cap {
+  display: none;
+  text-align: center; font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 2px 0 10px;
+}
 .feed-block {
   position:relative;
   border:1px solid var(--line); border-radius:14px; background:#fff; padding:10px 12px;
@@ -2381,23 +2390,32 @@ select.t-rate-input,
     box-shadow: 0 10px 30px rgba(43, 34, 51, .07);
   }
 
-  /* Only "Get to know you" narrows -- not the whole editor.
+  /* Narrowing the whole SECTION made its collapsed header a stubby card
+     wedged between two full-width ones -- it read as a rendering bug, since
+     nothing about a closed summary row explains why it is half the width.
 
-     Those blocks ARE the feed, so composing them two columns wide meant
-     judging crops, photo order and how much text fits against a layout no
-     client will ever load. Everything else in the editor (name, credentials,
-     licences, chip grids) is an ordinary form that is easier to fill in wide,
-     and squeezing it to phone width just made the top of the page look
-     broken for no gain.
+     So the card stays full width like its siblings and only the feed column
+     inside it narrows. That is the honest scope anyway: the blocks ARE the
+     feed and have to be composed at the width a client loads them at, but
+     the prompt picker, lead-photo row and add-photo controls are ordinary
+     controls that are easier to use wide.
 
-     No device frame: View is a preview of a client's screen, this is still an
-     editor, and framing it would imply otherwise. The section hint says
-     "shown at phone width" so the narrow card reads as deliberate. */
-  #t-profile-content[data-mode="edit"] .edit-section[data-edit-section="getToKnow"] {
-    max-width: 390px;
-    margin-left: auto;
-    margin-right: auto;
+     Given a frame and a caption so a 390px column inside a 740px card reads
+     as a deliberate phone stage rather than a broken layout. */
+  #t-profile-content[data-mode="edit"] .feed-stage {
+    /* 382, not 390: the stage's own 12px padding and 1px border sit OUTSIDE
+       the feed column. 382 - 24 - 2 = 356 for .feed-blocks, which is what a
+       390px phone column gives after the section's padding -- and 356 is what
+       renders the photo at 330px, the exact width View Profile shows. Sized
+       from the photo backwards, since matching that is the entire point. */
+    max-width: 382px;
+    margin: 14px auto 4px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--cream-2);
   }
+  #t-profile-content[data-mode="edit"] .feed-stage-cap { display: block; }
 }
 
 /* ===== "I booked this client" (inquiries) ===== */
@@ -2414,7 +2432,7 @@ select.t-rate-input,
 
 /* ===== "Get to know them" — visually its own section ===== */
 .get-to-know {
-  margin-top: 44px;
+  margin-top: 34px;   /* was 44 -- the void under the chips; air moved above .spec-title */
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -2439,9 +2457,19 @@ select.t-rate-input,
 .get-to-know > .prompt-block:first-of-type,
 .get-to-know > .feed-media:first-of-type { margin-top: 0; }
 
-/* centered specialty capsules with room under the heading */
-.spec-tags { justify-content: center; margin-top: 14px; }
-.spec-title { text-align: center; }
+/* Specialties sat flush against the bio blurb above it -- measured 0px --
+   and then had 44px of nothing beneath, so the heading read as a trailing
+   word of the bio and the chips floated alone in the gap. The air belongs
+   ABOVE the heading, which is what separates the two ideas; the chips then
+   tuck close to the heading they belong to. Weight 700 because it was
+   inheriting 400, identical to body text, so nothing marked it as a heading. */
+.spec-title {
+  text-align: center;
+  margin-top: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.spec-tags { justify-content: center; margin-top: 12px; }
 
 /* "not accepting new clients" ribbon over the card image */
 .not-accepting-banner {
