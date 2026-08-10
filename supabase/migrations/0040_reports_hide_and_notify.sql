@@ -17,7 +17,11 @@
 -- That is a real exposure and it is being accepted knowingly: hiding first is
 -- the right instinct when the alternative is leaving possible nudity or abuse
 -- in front of clients, and today the roster is empty so the risk is theoretical.
--- Before real clients arrive, one of these should be in place:
+--
+-- DECIDED 2026-08-09: revisit at 100 THERAPISTS. Until then, one report
+-- unlists a profile until a person reviews it. At 100 the roster is worth
+-- attacking and a single unreviewed report costs someone real income, so one
+-- of these has to land before that point:
 --     * a threshold (hide on N distinct reports rather than 1), or
 --     * a captcha/Turnstile token required on the insert, or
 --     * client accounts, so a report has an author who can be rate-limited

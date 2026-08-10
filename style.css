@@ -52,6 +52,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Privacy-page sub-headings. Only `.footer-col h4` was ever styled, so an h4
+   in body copy inherited margin:0 and sat flush against the paragraph above
+   it -- the same "heading reads as the tail of the previous sentence" problem
+   the Specialties title had. One step down from the h3 rhythm beside it. */
+main h4 { font-size: 1rem; font-weight: 700; margin: 1.35rem 0 0; }
+
 h1, h2, h3, .brand-name, .match-name {
   font-family: 'Literata', Georgia, serif;
   font-weight: 500;
