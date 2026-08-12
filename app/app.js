@@ -3298,23 +3298,49 @@ function credentialsLabel(t) {
   return filled.length ? filled.join(' • ') : 'Licensed Therapist';
 }
 
-function insuranceDisplayLabel(t, opts = {}) {
-  if (!opts.preview && intake.hasInsurance === 'yes' && intake.insurance !== 'any') return `Accepts ${intake.insurance}`;
-  /* Named explicitly in the therapist's own preview. "Accepts Aetna, BCBS"
-     is unambiguous to a client reading a stranger's card, but a therapist
-     looking at their own needs to recognise it as THEIR list -- the thing
-     they typed -- rather than wonder whose insurance is being described. */
-  if (t.insuranceList.length) {
-    return opts.preview
-      ? `Accepts insurance: ${t.insuranceList.join(', ')}`
-      : `Accepts ${t.insuranceList.join(', ')}`;
-  }
+/* ONE function, and it returns the icon as well as the words, because the icon
+   is part of the claim: a green tick beside "Accepts your insurance" is a
+   promise about money, and it must not be chosen separately from the sentence
+   it sits next to. */
+function insuranceFact(t, opts = {}) {
+  const list = (t.insuranceList || []).filter(Boolean);
   /* How they take payment is often what a self-pay client most needs to know
      before reaching out -- a superbill or an HSA card changes the real cost,
      and "Self-pay" alone says none of it. */
-  const payLabels = (t.paymentOptions || []).filter(k => k !== 'no_insurance').map(paymentLabel);
-  if (payLabels.length) return payLabels.join(' \u00b7 ');
-  return t.selfPayNote || 'Self-pay';
+  const payFallback = () => {
+    const payLabels = (t.paymentOptions || []).filter(k => k !== 'no_insurance').map(paymentLabel);
+    return ['\ud83d\udcb3', payLabels.length ? payLabels.join(' \u00b7 ') : (t.selfPayNote || 'Self-pay')];
+  };
+
+  /* The therapist's own preview. They do need to recognise their own list --
+     but a real profile carried 30+ carriers, taking more vertical space than
+     the photo, rate, location and intro combined. Three and a count proves it
+     saved without burying everything the card is actually for. */
+  if (opts.preview) {
+    if (!list.length) return payFallback();
+    const shown = list.slice(0, 3).join(', ');
+    const rest  = list.length - 3;
+    return ['\ud83d\udee1\ufe0f', `Accepts insurance: ${shown}${rest > 0 ? ` + ${rest} more` : ''}`];
+  }
+
+  const asked = intake.hasInsurance === 'yes' && intake.insurance && intake.insurance !== 'any';
+  if (asked) {
+    /* MEMBERSHIP IS CHECKED, never assumed. The old code inferred "they take
+       it" from "the client named one", reasoning that matching filters on
+       insurance. Matching does -- but SEARCH does not. Search opens the full
+       roster through this same detail view, so a client with Aetna could look
+       up a therapist who does not take Aetna and be told, under a green tick,
+       that their insurance was accepted. About money. */
+    return list.includes(intake.insurance)
+      ? ['\u2705', `Accepts your insurance \u2014 ${intake.insurance}`]
+      : ['\ud83d\udee1\ufe0f', `Doesn't take ${intake.insurance}`];
+  }
+
+  /* No plan named, so no plan is relevant, and the full list was pure noise
+     here: someone paying cash will not read 30 carriers, and someone who has
+     insurance but skipped the question cannot pick theirs out at a glance. */
+  if (list.length) return ['\ud83d\udee1\ufe0f', 'Accepts insurance'];
+  return payFallback();
 }
 
 // True when this therapist is one of the client's active Top 5 (requested,
@@ -3330,21 +3356,10 @@ function detailFactsHtml(t, opts = {}) {
   // Derive format + rate from the LIVE fields so edits show up for clients
   // immediately (the seeded t.meta could be stale after a profile change).
   const meta = buildTherapistMeta(t);
-  /* Insurance is a match requirement, so a client with insurance only ever
-     sees a therapist who takes it -- hence the verified tick and the
-     personalised wording for them.
-
-     PREVIEW MUST NOT GET THAT. `opts.preview` used to be ORed into the
-     condition, which forced the personalised phrasing on the one screen where
-     there is no "your": a therapist previewing their own card was told
-     "Accepts your insurance" and had no way to tell which plans it meant, or
-     whose. Preview shows the stored list instead -- and note that
-     insuranceDisplayLabel already handled preview correctly, so the wrong
-     branch was reaching past a function that had the right answer. */
-  const personalised = !opts.preview && intake.hasInsurance === 'yes' && intake.insurance !== 'any';
-  const insFact = personalised
-    ? ['✅', 'Accepts your insurance']
-    : ['🛡️', insuranceDisplayLabel(t, opts)];
+  /* Icon and wording decided together, in one place -- see insuranceFact().
+     They used to be chosen by two conditions that could disagree, which is how
+     a green tick ended up over an unverified claim. */
+  const insFact = insuranceFact(t, opts);
   const facts = [
     ['📍', `${t.location.city}, ${t.location.state}`],
     [fmtIcon, meta[0]],
@@ -7246,8 +7261,6 @@ function renderTherapistProfileBody() {
           <div class="toggle-label"><strong>Accepts sliding scale</strong><span>Shown to clients who need flexible pricing</span></div>
           <div class="switch ${hasSlidingScale(t) ? 'on' : ''}" id="t-sliding-switch"></div>
         </div>
-        <div class="t-form-label">Insurance accepted</div>
-        ${checkboxDropdownHtml(t.insuranceList, insuranceAll(), 'insurance', 'Choose every carrier you accept…')}
         <div class="t-form-label">Payment options</div>
         <!-- sliding_scale is filtered out here on purpose: it has its own
              toggle under Session Cost, above. Same field either way now, but
@@ -7372,6 +7385,12 @@ function renderTherapistProfileBody() {
     <details class="edit-section" data-edit-section="additional" ${editSectionsOpen.additional ? 'open' : ''}>
       <summary><span class="edit-section-title">Additional Details</span><span class="edit-section-hint">licensure, identity, therapy types</span><span class="edit-caret">▾</span></summary>
       <div class="edit-section-body">
+        <!-- Moved out of First Glance. A real therapist listed 30+ carriers,
+             which took more vertical space on the card than her photo, rate,
+             location and intro combined. First Glance is the card a client
+             meets you on; a carrier list is reference material. -->
+        <div class="t-form-label">Insurance accepted</div>
+        ${checkboxDropdownHtml(t.insuranceList, insuranceAll(), 'insurance', 'Choose every carrier you accept…')}
         <div class="must-have-toggle" style="margin-top:2px;">
           <div class="toggle-label"><strong>Accepting ongoing clients</strong><span>Off keeps you in Discover with a "save for later" banner</span></div>
           <div class="switch ${t.acceptingOngoing ? 'on' : ''}" id="t-ongoing-switch"></div>
