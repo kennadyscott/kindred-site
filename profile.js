@@ -215,7 +215,16 @@ function render(t) {
   if (loc.city || loc.state) facts.push(`📍 ${esc([loc.city, loc.state].filter(Boolean).join(', '))}`);
   if (formatLabel) facts.push(`🎥 ${formatLabel}`);
   if (t.rate_min) facts.push(`💵 $${t.rate_min}/session`);
-  if (t.insurance && t.insurance.length) facts.push(`🛡️ Accepts ${esc(t.insurance.join(', '))}`);
+  /* Three and a count, never the whole list. A real profile carried 30+
+     carriers, which on this page -- the one a therapist shares as their
+     website -- pushed everything else below the fold. There is no client
+     intake here to personalise against (a stranger with no account), so this
+     mirrors the preview treatment in the app rather than its matched one. */
+  const ins = (t.insurance || []).filter(Boolean);
+  if (ins.length) {
+    const rest = ins.length - 3;
+    facts.push(`🛡️ Accepts ${esc(ins.slice(0, 3).join(', '))}${rest > 0 ? ` + ${rest} more` : ''}`);
+  }
   if (t.languages && t.languages.length > 1) facts.push(`🗣️ ${esc(t.languages.join(', '))}`);
   $('kp-facts').innerHTML = facts.map(f => `<span>${f}</span>`).join('');
 
