@@ -5138,6 +5138,11 @@ document.getElementById('login-create-btn').addEventListener('click', async () =
   btn.disabled = true; btn.textContent = 'Creating account…';
   try {
     const { needsConfirmation } = await authSignUp(email, password);
+    /* Counted HERE, not on the button: an attempt that failed validation or
+       hit "already registered" throws above and must not read as a signup.
+       Mirrors the same event in activate.js so the two routes into a therapist
+       account land in one number instead of two half-numbers. */
+    kTrack('therapist_account_created');
     if (needsConfirmation) {
       showToast('Account created — check your email to confirm, then log in.');
       btn.disabled = false; btn.textContent = label;
