@@ -21,11 +21,6 @@ const NOTIFY_TO = Deno.env.get('NOTIFY_TO') ?? '';
 const NOTIFY_FROM = Deno.env.get('NOTIFY_FROM') ?? 'Kindred <onboarding@resend.dev>';
 const NOTIFY_SECRET = Deno.env.get('NOTIFY_SECRET') ?? '';
 
-const esc = (s: unknown) =>
-  String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
@@ -35,32 +30,42 @@ Deno.serve(async (req) => {
     return new Response('forbidden', { status: 403 });
   }
 
-  let payload: Record<string, any> = {};
-  try { payload = await req.json(); } catch (_err) { /* fall through to empty */ }
-
-  // Supabase webhooks post {type, table, record, old_record}
-  const r = payload.record ?? {};
-  const name = r.name || '(no name yet)';
-  const license = r.license_number || '(none given)';
-  const states = Array.isArray(r.license_states) ? r.license_states.join(', ') : '(none)';
+  /* The body is not read at all. The webhook posts {type, table, record}, and
+     `record` is the therapist row -- but this email says nothing about them,
+     so the row never enters scope. Pulling the name into a variable "just in
+     case" is how it reaches a subject line six months from now. The
+     shared-secret header above is the authentication; the body adds nothing. */
 
   if (!RESEND_API_KEY || !NOTIFY_TO) {
     // Do not fail the webhook over configuration -- log loudly and return 200
     // so Supabase does not retry an email that can never send.
-    console.error('notify-signup: RESEND_API_KEY or NOTIFY_TO missing; skipped', { name });
+    console.error('notify-signup: RESEND_API_KEY or NOTIFY_TO missing; skipped');
     return new Response(JSON.stringify({ skipped: 'not_configured' }), { status: 200 });
   }
 
+  /* ============================================================================
+     CONTENT-FREE BY RULE. No notification email carries anything about a
+     person -- no name, no license, no reason, no message. It says only THAT
+     something happened and links to a page behind sign-in.
+
+     This particular email is about a therapist, which is business data and not
+     PHI, so it is not itself a HIPAA problem. It is the template every future
+     notification will be copied from, and the next one is "a client sent you a
+     message". The moment a client's name reaches a subject line, PHI has left
+     Kindred's infrastructure through Resend, a vendor with no BAA -- a
+     violation with nothing to do with the database, arrived at by copying a
+     pattern that looked like plumbing.
+
+     Cheaper to make the pattern right while the only email is a harmless one.
+     Audit logs are the opposite case and stay detailed: they live in Supabase,
+     a BAA covers them, and HIPAA requires them.
+     ============================================================================ */
   const html = `
     <div style="font-family:system-ui,sans-serif;line-height:1.6;color:#3a2c40;">
-      <h2 style="color:#422448;margin:0 0 12px;">New therapist signup</h2>
-      <table style="border-collapse:collapse;font-size:15px;">
-        <tr><td style="padding:4px 14px 4px 0;color:#6b5a70;">Name</td><td><strong>${esc(name)}</strong></td></tr>
-        <tr><td style="padding:4px 14px 4px 0;color:#6b5a70;">License</td><td>${esc(license)}</td></tr>
-        <tr><td style="padding:4px 14px 4px 0;color:#6b5a70;">States</td><td>${esc(states)}</td></tr>
-      </table>
-      <p style="margin:18px 0 8px;">They will not appear to clients until their license is verified
-      against the state board and their ID is confirmed.</p>
+      <h2 style="color:#422448;margin:0 0 12px;">A new therapist is waiting for review</h2>
+      <p style="margin:0 0 18px;">Someone has finished signing up. They will not appear to
+      clients until their license is verified against the state board and their ID is
+      confirmed.</p>
       <p style="margin:0;">
         <a href="https://kindredtherapymatch.com/review"
            style="display:inline-block;background:#422448;color:#fff;text-decoration:none;
@@ -78,7 +83,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: NOTIFY_FROM,
         to: [NOTIFY_TO],
-        subject: `New therapist signup: ${name}`,
+        subject: 'A new therapist is waiting for review',
         html,
       }),
     });
@@ -86,7 +91,7 @@ Deno.serve(async (req) => {
       console.error('resend failed:', res.status, await res.text());
       return new Response(JSON.stringify({ ok: false }), { status: 200 });
     }
-    console.log('signup notification sent', { name });
+    console.log('signup notification sent');
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (err) {
     console.error('notify-signup error:', (err as Error).message);
