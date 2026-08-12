@@ -134,6 +134,35 @@ Deno.serve(async (req) => {
         return json({ ok: true, result });
       }
 
+      // ---- profile reports (0039 / 0040) ----------------------------------
+      // A report hides the therapist the moment it lands, so an unreviewed row
+      // is somebody earning nothing. Both functions are service_role only,
+      // which is the whole reason this call goes through the Edge Function.
+      case 'reports':
+        return json({ ok: true, rows: await rpc('admin_profile_reports', {}) });
+
+      case 'resolve_report': {
+        if (!body.id) return json({ error: 'id_required' }, 400);
+        const verdict = body.verdict === 'upheld' ? 'upheld' : 'dismissed';
+        // The resolution string IS the audit trail -- it is the only column
+        // that records what a human decided. Stamp who and when into it, since
+        // admin_resolve_report() takes no verifier argument and adding one
+        // would mean a migration to record something we already know here.
+        const note = String(body.note ?? '').trim().slice(0, 500);
+        const resolution = `${verdict}${note ? ' — ' + note : ''} · by ${email} on ${new Date().toISOString().slice(0, 10)}`;
+        // TWO DIFFERENT FUNCTIONS, and the difference is the whole feature.
+        // admin_resolve_report() clears resolved_at, and the hide is derived
+        // from "has an unresolved report" -- so it RELISTS. That is right for
+        // Dismiss and catastrophic for Uphold, which would put a profile found
+        // to contain nudity or abuse straight back in front of clients.
+        // admin_uphold_report() (0041) resolves and holds in one transaction.
+        const result = verdict === 'upheld'
+          ? await rpc('admin_uphold_report',  { p_id: String(body.id), p_resolution: resolution })
+          : await rpc('admin_resolve_report', { p_id: String(body.id), p_resolution: resolution });
+        console.log('report resolved', { by: email, id: body.id, verdict });
+        return json({ ok: true, result, resolution, verdict });
+      }
+
       default:
         return json({ error: 'unknown_action' }, 400);
     }
