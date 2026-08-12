@@ -28,6 +28,67 @@ function showMissing() {
   $('kp-missing').hidden = false;
 }
 
+/* THE FEED -- the thing that makes this a page rather than a listing.
+
+   `blocks` is what a therapist actually builds: photos and answers in an order
+   they dragged into place. The app has rendered it for clients since 0037.
+   This page never read the column at all, so the one page a therapist would
+   share as "my website" showed text prompts only, no photos, in an order
+   nobody chose -- the same bug as 0037, in a different file.
+
+   Order is the whole point, so blocks are rendered exactly as stored rather
+   than grouped by type, and there is no cap: a listing gets truncated, a
+   website does not.
+
+   The legacy path below still matters. `blocks` was added in 0024; a profile
+   written before that has its answers in optional_prompts and persona and
+   nothing in blocks, and would otherwise render an empty page. */
+function feedHtml(t, name) {
+  const promptCard = (q, a) =>
+    `<div class="kp-prompt"><p class="kp-prompt-q">${esc(q)}</p><p class="kp-prompt-a">${esc(a)}</p></div>`;
+  const filled = v => !!(v && String(v).trim());
+  const heading = `<p class="kp-section-title">In their words</p>`;
+
+  const blocks = Array.isArray(t.blocks) ? t.blocks : [];
+  if (blocks.length) {
+    const out = blocks.map(b => {
+      if (!b) return '';
+      if (b.type === 'prompt' && filled(b.answer)) return promptCard(b.question || '', b.answer);
+      if (b.type === 'photo' && filled(b.src)) {
+        /* loading="lazy" does nothing useful today -- these are base64 data
+           URLs, so the bytes already arrived with the HTML and there is no
+           request to defer. Kept because it starts paying the moment photos
+           move to Storage and this becomes a real URL. Worth knowing: in a
+           headless or non-painting browser a lazy image never enters the
+           viewport, so naturalWidth stays 0 and it looks like a broken image
+           when it is not. */
+        return `<figure class="kp-feed-photo"><img src="${esc(b.src)}" alt="A photo shared by ${esc(name)}" loading="lazy"></figure>`;
+      }
+      /* http(s) only. A blob: URL dies with the tab that made it and could
+         never load for a visitor -- 0038 cleared the stored ones, this keeps
+         a stale row from rendering a broken player. */
+      if (b.type === 'video' && /^https?:\/\//i.test(b.src || '')) {
+        return `<figure class="kp-feed-video"><video src="${esc(b.src)}" controls preload="metadata" playsinline></video></figure>`;
+      }
+      return '';
+    }).filter(Boolean);
+    if (out.length) return heading + out.join('');
+  }
+
+  // Pre-0024 profiles: no feed stored, so rebuild one from the older fields.
+  const prompts = [];
+  if (filled(t.prompt_style)) prompts.push(['My therapy style is…', t.prompt_style]);
+  if (filled(t.prompt_fit)) prompts.push(['You may be right for each other if…', t.prompt_fit]);
+  if (filled(t.prompt_first_session)) prompts.push(['First sessions feel like…', t.prompt_first_session]);
+  (Array.isArray(t.optional_prompts) ? t.optional_prompts : []).forEach(p => {
+    if (p && p.question && filled(p.answer)) prompts.push([p.question, p.answer]);
+  });
+  const persona = t.persona || {};
+  if (filled(persona.inOffice)) prompts.push(['Who I am in the office…', persona.inOffice]);
+  if (filled(persona.outOfOffice)) prompts.push(['Who I am out of the office…', persona.outOfOffice]);
+  return prompts.length ? heading + prompts.map(([q, a]) => promptCard(q, a)).join('') : '';
+}
+
 /* Per-therapist page metadata.
 
    READ THIS BEFORE TRUSTING IT: Facebook, iMessage, Slack, WhatsApp and
@@ -169,28 +230,11 @@ function render(t) {
     $('kp-specialties-wrap').hidden = false;
   }
 
-  // "in their words" — the prompts that make this feel like a person
-  const prompts = [];
-  if (t.prompt_style) prompts.push(['My therapy style is…', t.prompt_style]);
-  if (t.prompt_fit) prompts.push(['You may be right for each other if…', t.prompt_fit]);
-  if (t.prompt_first_session) prompts.push(['First sessions feel like…', t.prompt_first_session]);
-  (Array.isArray(t.optional_prompts) ? t.optional_prompts : []).forEach(p => {
-    if (p && p.question && p.answer) prompts.push([p.question, p.answer]);
-  });
-  const persona = t.persona || {};
-  if (persona.inOffice) prompts.push(['Who I am in the office…', persona.inOffice]);
-  if (persona.outOfOffice) prompts.push(['Who I am out of the office…', persona.outOfOffice]);
-
-  if (prompts.length) {
-    $('kp-prompts').innerHTML = `<p class="kp-section-title">In their words</p>` +
-      prompts.slice(0, 6).map(([q, a]) =>
-        `<div class="kp-prompt"><p class="kp-prompt-q">${esc(q)}</p><p class="kp-prompt-a">${esc(a)}</p></div>`
-      ).join('');
-  }
+  $('kp-prompts').innerHTML = feedHtml(t, name);
 
   // CTA — carry the therapist through so the app can surface them first
   const ref = t.slug || t.user_id;
-  $('kp-cta-btn').href = `${APP_URL}/#therapist=${encodeURIComponent(t.user_id)}`;
+  $('kp-cta-btn').href = `${APP_URL}#therapist=${encodeURIComponent(t.user_id)}`;
   $('kp-cta').hidden = false;
 
   $('kp-loading').hidden = true;

@@ -40,6 +40,14 @@
     color:#8a7a8f; margin:24px 0 10px; }
   .kp-tags { display:flex; flex-wrap:wrap; gap:8px; }
   .kp-tag { background:#EFE7F2; color:#5b4470; font-size:13px; font-weight:600; border-radius:999px; padding:6px 13px; }
+  /* Feed media. height:auto + object-fit:contain, NOT the square crop the lead
+     photo uses -- a therapist who uploads a portrait of their office should
+     see their whole office. Capped so one tall photo cannot own the page. */
+  .kp-feed-photo, .kp-feed-video { margin:16px 0 0; border-top:1px solid #F2E7DA; padding-top:16px; }
+  .kp-feed-photo img, .kp-feed-video video {
+    display:block; width:100%; height:auto; max-height:640px; object-fit:contain;
+    border-radius:12px; background:#F6F1EA;
+  }
   .kp-prompt { border-top:1px solid #F2E7DA; padding-top:16px; margin-top:16px; }
   .kp-prompt-q { font-size:13px; font-weight:700; color:#8a7a8f; margin:0 0 5px; }
   .kp-prompt-a { font-size:15.5px; line-height:1.6; color:#3a2c40; margin:0; }
