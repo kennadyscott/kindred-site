@@ -122,18 +122,19 @@
     ['.match-side .pillar-link', 'home_view_profile'],
     /* therapists landing */
     ['#kt-price-cta', 'therapists_claim_spot'],
-    ['.kt-bill', el => ({ event: 'therapists_toggle', props: { bill: el.dataset.bill } })],
     ['.kt-hero .btn-dark', 'therapists_create_profile'],
-    /* therapist portal funnel */
-    ['#kt-about-next', 'portal_profile_step'],
-    ['#kt-to-checkout', 'portal_checkout'],
-    ['#kt-subscribe', () => {
-      let plan = 'annual';
-      try { plan = (JSON.parse(localStorage.getItem('kt-account') || '{}').pendingPlan) || 'annual'; } catch (e) {}
-      return { event: 'portal_subscribed', props: { plan } };
-    }],
-    ['#kt-cancel', 'portal_cancel'],
-    ['#kt-resub', 'portal_reactivate'],
+    /* The therapist-portal funnel used to live here: portal_profile_step,
+       portal_checkout, portal_subscribed, portal_cancel, portal_reactivate.
+       Removed 2026-08-12 -- every one of their selectors (#kt-about-next,
+       #kt-to-checkout, #kt-subscribe, #kt-cancel, #kt-resub) exists nowhere on
+       the site since the portal was replaced by the app, so they could never
+       fire. Kept as a list rather than silently dropped, because
+       portal_subscribed is the paid-conversion event and it still needs a home:
+       whatever replaces it has to be wired in the APP, not here. Until then
+       the therapists table is the only truth about who is paying.
+
+       NOTE: therapists_toggle (#kt-bill) went with them -- the annual/monthly
+       billing toggle no longer exists now that there is one rate. */
     /* start here */
     ['.path-card[data-path]', el => ({ event: 'starthere_path', props: { path: el.dataset.path } })],
     /* feel better */
