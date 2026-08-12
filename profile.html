@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Therapist Profile — Kindred</title>
 <meta name="description" content="See this therapist's Kindred profile — how they work, who they work best with, and whether you two would work well together.">
-<meta property="og:title" content="My profile on Kindred">
-<meta property="og:description" content="See how I work and whether we'd work well together.">
+<!-- STATIC FALLBACK, and for link previews it is the only thing that counts:
+     Facebook, iMessage, Slack and LinkedIn do not run JavaScript, so they see
+     these tags and never the per-therapist ones setSocialMeta() writes. Kept
+     generic-but-true rather than "My profile on Kindred", which read as though
+     Kindred itself were the person being shared. Real per-therapist previews
+     need prerendered HTML -- see setSocialMeta() in profile.js. -->
+<meta property="og:title" content="A therapist on Kindred">
+<meta property="og:description" content="See how they work, who they work best with, and whether you two would be a fit.">
+<meta property="og:site_name" content="Kindred">
 <meta property="og:type" content="profile">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
