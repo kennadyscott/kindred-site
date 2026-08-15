@@ -1888,6 +1888,118 @@ async function authRest(path, opts = {}) {
   });
 }
 
+/* ===========================================================================
+   PHOTO STORAGE (migration 0044)
+   ---------------------------------------------------------------------------
+   Photos are captured as data URLs for the instant preview (readPhoto is
+   unchanged) and moved to Supabase Storage AT SAVE TIME. One choke point
+   instead of four upload sites, and it doubles as the lazy migration: any
+   base64 photo already sitting in a row gets uploaded and swapped to a URL
+   the next time that profile is saved.
+
+   NOTE the endpoint: /storage/v1, not /rest/v1 -- authRest cannot reach it.
+   The user's own access token is the authorization; the bucket policy only
+   accepts writes under the caller's auth.uid() folder.
+
+   Failure keeps the data URL. Everything renders data: URLs today, so a
+   failed upload degrades to exactly the current behaviour and retries on the
+   next save -- never block a save over a photo. */
+let storageUnavailable = false;                 // 0044 not run yet: stop retry spam
+const photoUploadCache = new Map();             // dataUrl -> public URL, this session
+
+function dataUrlToBlob(dataUrl) {
+  const m = /^data:(image\/[a-z+.-]+);base64,(.*)$/i.exec(dataUrl || '');
+  if (!m) return null;
+  const bin = atob(m[2]);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type: m[1] });
+}
+
+async function uploadPhotoToStorage(dataUrl) {
+  if (storageUnavailable) return null;
+  if (photoUploadCache.has(dataUrl)) return photoUploadCache.get(dataUrl);
+  const s = await ensureFreshSession();
+  if (!s || !s.user) return null;
+  const blob = dataUrlToBlob(dataUrl);
+  if (!blob) return null;
+  const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
+  const name = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
+  const path = `${s.user.id}/${name}`;
+  try {
+    const res = await fetch(`${KINDRED_AUTH.url}/storage/v1/object/therapist-media/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': KINDRED_AUTH.key, 'Authorization': `Bearer ${s.access_token}`,
+                 'Content-Type': blob.type, 'x-upsert': 'false' },
+      body: blob
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      if (res.status === 400 || res.status === 404) {
+        // Bucket missing: 0044 has not been run. Say so once, then stay quiet.
+        storageUnavailable = true;
+        console.warn('[kindred] photo upload skipped — therapist-media bucket not found. Run migration 0044.', body.slice(0, 120));
+      }
+      return null;
+    }
+    const url = `${KINDRED_AUTH.url}/storage/v1/object/public/therapist-media/${path}`;
+    photoUploadCache.set(dataUrl, url);
+    return url;
+  } catch (e) { return null; }
+}
+
+/* Walks every photo-bearing field on a therapist (or signup draft) and swaps
+   data: URLs for Storage URLs, in place. Safe to call repeatedly; already-
+   uploaded URLs pass straight through. Returns how many were migrated. */
+async function migratePhotosToStorage(t) {
+  if (!authReady() || !loadAuthSession()) return 0;
+  let moved = 0;
+  const swap = async (get, set) => {
+    const v = get();
+    if (typeof v === 'string' && v.startsWith('data:image/')) {
+      const url = await uploadPhotoToStorage(v);
+      if (url) { set(url); moved++; }
+    }
+  };
+  await swap(() => t.photo, u => { t.photo = u; });
+  for (const b of (Array.isArray(t.blocks) ? t.blocks : [])) {
+    if (b && b.type === 'photo') await swap(() => b.src, u => { b.src = u; });
+  }
+  for (const q of (Array.isArray(t.optionalPrompts) ? t.optionalPrompts : [])) {
+    if (q) await swap(() => q.photo, u => { q.photo = u; });
+  }
+  if (t.optionalPromptPhotos && typeof t.optionalPromptPhotos === 'object') {
+    for (const k of Object.keys(t.optionalPromptPhotos)) {
+      await swap(() => t.optionalPromptPhotos[k], u => { t.optionalPromptPhotos[k] = u; });
+    }
+  }
+  return moved;
+}
+
+/* Their photos go with the account. API-side delete removes the physical
+   objects; the RPC (0044) also clears the rows as an in-transaction backstop,
+   so a failure HERE is logged but never blocks the deletion itself. */
+async function deleteMyStorageObjects() {
+  try {
+    const s = await ensureFreshSession();
+    if (!s || !s.user) return;
+    const list = await fetch(`${KINDRED_AUTH.url}/storage/v1/object/list/therapist-media`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': KINDRED_AUTH.key, 'Authorization': `Bearer ${s.access_token}` },
+      body: JSON.stringify({ prefix: s.user.id + '/', limit: 200 })
+    });
+    if (!list.ok) return;
+    const items = await list.json();
+    const names = (Array.isArray(items) ? items : []).map(o => s.user.id + '/' + o.name).filter(n => !n.endsWith('/'));
+    if (!names.length) return;
+    await fetch(`${KINDRED_AUTH.url}/storage/v1/object/therapist-media`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'apikey': KINDRED_AUTH.key, 'Authorization': `Bearer ${s.access_token}` },
+      body: JSON.stringify({ prefixes: names })
+    });
+  } catch (e) { console.warn('[kindred] storage cleanup failed; the delete RPC backstop covers it', e && e.message); }
+}
+
 // in-memory therapist -> DB columns (mirror of dbRowToTherapist)
 function therapistToDbRow(t, userId) {
   return {
@@ -2018,6 +2130,10 @@ async function saveTherapistProfile(t) {
       body: JSON.stringify(row)
     });
   };
+
+  /* Photos first (0044): swap any data: URLs for Storage URLs so the row we
+     send is small. On failure the base64 goes through exactly as before. */
+  try { await migratePhotosToStorage(t); } catch (e) { /* never block a save */ }
 
   let res = await send();
   if (res.ok) kTrack('app_profile_saved');
@@ -6032,6 +6148,10 @@ function saveSignupProgress(d) {
   if (!authReady() || !s || !s.user) return;
   clearTimeout(signupSaveTimer);
   signupSaveTimer = setTimeout(async () => {
+    /* 0044: without this, every debounced autosave re-sent the full base64
+       photo. After the first successful upload d.photo is a short URL and
+       autosaves shrink from megabytes to bytes. */
+    try { await migratePhotosToStorage(d); } catch (e) { /* best-effort */ }
     const row = draftToPartialRow(d, s.user.id);
     unavailableColumns.forEach(c => { delete row[c]; });
     try {
@@ -8616,6 +8736,7 @@ async function deleteTherapistAccountOnServer() {
     return true;
   }
   try {
+    await deleteMyStorageObjects();     // photos go with the account (0044)
     const res = await authRest('/rpc/delete_my_therapist_account', { method: 'POST', body: '{}' });
     if (!res.ok) return false;
     const deleted = Number(await res.json());
