@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=merge32">
+<link rel="stylesheet" href="style.css?v=merge33">
 </head>
 <body>
 
@@ -229,6 +229,18 @@
 
   <!-- ===== THERAPIST BOTTOM NAV ===== -->
   <nav class="bottom-nav hidden" id="therapist-nav">
+    <!-- DESKTOP ONLY (>=900px). A tab bar says "app"; a wordmark on the left
+         and an account control on the right is what makes a header read as a
+         website. Both are display:none on a phone, where the same row has to
+         stay a five-target thumb bar. -->
+    <a class="nav-brand" href="/" aria-label="Kindred home">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+        <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+        <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+      </svg>
+      <span>kindred</span>
+    </a>
     <button class="nav-btn active" data-tscreen="t-insights">
       <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M4 10.4 12 4l8 6.4V19a1 1 0 0 1-1 1h-4.2v-5.3H9.2V20H5a1 1 0 0 1-1-1z" fill="#E9E3F2" stroke="#422448" stroke-width="1.8" stroke-linejoin="round"/>
@@ -259,7 +271,10 @@
         <path d="M12 3.2v2.1M12 18.7v2.1M20.8 12h-2.1M5.3 12H3.2M18.2 5.8l-1.5 1.5M7.3 16.7l-1.5 1.5M18.2 18.2l-1.5-1.5M7.3 7.3 5.8 5.8" stroke="#4E8C82" stroke-width="1.7" stroke-linecap="round"/>
       </svg></span><span>Settings</span>
     </button>
-  </nav>
+      <div class="nav-account">
+      <button class="signout-btn" id="therapist-logout-nav">Sign Out</button>
+    </div>
+</nav>
 
   <!-- ===== PROFILE DETAIL MODAL ===== -->
   <div class="modal-overlay hidden" id="detail-modal">
@@ -351,9 +366,24 @@
       </svg></span><span>You</span>
     </button>
   </nav>
+
+  <!-- DESKTOP ONLY. A phone app ends at the last card; a website ends at a
+       footer. Without one the therapist portal trails off into empty cream
+       below the content column, which is the strongest "this is a phone app
+       stretched wide" tell after the nav itself. -->
+  <footer class="app-footer">
+    <span class="app-footer-mark">kindred</span>
+    <nav class="app-footer-links">
+      <a href="/for-therapists">For therapists</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/about">About</a>
+      <a href="mailto:hello@kindredtherapymatch.com">Contact</a>
+    </nav>
+    <span class="app-footer-note">Therapy, matched to you.</span>
+  </footer>
 </div>
 
-<script src="app.js?v=merge77"></script>
+<script src="app.js?v=merge78"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control

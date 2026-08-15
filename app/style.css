@@ -2590,6 +2590,10 @@ select.t-rate-input,
   backdrop-filter: blur(2px);
 }
 
+/* The web-only chrome. Hidden by default so a phone never pays for it -- the
+   tab bar has exactly five thumb targets and no room for a wordmark. */
+.nav-brand, .nav-account, .app-footer { display: none; }
+
 /* ============================================================================
    DESKTOP / TRUE WEB LAYOUT
    ----------------------------------------------------------------------------
@@ -2615,7 +2619,15 @@ select.t-rate-input,
   /* The demo strip spans the full width when it's shown at all. */
   .demo-banner { width: 100%; }
 
-  /* ---- tab bar becomes a top navigation ---- */
+  /* ---- tab bar becomes a real site header ----------------------------------
+     Not just "the tabs, but on top". A website header is three things in one
+     row: who this is (wordmark, left), where you can go (tabs), and who you
+     are (account, right). Centring five tabs with nothing either side is what
+     kept reading as a phone tab bar stretched to 1440px.
+
+     The padding trick aligns the header's contents to the same column the page
+     uses, without wrapping the buttons in an extra div: max() keeps a 24px
+     gutter on smaller laptops and centres to 1240px on wide ones. */
   .bottom-nav {
     order: -1;                       /* move above the screens */
     border-top: none;
@@ -2624,6 +2636,39 @@ select.t-rate-input,
     justify-content: center;
     gap: 4px;
   }
+  /* Header layout is scoped to the therapist portal for now. The client nav
+     has no wordmark yet, and left-aligning tabs with nothing to their left
+     would just be an off-centre tab bar -- worse than the centred one. It
+     adopts this by adding the same two elements to its markup. */
+  #therapist-nav {
+    padding: 0 max(24px, calc((100% - 1240px) / 2));
+    justify-content: flex-start;
+    gap: 2px;
+    background: var(--paper, #fff);
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 28px;
+    text-decoration: none;
+    color: var(--ink);
+    font-family: 'Literata', Georgia, serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    white-space: nowrap;
+  }
+  .nav-brand svg { width: 19px; height: 19px; flex: none; }
+  .nav-brand:hover { opacity: .78; }
+  /* Pushed right by the auto margin, so the row needs no spacer element. */
+  .nav-account { display: flex; align-items: center; margin-left: auto; padding-left: 20px; }
+  .nav-account .signout-btn { margin: 0; }
+
+  /* The five in-content Sign Out buttons are a phone answer to having nowhere
+     else to put them. With an account slot in the header they are duplicates,
+     and a second Sign Out three inches below the first reads as an error. */
+  .screen[id^="screen-t-"] .top-bar .signout-btn { display: none; }
   .bottom-nav .nav-btn {
     flex: 0 0 auto;
     flex-direction: row;
@@ -2645,7 +2690,10 @@ select.t-rate-input,
   /* ---- screens scroll as a page, content held to a readable measure ---- */
   /* One measure per screen so the title in .top-bar lines up with the column
      beneath it. Screens that need more room just override --measure. */
+  /* flex:1 so the visible screen absorbs the free height and the footer lands
+     at the bottom of the window rather than immediately under short content. */
   .screen { overflow-y: auto; --measure: 720px; }
+  .screen:not(.hidden) { flex: 1 1 auto; min-height: 0; }
   /* Every direct child of a screen is a column in the page. Enumerating them by
      class went stale the moment a screen grew a subtitle or a notice — those
      stayed edge-to-edge while the heading above them was centred. */
@@ -2722,6 +2770,31 @@ select.t-rate-input,
   /* Chat should use the height available rather than a phone viewport. */
   #screen-chat .chat-messages { max-width: 760px; margin: 0 auto; width: 100%; }
   #screen-chat .chat-input-row { max-width: 760px; margin: 0 auto; width: 100%; }
+
+  /* ---- footer ---- */
+  /* Sits after the screens in source order, so it lands at the bottom of the
+     column. .phone is a flex column with the screen taking the free space, so
+     the footer stays put rather than floating up under short content. */
+  .app-footer {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+    padding: 16px max(24px, calc((100% - 1240px) / 2));
+    border-top: 1px solid var(--line);
+    background: var(--paper, #fff);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .app-footer-mark {
+    font-family: 'Literata', Georgia, serif;
+    font-size: 14px; font-weight: 600; color: var(--aubergine);
+  }
+  .app-footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+  .app-footer-links a { color: var(--ink-soft); text-decoration: none; }
+  .app-footer-links a:hover { color: var(--aubergine); text-decoration: underline; }
+  .app-footer-note { margin-left: auto; font-style: italic; opacity: .8; }
 }
 
 /* Wider still: give the reading columns a little more room. Bump the variable

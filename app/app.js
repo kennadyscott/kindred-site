@@ -6923,11 +6923,11 @@ function renderTherapistInsights() {
 document.querySelectorAll('#therapist-nav .nav-btn').forEach(btn => {
   btn.addEventListener('click', () => showTScreen(btn.dataset.tscreen));
 });
-document.getElementById('therapist-logout-0').addEventListener('click', logout);
-document.getElementById('therapist-logout-1').addEventListener('click', logout);
-document.getElementById('therapist-logout-2').addEventListener('click', logout);
-document.getElementById('therapist-logout-3').addEventListener('click', logout);
-document.getElementById('therapist-logout-4').addEventListener('click', logout);
+/* Six Sign Out buttons: one per therapist screen (a phone has nowhere else to
+   put it) plus the one in the desktop header, which is the only one visible
+   above 900px. Bound by class so adding a screen cannot silently ship a dead
+   button -- the enumerated version had already been edited five times. */
+document.querySelectorAll('.signout-btn').forEach(b => b.addEventListener('click', logout));
 
 function updateTNavBadge() {
   const badge = document.getElementById('t-nav-badge');
