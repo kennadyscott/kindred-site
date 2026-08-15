@@ -25,6 +25,16 @@ const SUPABASE_URL = 'https://izukppxgoerqtustfbnk.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dWtwcHhnb2VycXR1c3RmYm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTAzMTYsImV4cCI6MjEwMDQyNjMxNn0.FeJFOu4PmOJAbk2OqfMH1sQX6DlynKmTyhc-dtKfvZk';
 const APP_URL = '/app/';
 
+/* The same server-controlled flag the app reads. clientDataPersistence is off
+   until the BAA is countersigned, and while it is off this page must not offer
+   a form that would store a client's email -- so the contact section falls
+   back to the button it has always had. Flipping the flag in config.json turns
+   the form on everywhere with no redeploy, which is the whole point of it. */
+let KINDRED_FLAGS = { clientDataPersistence: false };
+const FLAGS_URL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  ? '/app/config.json'
+  : 'https://kindredtherapymatch.com/app/config.json';
+
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -128,6 +138,20 @@ function baseCSS(t) {
   .contact-in h2{margin-bottom:.5rem}
   .contact-in .soft{max-width:46ch;margin:0 auto 1.5rem}
   .fine{font-size:.8rem;color:var(--soft);margin-top:.9rem}
+  .inq{max-width:460px;margin:0 auto;text-align:left}
+  .inq-l{display:block;font-size:.78rem;font-weight:700;letter-spacing:.05em;
+         text-transform:uppercase;color:var(--soft);margin:0 0 .35rem}
+  .inq-opt{text-transform:none;letter-spacing:0;font-weight:500;opacity:.75}
+  .inq-in{width:100%;font:inherit;font-size:.98rem;color:${t.ink};background:${t.ground};
+          border:1px solid var(--line);border-radius:10px;padding:.7em .8em;margin:0 0 1rem}
+  .inq-in:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .inq textarea.inq-in{resize:vertical;min-height:76px}
+  .inq .btn{width:100%;border:0;cursor:pointer;font-family:inherit}
+  .inq .btn[disabled]{opacity:.6;cursor:default}
+  .inq-status{font-size:.85rem;margin:.8rem 0 0;min-height:1.2em}
+  .inq-status.bad{color:#a4402c}
+  .inq-done{text-align:center;padding:.4rem 0}
+  .inq-done .tick{font-size:1.6rem;color:var(--accent)}
   #site footer{border-top:1px solid var(--line);margin-top:3.4rem;padding:1.6rem 0 2.2rem}
   .band-foot footer{border-top:none;margin-top:0}
   .foot{display:flex;align-items:center;gap:1.2em;flex-wrap:wrap;font-size:.8rem;color:var(--soft);
@@ -438,6 +462,68 @@ function wireRail() {
   mark(items[0].id);
 }
 
+/* The inquiry form. Posts to submit_inquiry(), which is the ONLY way a row is
+   created -- every rule (email shape, length, is-this-therapist-listed, the
+   burst guard) lives in the function, so nothing here can be bypassed by
+   someone editing this file's copy in their own browser. */
+function wireInquiry(t) {
+  const form = document.getElementById('inq-form');
+  if (!form) return;
+  const email = document.getElementById('inq-email');
+  const msg = document.getElementById('inq-msg');
+  const btn = document.getElementById('inq-send');
+  const status = document.getElementById('inq-status');
+  const say = (text, bad) => { status.textContent = text; status.classList.toggle('bad', !!bad); };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (btn.disabled) return;
+    const value = (email.value || '').trim();
+    /* Checked here only to save a round trip and give a faster answer; the
+       function checks it again and is the one that counts. */
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+      say('That email address doesn\u2019t look right.', true);
+      email.focus();
+      return;
+    }
+    btn.disabled = true;
+    say('Sending\u2026');
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_inquiry`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON,
+          Authorization: `Bearer ${SUPABASE_ANON}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          p_therapist: t.user_id,
+          p_email: value,
+          p_message: (msg.value || '').trim(),
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        /* The function's own messages are written for a person to read, so
+           they are shown as-is rather than replaced with something vaguer. */
+        say(body.message || 'Something went wrong sending that. Try again in a moment.', true);
+        btn.disabled = false;
+        return;
+      }
+      const name = (t.name || '').replace(/^Dr\.?\s*/i, '').split(' ')[0] || 'They';
+      form.outerHTML = `<div class="inq-done">
+        <p class="tick" aria-hidden="true">\u2713</p>
+        <p><strong>Sent.</strong> ${esc(name)} will see it and reply to ${esc(value)}.</p>
+        <p class="soft" style="font-size:.9rem">Nothing else to do \u2014 there is no profile to
+        finish unless you want one later.</p>
+      </div>`;
+    } catch (err) {
+      say('No connection. Try again in a moment.', true);
+      btn.disabled = false;
+    }
+  });
+}
+
 /* Bound after every render -- innerHTML replaces the nav each time. */
 function wireNav() {
   const bar = document.querySelector('#site .topnav');
@@ -673,8 +759,21 @@ function render(t) {
     <section id="contact"><div class="contact-in">
       <h2>Ready when you are.</h2>
       <p class="soft">Send ${esc(first)} a message and it goes straight to them. All you need is an email address &mdash; you can fill in the rest later, or not at all.</p>
+      ${KINDRED_FLAGS.clientDataPersistence ? `
+      <form class="inq" id="inq-form" novalidate>
+        <label class="inq-l" for="inq-email">Your email</label>
+        <input class="inq-in" id="inq-email" type="email" required autocomplete="email"
+               inputmode="email" placeholder="you@example.com">
+        <label class="inq-l" for="inq-msg">Anything you'd like ${esc(first)} to know <span class="inq-opt">optional</span></label>
+        <textarea class="inq-in" id="inq-msg" rows="3" maxlength="2000"
+                  placeholder="A sentence or two is plenty."></textarea>
+        <button class="btn" type="submit" id="inq-send">Send ${esc(first)} a message</button>
+        <p class="inq-status" id="inq-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="fine">Only ${esc(first)} sees this. Free for clients, always.</p>`
+      : `
       <a class="btn" href="${esc(cta)}">Send ${esc(first)} a message</a>
-      <p class="fine">Free for clients, always.</p>
+      <p class="fine">Free for clients, always.</p>`}
     </div></section>`;
   const footer = `
   <footer><div class="foot">
@@ -873,6 +972,7 @@ function render(t) {
   $('site').innerHTML = body;
   wireNav();
   wireRail();
+  wireInquiry(t);
   $('kp-loading').hidden = true;
   $('kp-missing').hidden = true;
   $('site').hidden = false;
@@ -907,6 +1007,14 @@ function render(t) {
     }, 6000);
     return;
   }
+
+  /* Flags first, so the contact section renders the right thing on the first
+     paint rather than swapping a button for a form under the reader. Failure
+     is not fatal: the default is off, which is the old button. */
+  try {
+    const cfg = await fetch(FLAGS_URL + '?cb=' + Date.now(), { cache: 'no-store' });
+    if (cfg.ok) KINDRED_FLAGS = Object.assign(KINDRED_FLAGS, await cfg.json());
+  } catch (e) { /* defaults stand */ }
 
   const t = await fetchProfile();
   if (!t) { showMissing(); return; }
