@@ -190,6 +190,62 @@ function baseCSS(t) {
   .band.loud .btn{background:${t.ground};color:var(--accent)}
   .band.loud .fine{color:${t.btnInk};opacity:.8}
 
+  /* ==========================================================================
+     DESKTOP. Everything above this point is a phone layout that simply stops
+     growing: .measure caps at 640px, so on a 1600px screen the column
+     templates render a thin ribbon of content in an empty page. A therapist
+     showing this to a client on a laptop sees a broken-looking site.
+
+     The fix is a composition, not a wider column. Prose stays at a readable
+     760px -- widening text is worse, not better -- while the hero, the photos
+     and the practical details use the room they have been given. Photos wider
+     than the text they sit under is the oldest editorial trick there is, and
+     it is what stops a single column reading as an accident.
+     ========================================================================== */
+  @media (min-width:1080px){
+    /* Column templates: quiet, practice, evening */
+    .colwrap{max-width:980px}
+    .colwrap > section > .section-title,
+    .colwrap #story > .w-prompt,
+    .colwrap #practical .kv,
+    .colwrap #contact .contact-in{max-width:760px;margin-left:auto;margin-right:auto}
+    /* the photos take the full width of the wrapper -- wider than the words */
+    .colwrap #story > .w-photo,
+    .colwrap #story > .w-video{max-width:none}
+    .colwrap #story .w-photo img,
+    .colwrap #story .w-video video{max-height:720px}
+    /* Practical details are pairs, not prose: two up reads faster and stops
+       the section being a lonely list down the middle of a wide page. */
+    .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7em 2.6rem}
+    .kv > *{min-width:0}
+
+    /* Heroes get the width -- this is the first thing anyone sees. */
+    .hero-compact{max-width:1000px;grid-template-columns:minmax(0,1fr) 380px;gap:3.4rem}
+    .hero-compact h1{font-size:clamp(2.2rem,3.4vw,3rem)}
+    .hero-statement,.hero-dusk{max-width:880px}
+    .hero-statement .avatar-s{width:132px;height:132px}
+    .hero-dusk .avatar{width:140px;height:140px}
+
+    /* The wide layouts were built for a 1040px laptop and stop there. */
+    .layout-sidebar{max-width:1180px;grid-template-columns:360px minmax(0,1fr)}
+    .split{max-width:1180px}
+    .foot{max-width:1180px}
+  }
+
+  /* Wider still. Only the layouts that are genuinely two-dimensional grow
+     again; the reading column does not, at any size. */
+  @media (min-width:1500px){
+    .colwrap{max-width:1080px}
+    /* The hero must share the wrapper's edges. Left at 1000 while the feed
+       grew to 1080, the portrait sat 40px inside the photo below it -- close
+       enough to read as a mistake rather than a margin. */
+    .hero-compact{max-width:1080px}
+    .hero-statement,.hero-dusk{max-width:940px}
+    .layout-sidebar,.split,.hero-arch,.foot{max-width:1280px}
+    .hero-arch .media{margin-left:calc(-1 * (22px + max(0px,(100vw - 1280px)/2)))}
+    .hero-cover img.cover{height:min(62vh,620px)}
+  }
+
   @media (max-width:760px){
     .layout-sidebar{grid-template-columns:1fr;gap:1.6rem;margin-top:1.4rem}
     .aside-card{position:static}
@@ -470,8 +526,8 @@ function render(t) {
         <a class="btn" href="${esc(cta)}">Let’s do this</a>
       </div>
     </div>
-    ${storySec ? `<div class="band alt"><div class="measure">${storySec}</div></div>` : ''}
-    ${kvSec ? `<div class="band"><div class="measure">${kvSec}</div></div>` : ''}
+    ${storySec ? `<div class="band alt"><div class="measure colwrap">${storySec}</div></div>` : ''}
+    ${kvSec ? `<div class="band"><div class="measure colwrap">${kvSec}</div></div>` : ''}
     <div class="band loud"><div class="measure">${contactSec}</div></div>
     <div class="band-foot">${footer}</div>`;
   } else {
@@ -511,7 +567,7 @@ function render(t) {
     }
     const rhythm = tplId === 'quiet' ? ' data-rhythm="flow"' : '';
     body = `${nav}${hero}
-    <div class="measure"${rhythm}>
+    <div class="measure colwrap"${rhythm}>
       ${storySec}${kvSec}${contactSec}
     </div>
     ${footer}`;
