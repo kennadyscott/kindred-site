@@ -72,7 +72,7 @@ function baseCSS(t) {
   #site{--accent:${t.accent};--line:${t.line};--soft:${t.soft};--panel:${t.panel};--r:${t.r};
         --display:${t.display};--body:${t.body}}
   #site img{max-width:100%;display:block}
-  #site a{color:var(--accent)}
+  #site a:not([class]){color:var(--accent)}
   #site h1,#site h2{font-family:var(--display);font-weight:500;line-height:1.15;margin:0;letter-spacing:-.01em}
   #site h2{font-size:clamp(1.4rem,2.5vw,1.8rem);margin-bottom:1rem}
   #site p{margin:0 0 1em}
