@@ -742,20 +742,49 @@ function hasProfanity(v) { return PROFANITY_RE.test(String(v == null ? '' : v));
    therapist knows it by. Anything not on this list is either private (ideal
    client) or not free text, and flagging those would train people to ignore
    the warning. */
+/* CHECK WHAT A CLIENT CAN ACTUALLY SEE -- nothing else.
+   ---------------------------------------------------------------------------
+   The public page (profile.js feedBlocks) is strictly either/or: if the blocks
+   feed renders anything, then optionalPrompts, persona and the legacy prompt_*
+   fields are NEVER shown. They are a pre-0024 fallback.
+
+   This function used to read every source at once, and the editor only ever
+   writes to blocks -- so a therapist who answered "test" at signup and then
+   rewrote every answer properly in the feed stayed blocked forever on the
+   frozen signup copy. Invisible to clients, unreachable from any editor, and
+   named in a warning that told them to fix something already fixed. There was
+   no way out of it from inside the product.
+
+   So the rule is now the renderer's rule: the checker looks at exactly the
+   text that would be published, from the same source the page would use. */
+function livePromptSourceIsBlocks(t) {
+  /* Mirrors feedBlocks(): blocks win only if they yield something renderable.
+     A blocks array of empty prompts falls back, exactly as the page does. */
+  return (Array.isArray(t.blocks) ? t.blocks : []).some(b => b && (
+    (b.type === 'prompt' && b.answer && String(b.answer).trim()) ||
+    ((b.type === 'photo' || b.type === 'video') && b.src && String(b.src).trim())
+  ));
+}
+
 function publicTextFields(t) {
   const out = [];
   const add = (label, value) => { if (value && String(value).trim()) out.push({ label, value: String(value) }); };
   add('Your name', t.name);
   add('The one-sentence intro', t.bestFor);
-  add('You may be a fit if...', t.promptFit);
-  const p = t.persona || {};
-  add('Who I am in the office', p.inOffice);
-  add('Who I am out of the office', p.outOfOffice);
-  (t.optionalPrompts || []).forEach(q => { if (q) add(q.question || 'A prompt answer', q.answer); });
-  if (Array.isArray(t.blocks)) {
+  if (livePromptSourceIsBlocks(t)) {
     t.blocks.forEach(b => { if (b && b.type === 'prompt') add(b.question || 'A prompt answer', b.answer); });
+    /* Still checked when best_for is empty: the link-preview description falls
+       back to prompt_fit, so filler there can reach a card even though the
+       feed is what renders on the page. */
+    if (!(t.bestFor && String(t.bestFor).trim())) add('You may be a fit if...', t.promptFit);
+  } else {
+    add('You may be a fit if...', t.promptFit);
+    const p = t.persona || {};
+    add('Who I am in the office', p.inOffice);
+    add('Who I am out of the office', p.outOfOffice);
+    (t.optionalPrompts || []).forEach(q => { if (q) add(q.question || 'A prompt answer', q.answer); });
+    (t.mandatoryPromptAnswers || []).forEach((a, i) => add('Prompt ' + (i + 1), a));
   }
-  (t.mandatoryPromptAnswers || []).forEach((a, i) => add('Prompt ' + (i + 1), a));
   return out;
 }
 
