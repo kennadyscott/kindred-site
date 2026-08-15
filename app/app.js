@@ -1854,6 +1854,18 @@ async function dbRpc(name, params) {
   return res.json();
 }
 
+/* A plain GET against PostgREST, dbRpc's sibling. Browsing the roster is a
+   read of a view, not a call to the matcher, and there was no helper for that
+   -- every other read in the client goes through an RPC. */
+async function dbRest(path) {
+  const c = dbConfig();
+  const res = await fetch(`${c.url.replace(/\/$/, '')}/rest/v1${path}`, {
+    headers: { 'apikey': c.key, 'Authorization': `Bearer ${c.key}` }
+  });
+  if (!res.ok) throw new Error(`rest ${path}: HTTP ${res.status}`);
+  return res.json();
+}
+
 // ===================================================================
 // SUPABASE AUTH — real THERAPIST accounts (business data, HIPAA-safe).
 // Clients stay demo-side (no server-persisted PHI) until the BAA. Uses the
@@ -2542,10 +2554,34 @@ function refreshRosterCount() {
 }
 
 function computeDeck() {
-  const seededDeck = () => THERAPISTS.filter(t => isCompatible(t, 'ongoing'))
+  const seededDeck = () => (browseAll ? THERAPISTS.slice() : THERAPISTS.filter(t => isCompatible(t, 'ongoing')))
     .sort((a, b) => a.nextAvailableRank - b.nextAvailableRank);
 
   if (!dbReady()) { deck = seededDeck(); deckIndex = 0; return; }
+
+  /* Browsing everyone is a different question from matching, so it asks a
+     different one: the public roster, unfiltered, rather than match_therapists
+     with the criteria stripped out. Same view the website pages read, so a
+     therapist who is visible there is visible here and nowhere else. */
+  if (browseAll) {
+    const seq = ++deckFetchSeq;
+    deckLoading = true; deck = []; deckIndex = 0;
+    dbRest('/therapists_public?select=*&order=name')
+      .then(rows => {
+        if (seq !== deckFetchSeq) return;
+        deck = (rows || []).map(dbRowToTherapist);
+        if (!deck.length && !PRODUCTION_BUILD) deck = seededDeck();
+        deckLoading = false;
+        renderStack();
+      })
+      .catch(() => {
+        if (seq !== deckFetchSeq) return;
+        if (!PRODUCTION_BUILD) deck = seededDeck();
+        deckLoading = false;
+        renderStack();
+      });
+    return;
+  }
 
   // Server mode: Postgres filters and scores, we render one page. The seq
   // guard drops stale responses if the client edits preferences mid-flight.
@@ -2607,11 +2643,26 @@ function computeOnDemandList() {
     .sort((a, b) => Math.min(...a.onDemandSlots.map(s => s.rank)) - Math.min(...b.onDemandSlots.map(s => s.rank)));
 }
 
+/* "Loosen my requirements" relaxed four PREFERENCE flags -- modality, gender,
+   LGBTQ+, language -- and left the filters that actually empty the pool: state,
+   what they want to work on, session format, and accepting-new-clients. With a
+   roster this size the result was a button that visibly did nothing, which is
+   worse than no button: it says the problem is your requirements when the
+   problem is that there is nobody yet.
+
+   So it opens the doors instead. browseAll skips matching entirely and shows
+   the whole roster, which is honest about what is on offer and lets someone
+   look around rather than bounce. */
+let browseAll = false;
+
 function loosenRequirements() {
-  intake.modalityRequired = false;
-  intake.genderRequired = false;
-  intake.lgbtqRequired = false;
-  intake.languageRequired = false;
+  browseAll = true;
+  computeDeck();
+  renderStack();
+}
+
+function resumeMatching() {
+  browseAll = false;
   computeDeck();
   renderStack();
 }
@@ -3340,8 +3391,8 @@ function renderStack() {
     }
     cardStack.innerHTML = `<div class="empty-pool">
       No therapists match everything you asked for right now.<br><br>
-      Try loosening a must-have requirement to see more options.
-      <button class="loosen-btn" id="loosen-btn">Loosen my requirements</button>
+      You can look through everyone on Kindred instead &mdash; including therapists outside what you asked for.
+      <button class="loosen-btn" id="loosen-btn">Browse all therapists</button>
     </div>`;
     const btn = document.getElementById('loosen-btn');
     if (btn) btn.addEventListener('click', loosenRequirements);
@@ -4296,6 +4347,17 @@ function renderDiscoverRails() {
 
   const esc0 = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
   const remaining = Math.max(0, deck.length - deckIndex);
+  if (browseAll) {
+    left.innerHTML = `
+      <p class="rail-head">Browsing everyone</p>
+      <p class="rail-empty">You're seeing every therapist on Kindred, not just the ones who match what you asked for.</p>
+      <button type="button" class="rail-btn" id="rail-rematch" style="margin-top:12px">Back to my matches</button>
+      <p class="rail-note">${remaining} ${remaining === 1 ? 'person' : 'people'} left to look through.</p>`;
+    const back = document.getElementById('rail-rematch');
+    if (back) back.addEventListener('click', () => resumeMatching());
+    renderDiscoverSaved(right, esc0);
+    return;
+  }
   const looking = [];
   if (intake.state) looking.push(intake.state);
   if (intake.age) looking.push(intake.age + ' years old');
@@ -4310,6 +4372,17 @@ function renderDiscoverRails() {
     <button type="button" class="rail-btn" id="rail-refine">Change what I'm looking for</button>
     <p class="rail-note">${remaining} ${remaining === 1 ? 'person' : 'people'} left in this round. Everyone here already matches what you asked for.</p>`;
 
+  const refine = document.getElementById('rail-refine');
+  /* The same thing the magnifier in the header does -- reusing the existing
+     screen rather than inventing a second way to narrow the deck. */
+  if (refine) refine.addEventListener('click', () => { renderSearch(); showScreen('search'); });
+
+  renderDiscoverSaved(right, esc0);
+}
+
+/* One saved rail, used by both the matching and browsing states -- a second
+   copy is how the two would drift. */
+function renderDiscoverSaved(right, esc0) {
   const kept = shortlist.slice().reverse();
   right.innerHTML = `
     <div class="rail-top">
@@ -4328,10 +4401,6 @@ function renderDiscoverRails() {
       ${kept.length > 8 ? `<p class="rail-note">and ${kept.length - 8} more</p>` : ''}`
     : `<p class="rail-empty">Nobody saved yet. Tap the heart on anyone worth a second look &mdash; saving is private and sends nothing.</p>`}`;
 
-  const refine = document.getElementById('rail-refine');
-  /* The same thing the magnifier in the header does -- reusing the existing
-     screen rather than inventing a second way to narrow the deck. */
-  if (refine) refine.addEventListener('click', () => { renderSearch(); showScreen('search'); });
   const toList = document.getElementById('rail-toshortlist');
   if (toList) toList.addEventListener('click', () => showScreen('shortlist'));
   right.querySelectorAll('[data-rail-tid]').forEach(el =>
