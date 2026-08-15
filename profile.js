@@ -43,7 +43,7 @@ const TEMPLATES = {
     t: { ground:'#FBFAF6', panel:'#F3F1E8', ink:'#2E2B26', soft:'#6E675C', accent:'#5F7355',
          line:'#E5E0D4', r:'3px', btnInk:'#FBFAF6', navCase:'none',
          display:"Georgia, 'Iowan Old Style', serif", body:"Georgia, 'Iowan Old Style', serif" },
-    extra: '.hero-statement .big{font-style:italic}.section-title{font-style:italic;letter-spacing:0;text-transform:none;font-size:1.02rem;color:var(--accent)}.navlink{text-transform:none;letter-spacing:0;font-size:.9rem}' },
+    extra: '.hero-statement .big{font-style:italic}.section-title{font-style:italic;letter-spacing:0;text-transform:none;font-size:1.3rem;font-weight:600;color:var(--accent);margin-bottom:1.4rem}.navlink{text-transform:none;letter-spacing:0;font-size:.9rem}' },
   practice: { hero: 'compact', layout: 'column',
     t: { ground:'#FFFFFF', panel:'#F7F9FA', ink:'#1E2A32', soft:'#5C6B75', accent:'#2E5E6B',
          line:'#DCE4E8', r:'8px', btnInk:'#F4FAFC', navCase:'uppercase',
@@ -244,7 +244,12 @@ function baseCSS(t) {
     #story > .w-video{margin:0}
     #story > .w-photo img,
     #story > .w-video video{width:100%;aspect-ratio:4/3;object-fit:cover}
-    .colwrap #practical .kv,
+    /* Left edge shared with the heading above it. Centring a 760px block
+       inside a 1036px wrapper put "Good to know" at one x and its own
+       contents at another -- 138px apart, which reads as a broken column
+       rather than an indent. The contact card stays centred: it is a card,
+       and centring is the point of it. */
+    .colwrap #practical .kv{max-width:820px;margin-left:0;margin-right:0}
     .colwrap #contact .contact-in{max-width:760px;margin-left:auto;margin-right:auto}
     /* aspect-ratio already governs the height; this only stops an unusually
        wide wrapper turning a 4:3 into a billboard. */
@@ -257,6 +262,13 @@ function baseCSS(t) {
 
     /* Quiet has no cards -- its prompts are bare text with a rule above, so
        two bare columns need a visible gutter to stay legible as two. */
+    /* Quiet's section headings were a small italic line in the accent colour,
+       which at this width read as a caption rather than a heading -- "Good to
+       know" simply dissolved into the page. Bigger, with a rule over it, and
+       air above: the two things that say "a new section starts here" without
+       shouting, which would be the wrong register for this template. */
+    [data-tpl="quiet"] #site section{padding-top:2.2rem;border-top:1px solid var(--line)}
+    [data-tpl="quiet"] #site section:first-of-type{border-top:none;padding-top:0}
     [data-tpl="quiet"] #story{column-gap:3.2rem}
     [data-tpl="quiet"] [data-rhythm="flow"] .w-prompt,
     [data-tpl="quiet"] #story > .w-prompt{border-top:1px solid var(--line);padding-top:1.1rem}
@@ -272,8 +284,21 @@ function baseCSS(t) {
     /* Heroes get the width -- this is the first thing anyone sees. */
     .hero-compact{max-width:1000px;grid-template-columns:minmax(0,1fr) 380px;gap:3.4rem}
     .hero-compact h1{font-size:clamp(2.2rem,3.4vw,3rem)}
-    .hero-statement,.hero-dusk{max-width:880px}
-    .hero-statement .avatar-s{width:132px;height:132px}
+    .hero-dusk{max-width:880px}
+
+    /* QUIET, at width. A left-aligned column in a 940px block left a hard
+       empty half to its right -- the words led, and nothing balanced them.
+       The portrait moves out beside the text and grows into it: text left,
+       face right, both centred against each other. Quiet is the template
+       whose whole pitch is "your words lead", so the type keeps the wide
+       column and the photo takes the narrower one. */
+    .hero-statement{max-width:1040px;display:grid;
+                    grid-template-columns:minmax(0,1fr) 300px;
+                    column-gap:clamp(2.5rem,5vw,4.5rem);align-items:center}
+    .hero-statement > *{grid-column:1}
+    .hero-statement .avatar-s{grid-column:2;grid-row:1 / span 10;align-self:center;
+                              width:100%;height:auto;aspect-ratio:4/5;border-radius:6px;
+                              margin:0}
     .hero-dusk .avatar{width:140px;height:140px}
 
     /* Editorial pairs each photo with its prompt in alternating rows already
@@ -295,7 +320,8 @@ function baseCSS(t) {
        grew to 1080, the portrait sat 40px inside the photo below it -- close
        enough to read as a mistake rather than a margin. */
     .hero-compact{max-width:1080px}
-    .hero-statement,.hero-dusk{max-width:940px}
+    .hero-dusk{max-width:940px}
+    .hero-statement{max-width:1140px;grid-template-columns:minmax(0,1fr) 340px}
     .layout-sidebar,.split,.hero-arch,.foot{max-width:1280px}
     .hero-arch .media{margin-left:calc(-1 * (22px + max(0px,(100vw - 1280px)/2)))}
     .hero-cover img.cover{height:min(62vh,620px)}
@@ -540,7 +566,7 @@ function render(t) {
     <section id="contact"><div class="contact-in">
       <h2>Ready when you are.</h2>
       <p class="soft">A few questions first, so ${esc(first)} knows you two are likely to fit — then the conversation is yours.</p>
-      <a class="btn" href="${esc(cta)}">See if we’re a fit</a>
+      <a class="btn" href="${esc(cta)}">Send ${esc(first)} a message</a>
       <p class="fine">Free for clients, always. Takes about three minutes.</p>
     </div></section>`;
   const footer = `
@@ -566,7 +592,7 @@ function render(t) {
         ${badge}
         ${chips ? `<div style="margin:1rem 0 .4rem">${chips}</div>` : ''}
         ${paused}
-        <a class="btn" href="${esc(cta)}" style="margin-top:.6rem">Say hello</a>
+        <a class="btn" href="${esc(cta)}" style="margin-top:.6rem">Send me a message</a>
       </aside>
       <main>
         ${t.best_for ? `<section><p class="statement">${esc(t.best_for)}</p></section>` : ''}
@@ -614,7 +640,7 @@ function render(t) {
         ${factsRow}
         <div style="margin:1.1rem 0 1.4rem">${badge}</div>
         ${paused}
-        <a class="btn" href="${esc(cta)}">Let’s do this</a>
+        <a class="btn" href="${esc(cta)}">Send me a message</a>
       </div>
     </div>
     ${storySec ? `<div class="band alt"><div class="measure colwrap">${storySec}</div></div>` : ''}
@@ -633,7 +659,7 @@ function render(t) {
           ${factsRow}
           <div style="margin:1.1rem 0 1.3rem">${badge}</div>
           ${paused}
-          <a class="btn" href="${esc(cta)}">Say hello</a>
+          <a class="btn" href="${esc(cta)}">Send me a message</a>
         </div>
       </div>`;
     } else if (tpl.hero === 'dusk') {
