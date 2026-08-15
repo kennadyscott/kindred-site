@@ -203,17 +203,61 @@ function baseCSS(t) {
      it is what stops a single column reading as an accident.
      ========================================================================== */
   @media (min-width:1080px){
-    /* Column templates: quiet, practice, evening */
-    .colwrap{max-width:980px}
-    .colwrap > section > .section-title,
-    .colwrap #story > .w-prompt,
+    /* ------------------------------------------------------------------
+       THE FEED GOES TWO-DIMENSIONAL. A stack of cards down the middle of a
+       1500px window is a phone layout that grew; it is the single thing
+       that makes these read as an app screenshot rather than a website.
+
+       Everything flows two across, and NOTHING spans. That is the whole
+       trick: the builder encourages a photo after each answer ("something
+       that shows what you just wrote"), so a feed is usually photo, prompt,
+       photo, prompt -- and two-across turns that into split rows, each
+       photo beside the words it belongs to, alternating down the page.
+
+       Spanning the photos was the first attempt and it was worse: a
+       full-width photo ends the row, so every prompt landed alone in the
+       left column with dead space beside it. Half the page empty, in a
+       change whose entire purpose was to stop that.
+
+       Order-agnostic either way -- all prompts, all photos, or any mix the
+       therapist drags into place still fills the rows.
+       ------------------------------------------------------------------ */
+    .colwrap{max-width:1080px}
+    #story{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+           gap:1.5rem 1.6rem;align-items:stretch}
+    #story > .section-title{grid-column:1 / -1}
+    /* The PHOTO sets the row height, at a fixed 4:3, and the answer centres
+       beside it. Stretching the card to match instead was measurably wrong:
+       these answers run to about 50px of text, so a card stretched to a
+       520px photo was 471px of empty panel -- four of them down the page.
+       A short answer centred next to its photo is the split-row look; a
+       short answer inflated to fill 520px is a bug. */
+    #story{align-items:start}
+    #story > .w-prompt{margin-bottom:0;align-self:center}
+    #story > .w-photo,
+    #story > .w-video{margin:0}
+    #story > .w-photo img,
+    #story > .w-video video{width:100%;aspect-ratio:4/3;object-fit:cover}
     .colwrap #practical .kv,
     .colwrap #contact .contact-in{max-width:760px;margin-left:auto;margin-right:auto}
-    /* the photos take the full width of the wrapper -- wider than the words */
-    .colwrap #story > .w-photo,
-    .colwrap #story > .w-video{max-width:none}
+    /* aspect-ratio already governs the height; this only stops an unusually
+       wide wrapper turning a 4:3 into a billboard. */
     .colwrap #story .w-photo img,
-    .colwrap #story .w-video video{max-height:720px}
+    .colwrap #story .w-video video{max-height:460px}
+
+    /* Warm keeps its sticky card; the feed beside it pairs up too, and its
+       photos span the main column rather than the whole page. */
+    .layout-sidebar #story{gap:1.4rem 1.6rem}
+
+    /* Quiet has no cards -- its prompts are bare text with a rule above, so
+       two bare columns need a visible gutter to stay legible as two. */
+    [data-tpl="quiet"] #story{column-gap:3.2rem}
+    [data-tpl="quiet"] [data-rhythm="flow"] .w-prompt,
+    [data-tpl="quiet"] #story > .w-prompt{border-top:1px solid var(--line);padding-top:1.1rem}
+
+    /* Practice is the credential-forward one: equal cards on a strict grid
+       is the whole personality. */
+    [data-tpl="practice"] #story > .w-prompt{background:var(--panel);border:1px solid var(--line)}
     /* Practical details are pairs, not prose: two up reads faster and stops
        the section being a lonely list down the middle of a wide page. */
     .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7em 2.6rem}
@@ -225,6 +269,11 @@ function baseCSS(t) {
     .hero-statement,.hero-dusk{max-width:880px}
     .hero-statement .avatar-s{width:132px;height:132px}
     .hero-dusk .avatar{width:140px;height:140px}
+
+    /* Editorial pairs each photo with its prompt in alternating rows already
+       (.split), so it opts out of the grid entirely -- two systems stacked
+       would fight. */
+    [data-tpl="editorial"] #story{display:block}
 
     /* The wide layouts were built for a 1040px laptop and stop there. */
     .layout-sidebar{max-width:1180px;grid-template-columns:360px minmax(0,1fr)}
@@ -573,6 +622,7 @@ function render(t) {
     ${footer}`;
   }
 
+  $('site').dataset.tpl = tplId;
   $('site').innerHTML = body;
   $('kp-loading').hidden = true;
   $('kp-missing').hidden = true;
