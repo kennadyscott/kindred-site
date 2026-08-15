@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse therapists &mdash; Kindred</title>
+<meta name="description" content="Every therapist on Kindred, with what they work with, where they are licensed and what a session costs. Browse without signing up.">
+<link rel="canonical" href="https://kindredtherapymatch.com/browse">
+<meta property="og:title" content="Browse therapists — Kindred">
+<meta property="og:description" content="Every therapist on Kindred, with what they work with, where they are licensed and what a session costs.">
+<meta property="og:url" content="https://kindredtherapymatch.com/browse">
+<meta property="og:site_name" content="Kindred">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=50">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
+<style>
+/* ===========================================================================
+   BROWSE -- the only page where a stranger can see who is actually on Kindred
+   without answering a single question. The app's Discover deck asks for an
+   intake first; a search result or a link from a friend has to land somewhere
+   that just shows people.
+   =========================================================================== */
+.browse-head{max-width:1180px;margin:0 auto;padding:clamp(2rem,5vw,3.4rem) 22px 0}
+.browse-head h1{margin:0 0 .5rem}
+.browse-sub{color:var(--ink-soft,#6b6470);max-width:56ch;margin:0}
+.browse-bar{display:flex;flex-wrap:wrap;gap:10px;max-width:1180px;margin:1.8rem auto 0;padding:0 22px}
+.browse-bar select,.browse-bar input{font:inherit;font-size:.92rem;padding:.6em .8em;
+  border:1px solid var(--line,#e6e0ea);border-radius:999px;background:#fff;color:inherit;min-width:0}
+.browse-bar input{flex:1;min-width:190px}
+.browse-count{max-width:1180px;margin:1rem auto 0;padding:0 22px;font-size:.9rem;color:var(--ink-soft,#6b6470)}
+.browse-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;
+  max-width:1180px;margin:1rem auto 0;padding:0 22px 4rem}
+.tcard{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line,#e6e0ea);
+  border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .15s ease,box-shadow .15s ease}
+.tcard:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(43,34,51,.09)}
+.tcard-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#efeaf2}
+.tcard-fallback{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
+  background:#efeaf2;color:#8a7f92;font-family:'Literata',Georgia,serif;font-size:2rem}
+.tcard-body{padding:14px 15px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.tcard-name{font-family:'Literata',Georgia,serif;font-size:1.12rem;font-weight:600;margin:0}
+.tcard-cred{font-size:.82rem;color:var(--ink-soft,#6b6470)}
+.tcard-line{font-size:.85rem;color:var(--ink-soft,#6b6470)}
+.tcard-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;padding-top:8px}
+.tcard-tag{font-size:.74rem;font-weight:600;background:#f4f0f7;border-radius:999px;padding:4px 9px}
+.tcard-paused{font-size:.74rem;font-weight:700;color:#8a5a2b;background:#fdf2e4;border-radius:999px;padding:4px 9px}
+.browse-empty{max-width:640px;margin:3rem auto 5rem;padding:0 22px;text-align:center}
+.browse-empty h2{margin:0 0 .6rem}
+.browse-empty p{color:var(--ink-soft,#6b6470);margin:0 0 1.4rem}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#top">Skip to content</a>
+
+<header class="site-header">
+  <a class="brand" href="/" aria-label="Kindred home">
+    <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#422448"/>
+      <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+      <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+    </svg>
+    <span class="brand-text">
+      <span class="brand-name">Kindred</span>
+      <span class="brand-tag">Therapy, matched to you</span>
+    </span>
+  </a>
+
+  <nav class="main-nav" id="primary-nav" aria-label="Primary">
+    <a href="start-here.html">Start Here</a>
+    <a href="understand-yourself.html">Understand Yourself</a>
+    <a href="feel-better.html">Feel Better</a>
+    <a href="life-relationships.html">Life &amp; Relationships</a>
+    <a href="therapy.html">Therapy</a>
+    <a href="browse.html" aria-current="page">Browse Therapists</a>
+    <a class="nav-cta nav-cta-dark" data-app-link="match" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
+  </nav>
+
+  <div class="header-actions">
+    <button class="icon-btn" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </button>
+    
+    <a class="btn btn-dark btn-sm" data-app-link="match" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
+    <span class="header-sep" aria-hidden="true"></span>
+    <a class="nav-pro" href="therapists.html">For Therapists</a>
+  </div>
+
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main id="top">
+  <div class="browse-head">
+    <h1>Every therapist on Kindred</h1>
+    <p class="browse-sub">No account, no questions. Look through who is here, read them in their
+    own words, and reach out to anyone directly. Matching is a different door &mdash; this one is
+    just open.</p>
+  </div>
+
+  <div class="browse-bar">
+    <input type="search" id="f-q" placeholder="Search a name, a specialty, a city&hellip;" aria-label="Search therapists">
+    <select id="f-state" aria-label="Filter by state"><option value="">Any state</option></select>
+    <select id="f-spec" aria-label="Filter by specialty"><option value="">Any specialty</option></select>
+    <select id="f-format" aria-label="Filter by session format">
+      <option value="">Online or in person</option>
+      <option value="video">Online</option>
+      <option value="in-person">In person</option>
+    </select>
+    <select id="f-open" aria-label="Filter by availability">
+      <option value="">Everyone</option>
+      <option value="1">Taking new clients</option>
+    </select>
+  </div>
+
+  <p class="browse-count" id="count" role="status">Loading&hellip;</p>
+  <div class="browse-grid" id="grid"></div>
+  <div class="browse-empty" id="empty" hidden></div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#FFF8EF"/>
+        <path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/>
+        <path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/>
+      </svg>
+      <div>
+        <p class="brand-name">Kindred</p>
+        <p class="brand-tag">Therapy, matched to you</p>
+      </div>
+    </div>
+
+    <nav class="footer-col" aria-label="About">
+      <h4>About</h4>
+      <a href="about.html">About Us</a><a href="about.html#values">Our Values</a><a href="find-a-therapist.html">For Clients</a><a href="therapists.html">For Therapists</a><a href="about.html#careers">Careers</a>
+    </nav>
+    <nav class="footer-col" aria-label="Support">
+      <h4>Support</h4>
+      <a href="start-here.html">Help Center</a><a href="about.html#contact">Contact Us</a><a href="privacy.html#accessibility">Accessibility</a><a href="privacy.html">Privacy</a>
+    </nav>
+    <nav class="footer-col" aria-label="Connect">
+      <h4>Connect</h4>
+      <a href="https://www.instagram.com/kindred.therapymatch" target="_blank" rel="noopener">Instagram</a><a href="#newsletter">Newsletter</a><a href="mailto:info@kindredtherapymatch.com">Email us</a>
+    </nav>
+
+    <div class="footer-crisis">
+      <h4>Need help now?</h4>
+      <p>If you or someone you know is in crisis, help is available 24/7. Call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).</p>
+      <a class="btn btn-clay" href="tel:988">Get immediate help</a>
+    </div>
+
+  </div>
+  <p class="footer-fine">© 2026 Kindred. Kindred is not a substitute for professional diagnosis or emergency care.</p>
+</footer>
+
+<script src="browse.js?v=1"></script>
+</body>
+</html>
