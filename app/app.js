@@ -7515,7 +7515,10 @@ function renderTherapistProfileBody() {
       <button class="pmode ${profileMode === 'website' ? 'active' : ''}" data-pmode="website" role="tab">🌐 Website</button>
     </div>
 
-    <div class="pm-view">${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}</div>
+    <div class="pm-view">
+      <div class="preview-rail-cap">What clients see</div>
+      ${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}
+    </div>
 
     ${websitePaneHtml(t)}
 
@@ -7912,7 +7915,34 @@ function pushWebsitePreview(t) {
   } catch (e) { console.warn('[kindred] preview push failed', e && e.message); }
 }
 
+/* Keep the side-by-side preview honest while they type.
+   ---------------------------------------------------------------------------
+   Text fields deliberately do NOT re-render on input -- a full re-render mid-
+   word steals the caret, which is why the name check waits for blur. But with
+   the card pinned beside the form, a preview that only catches up when you
+   happen to click a chip is worse than no preview: you would trust it and be
+   wrong.
+
+   So this repaints ONLY the preview rail, which contains no focusable fields,
+   and never the form the caret is in. Delegated, so every text input is
+   covered without threading a call through two dozen handlers, and skipped
+   entirely when the rail is not on screen (phone, or any other tab). */
+let previewRailTimer = null;
+function refreshPreviewRail(t) {
+  const rail = document.querySelector('#t-profile-content .pm-view');
+  if (!rail || !rail.offsetParent) return;      // hidden: nothing to repaint
+  clearTimeout(previewRailTimer);
+  previewRailTimer = setTimeout(() => {
+    const live = document.querySelector('#t-profile-content .pm-view');
+    if (!live || !live.offsetParent) return;
+    live.innerHTML = '<div class="preview-rail-cap">What clients see</div>'
+      + contentWarningHtml(t) + profileCardHtml(t, { preview: true, inline: true });
+  }, 220);
+}
+
 function attachTherapistProfileHandlers(t) {
+  const editPane = document.querySelector('#t-profile-content .pm-edit');
+  if (editPane) editPane.addEventListener('input', () => refreshPreviewRail(t));
   const tPronounsInput = document.getElementById('t-pronouns-input');
   if (tPronounsInput) tPronounsInput.addEventListener('input', () => { t.pronouns = tPronounsInput.value; });
   const tShowPronounsSwitch = document.getElementById('t-show-pronouns-switch');

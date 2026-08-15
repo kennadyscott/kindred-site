@@ -2405,6 +2405,8 @@ select.t-rate-input,
 #t-profile-content[data-mode="website"] .pm-ideal,
 #t-profile-content[data-mode="website"] .pm-view { display: none; }
 
+.preview-rail-cap { display: none; }
+
 /* ----- Save, per section --------------------------------------------------
    Sits at the foot of each editor section rather than floating: the anxiety it
    answers is "did what I just typed survive", and the answer belongs next to
@@ -2806,6 +2808,72 @@ select.t-rate-input,
   /* A questionnaire stays narrow at any width — one question, one column. */
   #screen-intake, #screen-therapist-signup { --measure: 580px; }
   .card-stack { max-width: 560px; }
+
+  /* ==========================================================================
+     THE EDITOR GETS ITS PREVIEW BACK, SIDE BY SIDE
+     --------------------------------------------------------------------------
+     A form is a narrow thing: 780px is the right measure for one whether the
+     window is 1000px or 2000px, so widening the column would make it worse,
+     not more web-like. What actually reads as mobile is a lone narrow column
+     with the rest of the window empty.
+
+     So the space goes to something worth having: the card a client meets you
+     on, pinned beside the form while you edit it. Every keystroke re-renders
+     through renderTherapistProfile(), so it updates as they type -- the
+     question the whole editor is trying to answer ("how does this look?")
+     stops being a tab away.
+
+     Pure layout. .pm-view is already in the DOM on every mode and merely
+     hidden, so nothing new is rendered and no handler moves.
+     ========================================================================== */
+  #screen-t-profile { --measure: 1240px; }
+  #t-profile-content[data-mode="edit"] {
+    display: grid;
+    grid-template-columns: minmax(0, 780px) 390px;
+    gap: 30px;
+    align-items: start;
+  }
+  /* Header rows stay full width above both columns. */
+  #t-profile-content[data-mode="edit"] > .t-form-name,
+  #t-profile-content[data-mode="edit"] > .save-state,
+  #t-profile-content[data-mode="edit"] > .profile-modes { grid-column: 1 / -1; }
+  /* Placed explicitly, not left to auto-flow: .pm-view comes FIRST in source
+     order (it is the View Profile tab), so the grid handed it the wide track
+     and squeezed the form into 390px -- the two columns exactly backwards. */
+  #t-profile-content[data-mode="edit"] .pm-edit { grid-column: 1; grid-row: 2; }
+  #t-profile-content[data-mode="edit"] .pm-view { grid-column: 2; grid-row: 2; }
+
+  #t-profile-content[data-mode="edit"] .pm-view {
+    display: block;                 /* overrides the mode rule above */
+    position: sticky;
+    top: 18px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--paper);
+    box-shadow: 0 10px 30px rgba(43, 34, 51, .07);
+  }
+  /* The warning is rendered inside BOTH panes. With both on screen it would
+     appear twice, three inches apart, which reads as a bug in the warning. */
+  #t-profile-content[data-mode="edit"] .pm-view .content-warn { display: none; }
+  #t-profile-content[data-mode="edit"] .preview-rail-cap {
+    display: block;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 2px 0 10px 2px;
+  }
+  /* The card is the point; its swipe buttons are not. */
+  #t-profile-content[data-mode="edit"] .pm-view .primary-btn { display: none; }
+}
+
+/* Very wide: stop the reading columns sitting in a sea of cream. The form
+   still holds its measure -- only the screens that are data or lists widen. */
+@media (min-width: 1700px) {
+  #screen-t-home, #screen-t-insights { --measure: 1180px; }
+  #screen-t-requests { --measure: 1000px; }
+  #screen-t-profile { --measure: 1320px; }
+  #t-profile-content[data-mode="edit"] { grid-template-columns: minmax(0, 860px) 420px; }
 }
 
 /* (superseded by .getting-started below) */
