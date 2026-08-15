@@ -2223,7 +2223,13 @@ async function saveTherapistProfile(t) {
   try { await migratePhotosToStorage(t); } catch (e) { /* never block a save */ }
 
   let res = await send();
-  if (res.ok) kTrack('app_profile_saved');
+  /* once: this is a FUNNEL step, and every other row in that funnel counts
+     people. Without it the row counted autosaves -- and persistProfileSoon()
+     fires on every re-render, so it was really counting how often someone
+     moved around the editor. It read 82 against 0 accounts and 0 live, which
+     invites exactly the wrong conclusion: that 82 people got a profile saved
+     and none of them went live. */
+  if (res.ok) kTrack('app_profile_saved', true);
   if (!res.ok) {
     const body = await res.text();
     /* 23505 on therapists_slug_key: the upsert's speculative insert proposed a
@@ -2241,7 +2247,7 @@ async function saveTherapistProfile(t) {
           slug: slugifyName(displayName(t)) + '-' + String(s.user.id).replace(/-/g, '').slice(0, 6)
         }))
       });
-      if (retry.ok) { kTrack('app_profile_saved'); return true; }
+      if (retry.ok) { kTrack('app_profile_saved', true); return true; }
     }
     const missing = PENDING_COLUMNS.find(c => !unavailableColumns.has(c) && body.includes(c));
     if (missing && /42703|does not exist|schema cache/i.test(body)) {
@@ -2315,7 +2321,9 @@ async function saveLicense(state, number, expiresOn) {
   /* Deliberately no state in the payload — which states have supply is a
      server-side aggregate (admin_supply_by_state), not something to put in an
      events row where it would start to identify people at low volumes. */
-  if (res.ok) kTrack('app_license_entered');
+  /* Same unit as the rest of the funnel: a therapist who licenses in three
+     states is one person who reached this step, not three. */
+  if (res.ok) kTrack('app_license_entered', true);
   return res.ok;
 }
 async function deleteLicense(state) {
@@ -5394,7 +5402,7 @@ document.getElementById('login-create-btn').addEventListener('click', async () =
        hit "already registered" throws above and must not read as a signup.
        Mirrors the same event in activate.js so the two routes into a therapist
        account land in one number instead of two half-numbers. */
-    kTrack('therapist_account_created');
+    kTrack('therapist_account_created', true);
     if (needsConfirmation) {
       showToast('Account created — check your email to confirm, then log in.');
       btn.disabled = false; btn.textContent = label;
