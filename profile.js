@@ -44,7 +44,7 @@ const TEMPLATES = {
          line:'#E5E0D4', r:'3px', btnInk:'#FBFAF6', navCase:'none',
          display:"Georgia, 'Iowan Old Style', serif", body:"Georgia, 'Iowan Old Style', serif" },
     extra: '.hero-statement .big{font-style:italic}.section-title{font-style:italic;letter-spacing:0;text-transform:none;font-size:1.3rem;font-weight:600;color:var(--accent);margin-bottom:1.4rem}.navlink{text-transform:none;letter-spacing:0;font-size:.9rem}' },
-  practice: { hero: 'compact', layout: 'column',
+  practice: { hero: 'compact', layout: 'rail',
     t: { ground:'#FFFFFF', panel:'#F7F9FA', ink:'#1E2A32', soft:'#5C6B75', accent:'#2E5E6B',
          line:'#DCE4E8', r:'8px', btnInk:'#F4FAFC', navCase:'uppercase',
          display:"'Inter', -apple-system, sans-serif", body:"'Inter', -apple-system, sans-serif" },
@@ -54,7 +54,7 @@ const TEMPLATES = {
          line:'#E6E2DD', r:'0px', btnInk:'#FFF9F4', navCase:'uppercase',
          display:"'Iowan Old Style', 'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif" },
     extra: 'h2{letter-spacing:-.02em}.section-title{letter-spacing:.16em}' },
-  evening: { hero: 'dusk', layout: 'column',
+  evening: { hero: 'dusk', layout: 'panels',
     t: { ground:'#1A1622', panel:'#241E2F', ink:'#ECE7F0', soft:'#A99FB6', accent:'#C9A46A',
          line:'#373044', r:'12px', btnInk:'#1A1622', navCase:'uppercase',
          display:"'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif" },
@@ -170,6 +170,32 @@ function baseCSS(t) {
   .hero-arch .tag{font-family:var(--display);font-style:italic;font-size:clamp(1.02rem,2vw,1.28rem);
                   color:var(--accent);margin:0 0 1.2rem;max-width:44ch}
 
+  /* ----- rail (practice) ----- */
+  .layout-rail{max-width:1180px;margin:0 auto;padding:0 22px}
+  .rail ol{list-style:none;margin:0;padding:0}
+  .rail-link{display:block;padding:.6rem 0 .6rem .9rem;border-left:2px solid var(--line);
+             color:var(--soft);text-decoration:none;font-size:.88rem;line-height:1.4;
+             transition:color .15s ease,border-color .15s ease}
+  .rail-link:hover{color:var(--ink)}
+  .rail-link.current{color:var(--accent);border-left-color:var(--accent);font-weight:600}
+  .rail-item{scroll-margin-top:92px;margin-bottom:2.6rem}
+  .rail-item .q{font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+                color:var(--soft);margin:0 0 .5rem}
+  .rail-item .a{font-size:1.06rem;line-height:1.6;margin:0}
+  .rail-media{margin-top:1.1rem}
+  .rail-media img,.rail-media video{width:100%;border-radius:var(--r);display:block}
+
+  /* ----- panels (evening) ----- */
+  .panel{display:grid;grid-template-columns:1fr;gap:0;margin:0 0 1px}
+  .panel-media img,.panel-media video{width:100%;height:100%;object-fit:cover;display:block;
+                                      aspect-ratio:4/3}
+  .panel-text{display:flex;align-items:center;background:var(--panel);
+              padding:clamp(1.6rem,4vw,3.4rem) clamp(1.2rem,4vw,3.4rem)}
+  .panel-text .q{font-size:.75rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+                 color:var(--accent);margin:0 0 .7rem}
+  .panel-text .a{font-family:var(--display);font-size:clamp(1.1rem,1.7vw,1.45rem);
+                 line-height:1.55;margin:0}
+
   /* layouts */
   .layout-sidebar{display:grid;grid-template-columns:330px minmax(0,1fr);gap:3rem;align-items:start;
                   max-width:1040px;margin:2.4rem auto 0;padding:0 22px}
@@ -231,7 +257,7 @@ function baseCSS(t) {
     .colwrap{max-width:1080px}
     #story{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
            gap:1.5rem 1.6rem;align-items:stretch}
-    #story > .section-title{grid-column:1 / -1}
+    #story:not(.layout-rail) > .section-title{grid-column:1 / -1}
     /* The PHOTO sets the row height, at a fixed 4:3, and the answer centres
        beside it. Stretching the card to match instead was measurably wrong:
        these answers run to about 50px of text, so a card stretched to a
@@ -305,6 +331,39 @@ function baseCSS(t) {
        (.split), so it opts out of the grid entirely -- two systems stacked
        would fight. */
     [data-tpl="editorial"] #story{display:block}
+    /* Its TAIL was the weird part: leftover prompts, Good to know and the
+       contact card each sat in a 640px column under 1180px alternating rows,
+       so the page narrowed to a third of itself for the last screen and a
+       half. They now carry the same width as the splits above them. */
+    .edtail{max-width:1180px}
+    .edtail-rest{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+                 gap:1.4rem 2.4rem;align-items:start}
+    .edtail #contact .contact-in{max-width:720px;margin:0 auto}
+
+    /* Practice: contents column beside the answers. Sticky, so it stays with
+       you the whole way down -- a table of contents that scrolls off is just
+       a list.
+
+       #story, not .layout-rail: the generic two-column feed rule above is an
+       ID selector and beats a class, so the rail came out as two equal 605px
+       columns instead of 290 + the rest. Both new layouts have to out-specify
+       it rather than sit beside it. */
+    #story.layout-rail{display:grid;grid-template-columns:290px minmax(0,1fr);
+                       gap:clamp(2.5rem,5vw,4.5rem);align-items:start}
+    .rail{position:sticky;top:84px}
+    .rail-item{margin-bottom:3.4rem}
+    .rail-item .a{font-size:1.12rem;max-width:62ch}
+    .rail-media img,.rail-media video{max-height:520px;object-fit:cover}
+
+    /* Evening: full-bleed, image to the edge of the screen, text in the dark
+       beside it, sides alternating. Its #story is a plain flow of panels --
+       the feed grid would make each panel a cell in a two-up layout, which is
+       the opposite of one thing at a time. */
+    [data-tpl="evening"] #story{display:block}
+    .panel{grid-template-columns:1fr 1fr;margin-bottom:0}
+    .panel.rev .panel-media{order:2}
+    .panel-media img,.panel-media video{aspect-ratio:auto;height:100%;min-height:420px}
+    .panel-text{padding:clamp(2.5rem,5vw,5rem)}
 
     /* The wide layouts were built for a 1040px laptop and stop there. */
     .layout-sidebar{max-width:1180px;grid-template-columns:360px minmax(0,1fr)}
@@ -322,12 +381,17 @@ function baseCSS(t) {
     .hero-compact{max-width:1080px}
     .hero-dusk{max-width:940px}
     .hero-statement{max-width:1140px;grid-template-columns:minmax(0,1fr) 340px}
-    .layout-sidebar,.split,.hero-arch,.foot{max-width:1280px}
+    .layout-sidebar,.split,.hero-arch,.foot,.layout-rail,.edtail{max-width:1280px}
     .hero-arch .media{margin-left:calc(-1 * (22px + max(0px,(100vw - 1280px)/2)))}
     .hero-cover img.cover{height:min(62vh,620px)}
   }
 
   @media (max-width:760px){
+    /* A sticky contents column is a desktop affordance. On a phone it would be
+       a screenful of links before any content, so it goes away entirely and
+       the answers stand on their own. */
+    .rail{display:none}
+    .panel-text{padding:1.5rem 22px 2rem}
     /* brand left, burger, Contact right -- links drop into a panel beneath */
     .navburger{display:block;margin-left:auto}
     .topnav{flex-wrap:wrap;gap:.55rem}
@@ -351,6 +415,27 @@ function baseCSS(t) {
     .hero-arch .body{padding:2rem 22px}
     #site section{margin-bottom:2.6rem}
   }`;
+}
+
+/* Highlight the block the reader is level with. Observer, not a scroll
+   handler: it fires only when something crosses the line, rather than on every
+   pixel of every scroll. Silently absent on templates with no rail. */
+function wireRail() {
+  const links = [...document.querySelectorAll('.rail-link')];
+  const items = [...document.querySelectorAll('.rail-item')];
+  if (!links.length || !items.length || !('IntersectionObserver' in window)) return;
+  const mark = (id) => links.forEach(a =>
+    a.classList.toggle('current', a.getAttribute('href') === '#' + id));
+  const seen = new Map();
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => seen.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0));
+    /* The topmost thing currently on screen, not the most visible one -- with
+       tall photos the biggest block is often the one you have scrolled past. */
+    const onScreen = items.filter(el => (seen.get(el.id) || 0) > 0);
+    if (onScreen.length) mark(onScreen[0].id);
+  }, { rootMargin: '-84px 0px -55% 0px', threshold: [0, 0.01, 0.5] });
+  items.forEach(el => obs.observe(el));
+  mark(items[0].id);
 }
 
 /* Bound after every render -- innerHTML replaces the nav each time. */
@@ -476,6 +561,24 @@ function feedBlocks(t) {
   return legacy;
 }
 
+/* Prompt i with media i, the same zip editorial has always used. Position-
+   based pairing (the photo AFTER each prompt) breaks the moment a therapist
+   drags their feed into a different order, and they are told to drag it. */
+function pairFeed(blocks) {
+  const prompts = blocks.filter(b => b.kind === 'prompt');
+  const media = blocks.filter(b => b.kind !== 'prompt');
+  const n = Math.max(prompts.length, media.length);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push({ prompt: prompts[i] || null, media: media[i] || null });
+  return out;
+}
+
+function mediaHtml(m, name) {
+  if (!m) return '';
+  if (m.kind === 'video') return `<video src="${esc(m.src)}" controls preload="metadata" playsinline></video>`;
+  return `<img src="${esc(m.src)}" alt="A photo shared by ${esc(name)}" loading="lazy">`;
+}
+
 function feedItemHtml(b, name) {
   if (b.kind === 'prompt') return `<div class="w-prompt"><p class="q">${esc(b.q)}</p><p>${esc(b.a)}</p></div>`;
   if (b.kind === 'photo') return `<figure class="w-photo" style="margin-left:0;margin-right:0"><img src="${esc(b.src)}" alt="A photo shared by ${esc(name)}" loading="lazy"></figure>`;
@@ -562,12 +665,16 @@ function render(t) {
 
   const storySec = feed ? `<section id="story"><p class="section-title">Get to know ${esc(first)}</p>${feed}</section>` : '';
   const kvSec = kv.length ? `<section id="practical"><p class="section-title">Good to know</p><div class="kv">${kv.join('')}</div></section>` : '';
+  /* Was "a few questions first... takes about three minutes", which described
+     the eight-step intake. That is not what this button does any more: an
+     email address is the whole ask, and the profile is optional and later.
+     Copy that overstates the cost is the thing that loses the person. */
   const contactSec = `
     <section id="contact"><div class="contact-in">
       <h2>Ready when you are.</h2>
-      <p class="soft">A few questions first, so ${esc(first)} knows you two are likely to fit — then the conversation is yours.</p>
+      <p class="soft">Send ${esc(first)} a message and it goes straight to them. All you need is an email address &mdash; you can fill in the rest later, or not at all.</p>
       <a class="btn" href="${esc(cta)}">Send ${esc(first)} a message</a>
-      <p class="fine">Free for clients, always. Takes about three minutes.</p>
+      <p class="fine">Free for clients, always.</p>
     </div></section>`;
   const footer = `
   <footer><div class="foot">
@@ -624,10 +731,10 @@ function render(t) {
     ${t.best_for ? `<section class="measure" style="padding-top:2.6rem"><p class="pull">“${esc(String(t.best_for).replace(/\.$/, ''))}.”</p>
       <div style="text-align:center;margin-top:1.3rem">${badge}${paused ? `<div class="measure" style="margin-top:.8rem">${paused}</div>` : ''}</div></section>` : ''}
     ${rows ? `<section id="story"><p class="section-title wide" style="padding:0 22px">Get to know ${esc(first)}</p>${rows}
-      <div class="measure" data-rhythm="flow">${rest}${others}</div></section>`
-      : storySec ? `<div class="measure">${storySec}</div>` : ''}
-    ${kvSec ? `<div class="measure">${kvSec}</div>` : ''}
-    <div class="measure">${contactSec}</div>
+      <div class="measure edtail edtail-rest" data-rhythm="flow">${rest}${others}</div></section>`
+      : storySec ? `<div class="measure edtail">${storySec}</div>` : ''}
+    ${kvSec ? `<div class="measure edtail">${kvSec}</div>` : ''}
+    <div class="measure edtail">${contactSec}</div>
     ${footer}`;
   } else if (tpl.layout === 'banded') {
     body = `${nav}
@@ -647,8 +754,80 @@ function render(t) {
     ${kvSec ? `<div class="band"><div class="measure colwrap">${kvSec}</div></div>` : ''}
     <div class="band loud"><div class="measure">${contactSec}</div></div>
     <div class="band-foot">${footer}</div>`;
+  } else if (tpl.layout === 'rail' || tpl.layout === 'panels') {
+    /* ------------------------------------------------------------------
+       RAIL (practice) -- a contents column beside the answers, the drawer
+       idea built as NAVIGATION rather than as a gate. It highlights the
+       block you are level with and scrolls you to any other, but nothing is
+       hidden behind a click: these answers are how a client decides whether
+       they trust someone, and content behind a click mostly does not get
+       read. Structured and scannable is exactly Practice's register.
+
+       PANELS (evening) -- full-bleed alternating rows, image running to the
+       edge of the screen, text in the dark beside it. Slow and cinematic,
+       one thing at a time, which is the register trauma and somatic work
+       tends to want. Deliberately not the contained grid the others use.
+       ------------------------------------------------------------------ */
+    const pairs = pairFeed(blocks);
+    let hero;
+    if (tpl.hero === 'compact') {
+      hero = `<div class="hero measure hero-compact" id="top">
+        <div class="pic">${heroPortrait}</div>
+        <div>
+          <h1>${esc(name)}</h1>
+          <p class="soft" style="margin:.4rem 0 .9rem">${esc(creds)}${(t.pronouns && t.show_pronouns !== false) ? ' · ' + esc(t.pronouns) : ''}</p>
+          ${factsRow}
+          <div style="margin:1.1rem 0 1.3rem">${badge}</div>
+          ${paused}
+          <a class="btn" href="${esc(cta)}">Send me a message</a>
+        </div>
+      </div>`;
+    } else {
+      hero = `<div class="hero measure hero-dusk" id="top">
+        ${t.photo ? `<img class="avatar" src="${esc(t.photo)}" alt="${esc(name)}">` : ''}
+        <p class="section-title" style="margin-bottom:.6rem">${esc(creds)}</p>
+        <h1>${esc(name)}</h1>
+        ${t.best_for ? `<p style="font-style:italic;color:var(--soft);margin:.9rem auto 1.2rem;max-width:40ch">${esc(t.best_for)}</p>` : ''}
+        ${factsRow}
+        <div style="margin-top:1.3rem">${badge}</div>
+        ${paused ? `<div style="margin-top:1rem">${paused}</div>` : ''}
+      </div>`;
+    }
+
+    const items = pairs.map((pr, i) => {
+      const q = pr.prompt ? pr.prompt.q : '';
+      const a = pr.prompt ? pr.prompt.a : '';
+      const media = mediaHtml(pr.media, name);
+      if (tpl.layout === 'panels') {
+        return `<div class="panel${i % 2 ? ' rev' : ''}" id="blk-${i}">
+          ${media ? `<div class="panel-media">${media}</div>` : '<div></div>'}
+          <div class="panel-text"><div>${q ? `<p class="q">${esc(q)}</p>` : ''}${a ? `<p class="a">${esc(a)}</p>` : ''}</div></div>
+        </div>`;
+      }
+      return `<article class="rail-item" id="blk-${i}">
+        ${q ? `<p class="q">${esc(q)}</p>` : ''}
+        ${a ? `<p class="a">${esc(a)}</p>` : ''}
+        ${media ? `<div class="rail-media">${media}</div>` : ''}
+      </article>`;
+    }).join('');
+
+    const storyBlock = !items ? '' : (tpl.layout === 'panels'
+      ? `<section id="story"><p class="section-title measure">Get to know ${esc(first)}</p>${items}</section>`
+      : `<section id="story" class="layout-rail">
+          <nav class="rail" aria-label="Sections of this page">
+            <p class="section-title">Get to know ${esc(first)}</p>
+            <ol>${pairs.map((pr, i) =>
+              `<li><a class="rail-link" href="#blk-${i}" data-rail="${i}">${esc(pr.prompt ? pr.prompt.q : 'A photo')}</a></li>`).join('')}</ol>
+          </nav>
+          <div class="rail-body">${items}</div>
+        </section>`);
+
+    body = `${nav}${hero}
+    ${storyBlock}
+    <div class="measure colwrap">${kvSec}${contactSec}</div>
+    ${footer}`;
   } else {
-    /* column: quiet (statement) / practice (compact) / evening (dusk) */
+    /* column: quiet (statement) */
     let hero;
     if (tpl.hero === 'compact') {
       hero = `<div class="hero measure hero-compact" id="top">
@@ -693,6 +872,7 @@ function render(t) {
   $('site').dataset.tpl = tplId;
   $('site').innerHTML = body;
   wireNav();
+  wireRail();
   $('kp-loading').hidden = true;
   $('kp-missing').hidden = true;
   $('site').hidden = false;
