@@ -516,13 +516,39 @@ function render(t) {
   if (new URLSearchParams(location.search).get('from') === 'browse') {
     $('kt-ribbon').hidden = false;
   }
+  /* PREVIEW MODE. The therapist portal opens this page in an iframe and posts
+     the row it would save, so a therapist can see their website before they
+     are verified -- which is exactly when they are choosing a look, and when
+     therapists_public deliberately does not have them. No fetch, no address-bar
+     rewrite, and every later message re-renders, so switching template in the
+     portal repaints instantly.
+
+     Only same-origin messages are honoured. The portal is the only sender and
+     it is on our origin; anything else is ignored outright. */
+  if (new URLSearchParams(location.search).get('preview') === '1') {
+    document.documentElement.setAttribute('data-preview', '1');
+    window.addEventListener('message', ev => {
+      if (ev.origin !== location.origin) return;
+      const d = ev.data;
+      if (!d || d.kind !== 'kindred-preview' || !d.row) return;
+      $('kp-loading').hidden = true;
+      $('kp-missing').hidden = true;
+      render(d.row);
+    });
+    /* Say so if the portal never speaks, rather than spinning forever. */
+    setTimeout(() => {
+      if ($('site').hidden) { $('kp-loading').hidden = true; showMissing(); }
+    }, 6000);
+    return;
+  }
+
   const t = await fetchProfile();
   if (!t) { showMissing(); return; }
   render(t);
   /* Show the pretty URL whichever door they came in through. replaceState
      only -- no reload, no history spam; reloading the pretty path lands on
      404.html, which routes straight back here. */
-  if (t.slug && /^[a-z0-9][a-z0-9-]{1,80}$/.test(t.slug)) {
+  if (t.slug && /^[a-z0-9][a-z0-9-]{1,80}$/.test(t.slug) && !document.documentElement.hasAttribute('data-preview')) {
     const keep = new URLSearchParams(location.search).get('from') === 'browse' ? '?from=browse' : '';
     try { history.replaceState(null, '', '/' + t.slug + keep); } catch (e) { /* file:// etc. */ }
   }

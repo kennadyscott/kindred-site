@@ -2434,6 +2434,28 @@ select.t-rate-input,
              color: var(--aubergine); cursor: pointer; white-space: nowrap; }
 .pm-view .primary-btn { display: none; } /* it's a preview here, not the swipe card */
 
+/* ----- Set up | Preview, and the preview stage -----------------------------
+   The frame runs the real profile.html, so nothing in here may style its
+   contents -- only the box around it. Width is the only thing the Phone
+   toggle changes, which is what makes switching instant: same document,
+   no reload, and the templates' own media queries do the rest. */
+.site-sub-tabs { display: flex; gap: 6px; background: var(--wash, #F3F0F6); border-radius: 999px;
+                 padding: 4px; margin-bottom: 14px; }
+.site-sub { flex: 1; border: none; background: none; cursor: pointer; border-radius: 999px;
+            padding: 8px 10px; font: 700 12.5px/1 'Inter', sans-serif; color: var(--ink-soft); }
+.site-sub.active { background: #fff; color: var(--aubergine); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.site-preview-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
+.site-preview-note { font-size: 11.5px; color: var(--ink-soft); flex: 1; min-width: 140px; }
+.site-dev-toggle { display: inline-flex; gap: 4px; background: var(--wash, #F3F0F6);
+                   border-radius: 999px; padding: 3px; }
+.site-dev { border: none; background: none; cursor: pointer; border-radius: 999px;
+            padding: 6px 12px; font: 600 11.5px/1 'Inter', sans-serif; color: var(--ink-soft); }
+.site-dev.active { background: #fff; color: var(--aubergine); box-shadow: 0 1px 2px rgba(0,0,0,.07); }
+.site-preview-stage { border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+                      background: #fff; height: 560px; }
+.site-preview-stage.is-phone { max-width: 390px; margin: 0 auto; height: 620px; border-radius: 26px; }
+.site-preview-frame { width: 100%; height: 100%; border: 0; display: block; }
+
 /* ---------------------------------------------------------------------------
    VIEW PROFILE IS A PHONE PREVIEW.
 

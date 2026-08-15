@@ -4332,6 +4332,12 @@ function gettingStartedHtml(t) {
   const licenses = t.licenses || [];
   const hasLicense = licenses.length > 0;
   const deniedLicense = licenses.find(l => l.rejectedAt);
+  /* Every therapist HAS a website the moment they are verified -- there is
+     nothing to switch on. So the step is not "make one", it is "decide how it
+     looks": done once they have picked a template, which is the one choice
+     only they can make. Same bar as Ideal Client -- they have been in there
+     and made a decision. */
+  const hasWebsite = !!(t.site && t.site.template);
   /* ORDER IS THE PRODUCT DECISION, not a layout choice.
      Payment used to be step one: a card before a therapist had seen how
      Kindred represents them, on a marketplace with nobody in it yet. Building
@@ -4385,6 +4391,17 @@ function gettingStartedHtml(t) {
        later, and lives in the banner and in Settings where a billing decision
        belongs. A list called "what's left before clients see you" should only
        ever contain things that are actually left. */
+    /* Third, and counted the same way Ideal Client is: it does not gate
+       visibility, but it is theirs to build and it is the reason many of them
+       are here at all -- a therapist paying Squarespace $25/month should not
+       have to discover this tab by accident. Placing it here also groups the
+       list honestly: the three creative steps they own, then the three
+       verification steps that gate them. */
+    { key: 'website',  done: hasWebsite, title: 'Build your website', mine: true,
+      body: hasWebsite
+        ? 'Your own page at your own link, built from everything above. Change the look any time \u2014 switching never loses a word.'
+        : 'You get a real website at your own link, built from the profile above \u2014 no second thing to write. Pick how it looks.',
+      action: hasWebsite ? null : { label: 'Build my website', id: 't-gs-website' } },
     { key: 'license',  done: licenseDone, title: 'Add your license(s)', mine: true,
       body: deniedLicense
         ? `${deniedLicense.state}: ${String(deniedLicense.rejectedReason || '').replace(/[<>&]/g, '')}`
@@ -4464,13 +4481,22 @@ function gettingStartedHtml(t) {
     </div>`;
 }
 
+/* Open a profile tab from anywhere. showTScreen re-renders t-profile, so this
+   also works when we are ALREADY on t-profile -- which is exactly the case
+   that was broken: the Website tab's "Finish my profile" set profileMode and
+   nothing repainted. One helper so the next caller cannot get it wrong. */
+function goProfileMode(mode) {
+  profileMode = mode;
+  showTScreen('t-profile');
+}
+
 function wireGettingStarted() {
   const id = document.getElementById('t-gs-id');
   if (id) id.addEventListener('click', () => startIdentityVerification(id));
   const lic = document.getElementById('t-gs-license');
   if (lic) lic.addEventListener('click', openLicenseNumberField);
   const prof = document.getElementById('t-gs-profile');
-  if (prof) prof.addEventListener('click', () => { profileMode = 'edit'; showTScreen('t-profile'); });
+  if (prof) prof.addEventListener('click', () => goProfileMode('edit'));
   /* The paywall. Sends them to the website's activate page rather than trying
      to take money in the app -- that is what keeps Apple out of it entirely.
      LATER, once there are clients: this step is the place for "N people in
@@ -4486,7 +4512,9 @@ function wireGettingStarted() {
     openActivateProfile();
   });
   const ideal = document.getElementById('t-gs-ideal');
-  if (ideal) ideal.addEventListener('click', () => { profileMode = 'ideal'; showTScreen('t-profile'); });
+  if (ideal) ideal.addEventListener('click', () => goProfileMode('ideal'));
+  const web = document.getElementById('t-gs-website');
+  if (web) web.addEventListener('click', () => goProfileMode('website'));
   const dis = document.getElementById('t-gs-dismiss');
   if (dis) dis.addEventListener('click', () => {
     try { localStorage.setItem(GETTING_STARTED_KEY, 'dismissed'); } catch (e) {}
@@ -5628,6 +5656,11 @@ function restoreProfileScroll(saved) {
    live switch in t.websiteLive (0043). Both save through the same debounced
    persistProfileSoon as every other edit.
    =========================================================================== */
+/* Which half of the Website tab is showing, and at what width. Module state
+   rather than a URL param: it is a viewing preference, not a place. */
+let websiteView = 'setup';
+let websitePreviewDevice = 'desktop';
+
 const SITE_TEMPLATES = [
   { id: 'warm',      name: 'Warm',      who: 'Cream and soft edges, your card beside the page. The friendly default.', sw: ['#FAF4EC', '#A85B44', '#3A2C40'] },
   { id: 'quiet',     name: 'Quiet',     who: 'All serif and unhurried. Your words lead.',                              sw: ['#FBFAF6', '#5F7355', '#2E2B26'] },
@@ -5637,16 +5670,69 @@ const SITE_TEMPLATES = [
   { id: 'sunrise',   name: 'Sunrise',   who: 'Cream and coral, big confident serif, your photo sweeping the edge.',   sw: ['#FBECDC', '#D8412A', '#3B2620'] }
 ];
 
+/* The preview is the SAME renderer the public page uses, driven by the row we
+   would save -- not a second copy of the six templates inside the app. Copy
+   number two is how sliding scale, the CBT vocabulary and listingState each
+   drifted; a preview that quietly disagreed with the real page would be the
+   worst version of that bug, because being trusted is its entire job.
+
+   It has to work BEFORE they are verified -- that is exactly when they are
+   choosing a look -- and an unverified therapist is not in therapists_public,
+   so the frame cannot fetch. It receives the row by postMessage instead. */
+function websitePreviewRow(t) {
+  const row = therapistToDbRow(t, t.id);
+  /* NEVER ships: the ideal-client spec is private and the preview renders what
+     a stranger sees. Deleting it here means the frame cannot leak what it was
+     never handed. */
+  delete row.ideal_client;
+  row.slug = t.slug || slugifyName(displayName(t));
+  /* Shown as it WILL be: they are looking at the finished page, and the
+     verified badge is the only thing verification adds to it. */
+  row.license_verified = true;
+  row.identity_verified = true;
+  return row;
+}
+
+/* NOTE ON THE BLOCKED COPY BELOW. next.why is a CLAUSE -- "your profile still
+   needs real answers for 3 fields..." -- so it only parses after "while". The
+   old line dropped it into "The link works the moment X is resolved", which
+   rendered as "the moment your profile still needs real answers for 3 fields
+   is resolved": a sentence with no meaning, and the one a therapist saw.
+
+   The note lives out here because a template literal has no comments. An HTML
+   comment inside one is still interpolated (quoting the broken string in there
+   re-ran it), and a block comment is simply printed onto the page. */
 function websitePaneHtml(t) {
   const esc0 = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
   const url = therapistProfileUrl(t);
   const chosen = (t.site && t.site.template) || 'warm';
   const next = nextStepToLive(t);
   const live = !next;
+  const previewing = websiteView === 'preview';
 
   return `<div class="pm-website">
 
-    <div class="site-url-card">
+    <div class="site-sub-tabs" role="tablist">
+      <button type="button" class="site-sub ${previewing ? '' : 'active'}" data-siteview="setup" role="tab">Set up</button>
+      <button type="button" class="site-sub ${previewing ? 'active' : ''}" data-siteview="preview" role="tab">Preview</button>
+    </div>
+
+    ${previewing ? `
+    <div class="site-preview-bar">
+      <span class="site-preview-note">${live ? 'Exactly what a visitor sees.' : 'Exactly how it will look once you\u2019re live.'}</span>
+      <span class="site-dev-toggle">
+        <button type="button" class="site-dev ${websitePreviewDevice === 'phone' ? '' : 'active'}" data-sitedev="desktop">Desktop</button>
+        <button type="button" class="site-dev ${websitePreviewDevice === 'phone' ? 'active' : ''}" data-sitedev="phone">Phone</button>
+      </span>
+    </div>
+    <div class="site-preview-stage ${websitePreviewDevice === 'phone' ? 'is-phone' : ''}">
+      <iframe id="site-preview-frame" class="site-preview-frame" title="Preview of your website"
+              src="../profile.html?preview=1"></iframe>
+    </div>
+    <p class="portal-note" style="margin-top:10px">Changing your look below updates this straight away.</p>
+    ` : ''}
+
+    <div class="site-url-card" style="margin-top:14px">
       <div class="site-url-label">Your website</div>
       <div class="site-url">${esc0(url)}</div>
       <div class="site-url-row">
@@ -5658,7 +5744,7 @@ function websitePaneHtml(t) {
 
     ${live ? '' : `<div class="empty-coach is-blocked" style="margin-top:12px">
       <p class="empty-coach-title">Your website isn't public yet</p>
-      <p class="empty-coach-body">The link works the moment ${esc0(next.why)} is resolved${next.when ? ' \u2014 ' + esc0(next.when) : ''}.</p>
+      <p class="empty-coach-body">Your page stays private while ${esc0(next.why)}. The link starts working the moment that\u2019s done.${next.when ? ' ' + esc0(next.when) : ''}</p>
       ${next.label ? `<button class="empty-coach-btn" id="${next.id}">${esc0(next.label)}</button>` : ''}
     </div>`}
 
@@ -6979,11 +7065,11 @@ function therapistEmptyState(t, what, opts) {
 /* Buttons inside an empty state, wired wherever one is rendered. */
 function wireEmptyStateActions(t) {
   const go = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
-  go('t-empty-profile',  () => { profileMode = 'edit'; showTScreen('t-profile'); });
+  go('t-empty-profile',  () => goProfileMode('edit'));
   go('t-empty-activate', () => openActivateProfile());
   go('t-empty-license',  () => openLicenseNumberField());
   go('t-empty-identity', () => startIdentityVerification(document.getElementById('t-empty-identity')));
-  go('t-empty-ideal',    () => { profileMode = 'ideal'; showTScreen('t-profile'); });
+  go('t-empty-ideal',    () => goProfileMode('ideal'));
 }
 
 function inquirySectionHtml(key, title, count, body, emptyHtml) {
@@ -7343,8 +7429,8 @@ function renderTherapistProfileBody() {
     <div class="profile-modes" role="tablist">
       <button class="pmode ${profileMode === 'ideal' ? 'active' : ''}" data-pmode="ideal" role="tab">✦ Ideal Client</button>
       <button class="pmode ${profileMode === 'edit' ? 'active' : ''}" data-pmode="edit" role="tab">✎ Edit Profile</button>
-      <button class="pmode ${profileMode === 'website' ? 'active' : ''}" data-pmode="website" role="tab">🌐 Website</button>
       <button class="pmode ${profileMode === 'view' ? 'active' : ''}" data-pmode="view" role="tab">👀 View Profile</button>
+      <button class="pmode ${profileMode === 'website' ? 'active' : ''}" data-pmode="website" role="tab">🌐 Website</button>
     </div>
 
     <div class="pm-view">${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}</div>
@@ -7674,13 +7760,53 @@ function renderTherapistProfileBody() {
   document.querySelectorAll('[data-site-tpl]').forEach(el => el.addEventListener('click', () => {
     t.site = Object.assign({}, t.site, { template: el.dataset.siteTpl });
     persistProfileSoon(t);
-    renderTherapistProfile();
+    /* Deliberately NOT a re-render: that would rebuild the iframe and reload
+       the preview, so every look they tried would flash white. Repaint the
+       chosen card by hand and push the new row into the frame that is already
+       open -- the switch is then instant, which is the whole point of being
+       able to try six of them. */
+    document.querySelectorAll('[data-site-tpl]').forEach(b => {
+      const on = b === el;
+      b.classList.toggle('selected', on);
+      const nameEl = b.querySelector('.site-tpl-name');
+      if (nameEl) nameEl.textContent = nameEl.textContent.replace(' \u2713', '') + (on ? ' \u2713' : '');
+    });
+    if (websiteView === 'preview') pushWebsitePreview(t);
+    else renderTherapistProfile();
   }));
   document.querySelectorAll('[data-site-jump]').forEach(el => el.addEventListener('click', () => {
-    profileMode = 'edit';
+    goProfileMode('edit');
+  }));
+  document.querySelectorAll('[data-siteview]').forEach(el => el.addEventListener('click', () => {
+    websiteView = el.dataset.siteview;
     renderTherapistProfile();
   }));
+  document.querySelectorAll('[data-sitedev]').forEach(el => el.addEventListener('click', () => {
+    websitePreviewDevice = el.dataset.sitedev;
+    /* Width only -- the frame keeps its document, so no reload and no flash. */
+    const stage = document.querySelector('.site-preview-stage');
+    if (stage) stage.classList.toggle('is-phone', websitePreviewDevice === 'phone');
+    document.querySelectorAll('[data-sitedev]').forEach(b =>
+      b.classList.toggle('active', b.dataset.sitedev === websitePreviewDevice));
+  }));
+  const frame = document.getElementById('site-preview-frame');
+  if (frame) frame.addEventListener('load', () => pushWebsitePreview(t));
+  /* Buttons rendered by nextStepToLive() live in this pane too -- they were
+     drawn and never wired, which is why "Finish my profile" did nothing. */
+  wireEmptyStateActions(t);
   attachTherapistProfileHandlers(t);
+}
+
+/* Hand the current row to the preview frame. Same-origin only, and the frame
+   is ours, so targetOrigin is pinned to our own origin rather than '*'. */
+function pushWebsitePreview(t) {
+  const frame = document.getElementById('site-preview-frame');
+  if (!frame || !frame.contentWindow) return;
+  try {
+    frame.contentWindow.postMessage(
+      { kind: 'kindred-preview', row: websitePreviewRow(t) },
+      location.origin);
+  } catch (e) { console.warn('[kindred] preview push failed', e && e.message); }
 }
 
 function attachTherapistProfileHandlers(t) {
