@@ -86,8 +86,14 @@ function baseCSS(t) {
           padding:.85rem 22px;background:${t.ground};border-bottom:1px solid var(--line)}
   .navbrand{font-family:var(--display);font-size:1.08rem;color:inherit;text-decoration:none;
             margin-right:auto;white-space:nowrap}
-  .navlinks{display:flex;gap:1.15rem;align-items:center;overflow-x:auto;scrollbar-width:none;min-width:0}
-  .navlinks::-webkit-scrollbar{display:none}
+  .navlinks{display:flex;gap:1.15rem;align-items:center;min-width:0}
+  .navburger{display:none;flex:none;background:none;border:0;cursor:pointer;
+             padding:.5rem;width:38px;height:38px}
+  .navburger span{display:block;height:2px;border-radius:2px;background:var(--soft);
+                  margin:4px 0;transition:transform .18s ease,opacity .18s ease}
+  .topnav.open .navburger span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+  .topnav.open .navburger span:nth-child(2){opacity:0}
+  .topnav.open .navburger span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
   .navlink{font-size:.76rem;font-weight:700;letter-spacing:.09em;text-transform:${t.navCase};
            color:var(--soft);text-decoration:none;white-space:nowrap}
   .navlink:hover{color:var(--accent)}
@@ -296,6 +302,16 @@ function baseCSS(t) {
   }
 
   @media (max-width:760px){
+    /* brand left, burger, Contact right -- links drop into a panel beneath */
+    .navburger{display:block;margin-left:auto}
+    .topnav{flex-wrap:wrap;gap:.55rem}
+    .navbrand{margin-right:0}
+    .navcta{order:3}
+    .navlinks{order:4;display:none;width:100%;flex-direction:column;align-items:stretch;
+              gap:0;border-top:1px solid var(--line);margin-top:.1rem}
+    .topnav.open .navlinks{display:flex}
+    .navlinks .navlink{display:block;width:100%;padding:.85rem 0;font-size:.9rem}
+    .navlinks .navlink + .navlink{border-top:1px solid var(--line)}
     .layout-sidebar{grid-template-columns:1fr;gap:1.6rem;margin-top:1.4rem}
     .aside-card{position:static}
     .aside-card img,.aside-fallback{max-width:280px;margin-left:auto;margin-right:auto}
@@ -309,6 +325,26 @@ function baseCSS(t) {
     .hero-arch .body{padding:2rem 22px}
     #site section{margin-bottom:2.6rem}
   }`;
+}
+
+/* Bound after every render -- innerHTML replaces the nav each time. */
+function wireNav() {
+  const bar = document.querySelector('#site .topnav');
+  const burger = bar && bar.querySelector('.navburger');
+  if (!bar || !burger) return;
+  const setOpen = (on) => {
+    bar.classList.toggle('open', on);
+    burger.setAttribute('aria-expanded', on ? 'true' : 'false');
+  };
+  burger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(!bar.classList.contains('open'));
+  });
+  /* Tapping a link jumps down the page; leaving the panel open would cover
+     the very section they just asked for. */
+  bar.querySelectorAll('.navlink').forEach(a => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('click', (e) => { if (!bar.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 }
 
 function showMissing() {
@@ -482,13 +518,19 @@ function render(t) {
   }
 
   const cta = `${APP_URL}#therapist=${encodeURIComponent(t.user_id)}`;
+  /* The links row was overflow-x:auto, which on a phone rendered as a half-cut
+     word ("Good to kno...") with nothing to say it scrolled -- it reads as a
+     broken nav rather than a scrollable one. Below 760px the links collapse
+     into a hamburger panel. The brand and Contact stay put: the one thing a
+     visitor on a phone is most likely to want must never be behind a menu. */
+  const navLinks = `${feed ? `<a class="navlink" href="#story">My story</a>` : ''}${kv.length ? `<a class="navlink" href="#practical">Good to know</a>` : ''}`;
   const nav = `
   <nav class="topnav">
     <a class="navbrand" href="#top">${esc(name)}</a>
-    <div class="navlinks">
-      ${feed ? `<a class="navlink" href="#story">My story</a>` : ''}
-      ${kv.length ? `<a class="navlink" href="#practical">Good to know</a>` : ''}
-    </div>
+    ${navLinks ? `<button class="navburger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="navlinks">
+      <span></span><span></span><span></span>
+    </button>` : ''}
+    <div class="navlinks" id="navlinks">${navLinks}</div>
     <a class="navcta" href="#contact">Contact</a>
   </nav>`;
 
@@ -624,6 +666,7 @@ function render(t) {
 
   $('site').dataset.tpl = tplId;
   $('site').innerHTML = body;
+  wireNav();
   $('kp-loading').hidden = true;
   $('kp-missing').hidden = true;
   $('site').hidden = false;
