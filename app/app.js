@@ -784,10 +784,19 @@ function contentWarningHtml(t) {
   const line = f => '<li><strong>' + esc(f.label) + '</strong> &mdash; "' + esc(String(f.value).trim().slice(0, 60)) + '"</li>';
   let html = '';
   if (w.placeholders.length) {
+    /* NAME THE WORD, not the field. The old title was "This still looks
+       unfinished" over a list of fields the therapist had in fact filled in --
+       so it read as the checker being broken, when the actual message was
+       narrower and easy to act on: the words you typed are ones we treat as
+       filler. Quoting the value was already there and was not enough; nothing
+       said that the quote WAS the reason. */
+    const one = w.placeholders.length === 1;
     html += '<div class="content-warn is-block">'
-      + '<p class="content-warn-title">This still looks unfinished</p>'
+      + '<p class="content-warn-title">' + (one ? 'This answer reads as a placeholder' : 'These answers read as placeholders') + '</p>'
       + '<ul class="content-warn-list">' + w.placeholders.map(line).join('') + '</ul>'
-      + '<p class="content-warn-sub">Clients read these before anything else. Your profile stays hidden until they say something real.</p>'
+      + '<p class="content-warn-sub">Words like <em>test</em>, <em>TBD</em> and <em>asdf</em> are the ones we hold back on \u2014 '
+      + (one ? 'replace it' : 'replace them')
+      + ' with what you\u2019d actually say and your profile goes live. Clients read these before anything else.</p>'
       + '</div>';
   }
   if (w.profanity.length) {
@@ -2063,6 +2072,48 @@ function persistProfileSoon(t) {
     paintSaveState();
   }, 1000);
 }
+/* SAVE NOW, on demand. Autosave is a promise the therapist has to take on
+   faith: the only evidence is one grey line at the top of a long page, far
+   from whatever they were typing. Editing a profile you might be judged on and
+   seeing no Save button reads as "this is not being kept" -- so the button is
+   not a new persistence path, it is the receipt for the one that already runs.
+
+   Cancels the pending debounce and writes immediately, and reports which of
+   the three real outcomes happened rather than always claiming success. */
+async function saveProfileNow(t) {
+  if (!t) return 'error';
+  /* A field only writes to the model on input/change, and clicking a button
+     does not blur the field first in every browser. Commit the caret's field
+     before reading the model, or the last thing they typed is the one thing
+     the save misses. */
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+    active.dispatchEvent(new Event('input', { bubbles: true }));
+    active.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  clearTimeout(profileSaveTimer);
+  if (!authReady() || !loadAuthSession()) return 'demo';  // nothing to save to
+  profileSaveState = 'saving'; paintSaveState();
+  try {
+    await saveTherapistProfile(t);
+    profileSaveState = 'saved'; paintSaveState();
+    return 'saved';
+  } catch (e) {
+    console.warn('profile save failed:', e.message);
+    profileSaveState = 'error'; paintSaveState();
+    return 'error';
+  }
+}
+
+/* The button at the foot of an editor section. Same action every time; the
+   label is the only thing that varies, and only to report what happened. */
+function saveRowHtml(where) {
+  return `<div class="save-row">
+      <button type="button" class="save-btn" data-save-section="${where}">Save</button>
+      <span class="save-row-note">Saved automatically too &mdash; this just does it now.</span>
+    </div>`;
+}
+
 function paintSaveState() {
   const el = document.getElementById('t-save-state');
   if (!el) return;
@@ -5777,6 +5828,8 @@ function websitePaneHtml(t) {
     </div>
     <p class="portal-note" style="margin-top:10px">Coming next: services &amp; fees, common questions, office &amp; hours, and a booking link \u2014 website-only sections that matching never reads.</p>
 
+    ${saveRowHtml('website')}
+
   </div>`;
 }
 
@@ -7583,6 +7636,7 @@ function renderTherapistProfileBody() {
 
         <div class="t-form-label">I have experience working with&hellip; <span class="ideal-hint">star up to 3 — those lead your profile</span></div>
         ${specialtyPickerHtml(t)}
+        ${saveRowHtml('first')}
       </div>
     </details>
 
@@ -7678,6 +7732,7 @@ function renderTherapistProfileBody() {
           </div>`;
           return picker + media + hint + stage + addPhoto + addVideo;
         })()}
+        ${saveRowHtml('getToKnow')}
       </div>
     </details>
 
@@ -7731,6 +7786,7 @@ function renderTherapistProfileBody() {
 
         <div class="t-form-label" style="margin-top:16px;">Types of Therapy</div>
         ${checkboxDropdownHtml(t.modalities, modalityAll(), 'modality', 'Choose the therapy types you offer…')}
+        ${saveRowHtml('additional')}
       </div>
     </details>
     </div>
@@ -7776,6 +7832,24 @@ function renderTherapistProfileBody() {
   }));
   document.querySelectorAll('[data-site-jump]').forEach(el => el.addEventListener('click', () => {
     goProfileMode('edit');
+  }));
+  /* One handler for every Save button on the screen. Feedback lands ON the
+     button they pressed -- a therapist who clicks Save at the foot of a long
+     section should not have to scroll to the top to learn whether it worked. */
+  document.querySelectorAll('[data-save-section]').forEach(el => el.addEventListener('click', async () => {
+    if (el.disabled) return;
+    const original = el.textContent;
+    el.disabled = true; el.textContent = 'Saving\u2026';
+    const result = await saveProfileNow(t);
+    el.textContent = result === 'saved' ? '\u2713 Saved'
+                   : result === 'demo'  ? 'Demo \u2014 not saved'
+                   : 'Couldn\u2019t save';
+    el.classList.toggle('is-ok', result === 'saved');
+    el.classList.toggle('is-bad', result === 'error');
+    setTimeout(() => {
+      el.textContent = original; el.disabled = false;
+      el.classList.remove('is-ok', 'is-bad');
+    }, result === 'saved' ? 1800 : 3200);
   }));
   document.querySelectorAll('[data-siteview]').forEach(el => el.addEventListener('click', () => {
     websiteView = el.dataset.siteview;
