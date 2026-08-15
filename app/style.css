@@ -1063,9 +1063,12 @@ h1, h2, .logo, .chat-name, .nav-btn span:last-child {
 .nav-btn:not(.active) .nav-icon svg { opacity: .55; }
 .nav-btn.active .nav-icon svg { opacity: 1; }
 .nav-btn span:last-child { font-size: 10.5px; white-space: nowrap; letter-spacing: -.1px; }
-.five-tabs .nav-btn { padding: 0 2px; }
-.five-tabs .nav-icon svg { width: 21px; height: 21px; }
-.five-tabs .nav-btn span:last-child { font-size: 9px; letter-spacing: -0.2px; }
+/* The therapist bar carries six now (Website joined). Same squeeze the
+   five-tab bar already used -- it is the tightest thing on a 375px screen. */
+.five-tabs .nav-btn, #therapist-nav .nav-btn { padding: 0 2px; }
+.five-tabs .nav-icon svg, #therapist-nav .nav-icon svg { width: 21px; height: 21px; }
+.five-tabs .nav-btn span:last-child,
+#therapist-nav .nav-btn span:last-child { font-size: 9px; letter-spacing: -0.2px; }
 .nav-badge {
   position: absolute;
   top: -2px;
@@ -2392,18 +2395,14 @@ select.t-rate-input,
 /* active item gets a colored capsule on top of it */
 .pmode.active { background: var(--coral); color: #ffffff; }
 /* show only the active region; the other two stay in the DOM (handlers intact) */
+/* Website is its own SCREEN now (#screen-t-website), so the profile editor is
+   back to three panes and there is no 'website' mode to hide. */
 #t-profile-content[data-mode="edit"]  .pm-ideal,
 #t-profile-content[data-mode="edit"]  .pm-view,
-#t-profile-content[data-mode="edit"]  .pm-website,
 #t-profile-content[data-mode="ideal"] .pm-edit,
 #t-profile-content[data-mode="ideal"] .pm-view,
-#t-profile-content[data-mode="ideal"] .pm-website,
 #t-profile-content[data-mode="view"]  .pm-edit,
-#t-profile-content[data-mode="view"]  .pm-ideal,
-#t-profile-content[data-mode="view"]  .pm-website,
-#t-profile-content[data-mode="website"] .pm-edit,
-#t-profile-content[data-mode="website"] .pm-ideal,
-#t-profile-content[data-mode="website"] .pm-view { display: none; }
+#t-profile-content[data-mode="view"]  .pm-ideal { display: none; }
 
 .preview-rail-cap { display: none; }
 
@@ -2684,9 +2683,10 @@ select.t-rate-input,
   .bottom-nav .nav-btn.active {
     border-bottom-color: var(--coral);
   }
-  .five-tabs .nav-btn { padding: 14px 16px; }
-  .five-tabs .nav-btn span:last-child { font-size: 13px; letter-spacing: 0; }
-  .five-tabs .nav-icon { font-size: 16px; }
+  .five-tabs .nav-btn, #therapist-nav .nav-btn { padding: 14px 16px; }
+  .five-tabs .nav-btn span:last-child,
+  #therapist-nav .nav-btn span:last-child { font-size: 13px; letter-spacing: 0; }
+  .five-tabs .nav-icon, #therapist-nav .nav-icon { font-size: 16px; }
   .nav-badge { position: static; margin-left: 2px; }
 
   /* ---- screens scroll as a page, content held to a readable measure ---- */
@@ -2827,6 +2827,11 @@ select.t-rate-input,
      hidden, so nothing new is rendered and no handler moves.
      ========================================================================== */
   #screen-t-profile { --measure: 1240px; }
+  /* A website preview is the widest thing this product renders. Nearly
+     full-bleed, and the stage grows with the window rather than sitting at a
+     fixed 560px -- the point of moving it out of the profile tabs. */
+  #screen-t-website { --measure: 1400px; }
+  #screen-t-website .site-preview-stage { height: min(76vh, 900px); }
   #t-profile-content[data-mode="edit"] {
     display: grid;
     grid-template-columns: minmax(0, 780px) 390px;
@@ -2879,6 +2884,7 @@ select.t-rate-input,
   #screen-t-home, #screen-t-insights { --measure: 1180px; }
   #screen-t-requests { --measure: 1000px; }
   #screen-t-profile { --measure: 1320px; }
+  #screen-t-website { --measure: 1640px; }
   #t-profile-content[data-mode="edit"] { grid-template-columns: minmax(0, 860px) 420px; }
 }
 

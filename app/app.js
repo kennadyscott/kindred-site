@@ -4594,7 +4594,7 @@ function wireGettingStarted() {
   const ideal = document.getElementById('t-gs-ideal');
   if (ideal) ideal.addEventListener('click', () => goProfileMode('ideal'));
   const web = document.getElementById('t-gs-website');
-  if (web) web.addEventListener('click', () => goProfileMode('website'));
+  if (web) web.addEventListener('click', () => showTScreen('t-website'));
   const dis = document.getElementById('t-gs-dismiss');
   if (dis) dis.addEventListener('click', () => {
     try { localStorage.setItem(GETTING_STARTED_KEY, 'dismissed'); } catch (e) {}
@@ -5862,6 +5862,95 @@ function websitePaneHtml(t) {
   </div>`;
 }
 
+/* ===========================================================================
+   THE WEBSITE SCREEN
+   ---------------------------------------------------------------------------
+   Was a fourth tab inside My Profile, which meant previewing a whole web page
+   inside the profile editor's column -- a third of the window on a laptop, and
+   narrower still once the editor grew its side-by-side preview. A website is
+   the widest thing this product renders, so it gets the window.
+   =========================================================================== */
+function renderTherapistWebsite() {
+  const t = THERAPISTS.find(t => t.id === currentTherapistId);
+  const container = document.getElementById('t-website-content');
+  if (!t || !container) return;
+  persistProfileSoon(t);
+  container.innerHTML = `
+    <div class="t-form-name">${t.name} <span class="t-form-creds">${credentialsLabel(t)}</span></div>
+    <div class="save-state" id="t-save-state"></div>
+    ${websitePaneHtml(t)}`;
+  paintSaveState();
+  wireWebsitePane(t);
+}
+
+function wireWebsitePane(t) {
+  document.querySelectorAll('[data-site-tpl]').forEach(el => el.addEventListener('click', () => {
+    t.site = Object.assign({}, t.site, { template: el.dataset.siteTpl });
+    persistProfileSoon(t);
+    /* Deliberately NOT a re-render: that would rebuild the iframe and reload
+       the preview, so every look they tried would flash white. Repaint the
+       chosen card by hand and push the new row into the frame that is already
+       open -- the switch is then instant, which is the whole point of being
+       able to try six of them. */
+    document.querySelectorAll('[data-site-tpl]').forEach(b => {
+      const on = b === el;
+      b.classList.toggle('selected', on);
+      const nameEl = b.querySelector('.site-tpl-name');
+      if (nameEl) nameEl.textContent = nameEl.textContent.replace(' \u2713', '') + (on ? ' \u2713' : '');
+    });
+    if (websiteView === 'preview') pushWebsitePreview(t);
+    else renderTherapistWebsite();
+  }));
+  /* "Edit >" on the shared-content rows now crosses screens, not tabs. */
+  document.querySelectorAll('[data-site-jump]').forEach(el => el.addEventListener('click', () => {
+    goProfileMode('edit');
+  }));
+  document.querySelectorAll('[data-siteview]').forEach(el => el.addEventListener('click', () => {
+    websiteView = el.dataset.siteview;
+    renderTherapistWebsite();
+  }));
+  document.querySelectorAll('[data-sitedev]').forEach(el => el.addEventListener('click', () => {
+    websitePreviewDevice = el.dataset.sitedev;
+    /* Width only -- the frame keeps its document, so no reload and no flash. */
+    const stage = document.querySelector('.site-preview-stage');
+    if (stage) stage.classList.toggle('is-phone', websitePreviewDevice === 'phone');
+    document.querySelectorAll('[data-sitedev]').forEach(b =>
+      b.classList.toggle('active', b.dataset.sitedev === websitePreviewDevice));
+  }));
+  document.querySelectorAll('#t-website-content [data-save-section]').forEach(el => el.addEventListener('click', async () => {
+    if (el.disabled) return;
+    const original = el.textContent;
+    el.disabled = true; el.textContent = 'Saving\u2026';
+    const result = await saveProfileNow(t);
+    el.textContent = result === 'saved' ? '\u2713 Saved'
+                   : result === 'demo'  ? 'Demo \u2014 not saved'
+                   : 'Couldn\u2019t save';
+    el.classList.toggle('is-ok', result === 'saved');
+    el.classList.toggle('is-bad', result === 'error');
+    setTimeout(() => {
+      el.textContent = original; el.disabled = false;
+      el.classList.remove('is-ok', 'is-bad');
+    }, result === 'saved' ? 1800 : 3200);
+  }));
+  const frame = document.getElementById('site-preview-frame');
+  if (frame) frame.addEventListener('load', () => pushWebsitePreview(t));
+  const siteCopy = document.getElementById('site-copy-btn');
+  if (siteCopy) siteCopy.addEventListener('click', async () => {
+    const url = therapistProfileUrl(t);
+    try { await navigator.clipboard.writeText(url); showToast('Link copied.'); }
+    catch (e) { window.prompt('Copy your link:', url); }
+  });
+  const siteShare = document.getElementById('site-share-btn');
+  if (siteShare) siteShare.addEventListener('click', openShareMyProfile);
+  const siteLive = document.getElementById('site-live-switch');
+  if (siteLive) siteLive.addEventListener('click', () => {
+    t.websiteLive = t.websiteLive === false ? true : false;
+    persistProfileSoon(t);
+    renderTherapistWebsite();
+  });
+  wireEmptyStateActions(t);
+}
+
 function renderTherapistProfile(opts) {
   const focus = captureDropdownState();
   const scroll = captureProfileScroll();
@@ -6797,6 +6886,7 @@ function showTScreen(name) {
   if (name === 't-requests') renderRequests();
   if (name === 't-insights') renderTherapistInsights();
   if (name === 't-profile') renderTherapistProfile();
+  if (name === 't-website') renderTherapistWebsite();
   if (name === 't-settings') renderTherapistSettings();
 }
 
@@ -7512,7 +7602,6 @@ function renderTherapistProfileBody() {
       <button class="pmode ${profileMode === 'ideal' ? 'active' : ''}" data-pmode="ideal" role="tab">✦ Ideal Client</button>
       <button class="pmode ${profileMode === 'edit' ? 'active' : ''}" data-pmode="edit" role="tab">✎ Edit Profile</button>
       <button class="pmode ${profileMode === 'view' ? 'active' : ''}" data-pmode="view" role="tab">👀 View Profile</button>
-      <button class="pmode ${profileMode === 'website' ? 'active' : ''}" data-pmode="website" role="tab">🌐 Website</button>
     </div>
 
     <div class="pm-view">
@@ -7520,7 +7609,6 @@ function renderTherapistProfileBody() {
       ${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}
     </div>
 
-    ${websitePaneHtml(t)}
 
     <div class="pm-ideal"><div class="ideal-section">
       <div class="ideal-section-head">
@@ -7830,41 +7918,7 @@ function renderTherapistProfileBody() {
     document.getElementById('t-profile-content').scrollTop = 0;
   }));
 
-  /* ----- Website tab (step 3) ----- */
-  const siteCopy = document.getElementById('site-copy-btn');
-  if (siteCopy) siteCopy.addEventListener('click', async () => {
-    const url = therapistProfileUrl(t);
-    try { await navigator.clipboard.writeText(url); showToast('Link copied.'); }
-    catch (e) { window.prompt('Copy your link:', url); }
-  });
-  const siteShare = document.getElementById('site-share-btn');
-  if (siteShare) siteShare.addEventListener('click', openShareMyProfile);
-  const siteLive = document.getElementById('site-live-switch');
-  if (siteLive) siteLive.addEventListener('click', () => {
-    t.websiteLive = t.websiteLive === false ? true : false;
-    persistProfileSoon(t);
-    renderTherapistProfile();
-  });
-  document.querySelectorAll('[data-site-tpl]').forEach(el => el.addEventListener('click', () => {
-    t.site = Object.assign({}, t.site, { template: el.dataset.siteTpl });
-    persistProfileSoon(t);
-    /* Deliberately NOT a re-render: that would rebuild the iframe and reload
-       the preview, so every look they tried would flash white. Repaint the
-       chosen card by hand and push the new row into the frame that is already
-       open -- the switch is then instant, which is the whole point of being
-       able to try six of them. */
-    document.querySelectorAll('[data-site-tpl]').forEach(b => {
-      const on = b === el;
-      b.classList.toggle('selected', on);
-      const nameEl = b.querySelector('.site-tpl-name');
-      if (nameEl) nameEl.textContent = nameEl.textContent.replace(' \u2713', '') + (on ? ' \u2713' : '');
-    });
-    if (websiteView === 'preview') pushWebsitePreview(t);
-    else renderTherapistProfile();
-  }));
-  document.querySelectorAll('[data-site-jump]').forEach(el => el.addEventListener('click', () => {
-    goProfileMode('edit');
-  }));
+  /* Website controls moved to their own screen -- see wireWebsitePane(). */
   /* One handler for every Save button on the screen. Feedback lands ON the
      button they pressed -- a therapist who clicks Save at the foot of a long
      section should not have to scroll to the top to learn whether it worked. */
@@ -7883,20 +7937,6 @@ function renderTherapistProfileBody() {
       el.classList.remove('is-ok', 'is-bad');
     }, result === 'saved' ? 1800 : 3200);
   }));
-  document.querySelectorAll('[data-siteview]').forEach(el => el.addEventListener('click', () => {
-    websiteView = el.dataset.siteview;
-    renderTherapistProfile();
-  }));
-  document.querySelectorAll('[data-sitedev]').forEach(el => el.addEventListener('click', () => {
-    websitePreviewDevice = el.dataset.sitedev;
-    /* Width only -- the frame keeps its document, so no reload and no flash. */
-    const stage = document.querySelector('.site-preview-stage');
-    if (stage) stage.classList.toggle('is-phone', websitePreviewDevice === 'phone');
-    document.querySelectorAll('[data-sitedev]').forEach(b =>
-      b.classList.toggle('active', b.dataset.sitedev === websitePreviewDevice));
-  }));
-  const frame = document.getElementById('site-preview-frame');
-  if (frame) frame.addEventListener('load', () => pushWebsitePreview(t));
   /* Buttons rendered by nextStepToLive() live in this pane too -- they were
      drawn and never wired, which is why "Finish my profile" did nothing. */
   wireEmptyStateActions(t);
