@@ -1,3 +1,6 @@
+-- !!! SUPERSEDED BY 0046 — do not run. The paste aborted in production
+-- because has_open_report() lacked SECURITY DEFINER; 0046 fixes that and
+-- carries this file's entire content.
 -- ============================================================================
 -- 0045 -- The website's own settings: one jsonb, starting with the template
 --
