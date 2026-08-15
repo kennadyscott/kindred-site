@@ -2834,14 +2834,20 @@ select.t-rate-input,
     align-items: start;
   }
   /* Header rows stay full width above both columns. */
-  #t-profile-content[data-mode="edit"] > .t-form-name,
-  #t-profile-content[data-mode="edit"] > .save-state,
-  #t-profile-content[data-mode="edit"] > .profile-modes { grid-column: 1 / -1; }
-  /* Placed explicitly, not left to auto-flow: .pm-view comes FIRST in source
-     order (it is the View Profile tab), so the grid handed it the wide track
-     and squeezed the form into 390px -- the two columns exactly backwards. */
-  #t-profile-content[data-mode="edit"] .pm-edit { grid-column: 1; grid-row: 2; }
-  #t-profile-content[data-mode="edit"] .pm-view { grid-column: 2; grid-row: 2; }
+  /* EVERY row is placed explicitly. Half-explicit was the bug: pinning only
+     the two panes to row 2 left the name, save state and tab bar to
+     auto-flow, and auto-placement skips any row already occupied -- so the
+     three full-width header rows landed BELOW the content and the tab bar
+     ended up at the foot of the page.
+
+     Rows 1-3 are the header, full width; row 4 is the two columns. Source
+     order cannot be relied on here anyway: .pm-view precedes .pm-edit in the
+     markup, which is what put the preview in the form's track first time. */
+  #t-profile-content[data-mode="edit"] > .t-form-name  { grid-column: 1 / -1; grid-row: 1; }
+  #t-profile-content[data-mode="edit"] > .save-state   { grid-column: 1 / -1; grid-row: 2; }
+  #t-profile-content[data-mode="edit"] > .profile-modes{ grid-column: 1 / -1; grid-row: 3; }
+  #t-profile-content[data-mode="edit"] .pm-edit { grid-column: 1; grid-row: 4; }
+  #t-profile-content[data-mode="edit"] .pm-view { grid-column: 2; grid-row: 4; }
 
   #t-profile-content[data-mode="edit"] .pm-view {
     display: block;                 /* overrides the mode rule above */
