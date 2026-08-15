@@ -1,6 +1,15 @@
 -- ============================================================================
 -- 0044 -- Photos move out of Postgres into Storage
 --
+-- !!! RUN AS TWO SEPARATE PASTES. On hosted Supabase the SQL-editor role
+-- often does not own storage.objects, so the CREATE POLICY block below can
+-- fail with "must be owner of table objects" -- and because the editor runs
+-- one paste as ONE transaction, that failure silently rolls back the bucket
+-- too. That is exactly what happened on the first attempt (2026-08-10:
+-- "I ran 0044" / bucket still 404). Paste PART 1 alone, then PART 2; if
+-- PART 2 errors on ownership, create the same four policies in
+-- Dashboard -> Storage -> therapist-media -> Policies instead.
+--
 -- Photos are base64 data URLs in text columns today. Measured cost: 47KB-843KB
 -- per image, ~1.25MB per finished profile -- inside every select *, every
 -- match_therapists() row, every autosave (the signup autosave re-sent the
@@ -28,10 +37,14 @@
 -- a new bucket with a BAA conversation attached, not a policy edit here.
 -- ============================================================================
 
+-- ========================= PART 1: bucket + function =========================
 insert into storage.buckets (id, name, public)
 values ('therapist-media', 'therapist-media', true)
 on conflict (id) do update set public = true;
 
+-- ========================= PART 2: policies ==================================
+-- If this paste errors with "must be owner of table objects", use the
+-- Dashboard instead -- expressions are identical to the ones below.
 -- storage.objects already has RLS enabled by Supabase; these are additive.
 drop policy if exists "therapist media public read"  on storage.objects;
 create policy "therapist media public read" on storage.objects
@@ -96,9 +109,16 @@ begin
          deleted_at             = now();
 
   -- 0044: their photos go with the account. Backstop for the API-side delete.
-  delete from storage.objects
-   where bucket_id = 'therapist-media'
-     and (storage.foldername(name))[1] = uid::text;
+  -- Wrapped: if this definer lacks storage.objects privileges on this
+  -- project, losing the backstop must not fail the account deletion itself
+  -- (the client already deleted the objects through the Storage API).
+  begin
+    delete from storage.objects
+     where bucket_id = 'therapist-media'
+       and (storage.foldername(name))[1] = uid::text;
+  exception when others then
+    null;
+  end;
 
   delete from therapists where user_id = uid;   -- licences cascade
   get diagnostics n = row_count;
