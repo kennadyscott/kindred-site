@@ -3842,10 +3842,14 @@ function slugifyName(name) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 function therapistProfileUrl(t) {
+  /* Absolute on purpose: this string lands in copied captions and share
+     sheets, where a bare path is useless. Pretty path when there is a slug
+     (404.html routes it); the ?id= form remains for pre-slug rows. */
+  const base = KINDRED_SITE_URL || location.origin;
   const ref = t.slug || slugifyName(displayName(t));
   return ref
-    ? `${KINDRED_SITE_URL}/profile.html?t=${encodeURIComponent(ref)}`
-    : `${KINDRED_SITE_URL}/profile.html?id=${encodeURIComponent(t.id)}`;
+    ? `${base}/${encodeURIComponent(ref)}`
+    : `${base}/profile.html?id=${encodeURIComponent(t.id)}`;
 }
 
 // Ready-to-post captions. Therapists are busy; giving them the words is the

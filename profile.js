@@ -264,7 +264,12 @@ function setSocialMeta(t, name, creds) {
   }
   let link = document.head.querySelector('link[rel="canonical"]');
   if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
-  link.href = location.origin + location.pathname + location.search;
+  /* The pretty path is the address (404.html routes it back here on entry),
+     so it is also the canonical -- one URL per therapist everywhere. */
+  link.href = t.slug ? location.origin + '/' + t.slug
+                     : location.origin + location.pathname + location.search;
+  const og = document.head.querySelector('meta[property="og:url"]');
+  if (og) og.setAttribute('content', link.href);
 }
 
 const filled = v => !!(v && String(v).trim());
@@ -514,4 +519,11 @@ function render(t) {
   const t = await fetchProfile();
   if (!t) { showMissing(); return; }
   render(t);
+  /* Show the pretty URL whichever door they came in through. replaceState
+     only -- no reload, no history spam; reloading the pretty path lands on
+     404.html, which routes straight back here. */
+  if (t.slug && /^[a-z0-9][a-z0-9-]{1,80}$/.test(t.slug)) {
+    const keep = new URLSearchParams(location.search).get('from') === 'browse' ? '?from=browse' : '';
+    try { history.replaceState(null, '', '/' + t.slug + keep); } catch (e) { /* file:// etc. */ }
+  }
 })();
