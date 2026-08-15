@@ -2413,6 +2413,19 @@ select.t-rate-input,
 }
 .chip-option.chip-locked:hover { background: transparent; }
 
+/* The deck wrapper exists so the desktop grid has a middle column. On a phone
+   it must be invisible to layout: .card-stack{flex:1} fills the screen's flex
+   column, and dropping a plain <div> in between left it with nothing to fill
+   and collapsed the deck to 0px. So the wrapper carries the flex through. */
+.deck-col { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ----- Discover, on a desktop --------------------------------------------
+   A swipe deck alone in a 1500px window is a phone screen with cream around
+   it. Two rails give the width something to do: what you asked for on the
+   left, who you have kept on the right. Hidden below 1080px, where the deck
+   is the whole screen and a rail would be a wall before the first card. */
+.dsk-rail { display: none; }
+
 .preview-rail-cap { display: none; }
 
 /* ----- View Profile: phone or desktop ------------------------------------
@@ -2825,6 +2838,69 @@ select.t-rate-input,
   .app-footer-links a { color: var(--ink-soft); text-decoration: none; }
   .app-footer-links a:hover { color: var(--aubergine); text-decoration: underline; }
   .app-footer-note { margin-left: auto; font-style: italic; opacity: .8; }
+}
+
+@media (min-width: 1080px) {
+  #screen-discover {
+    display: grid;
+    /* width:100% because .phone is a flex COLUMN: without an explicit width a
+       flex item that is not stretching sizes to its content, so the middle
+       track resolved to the card's own width (198px) instead of filling, and
+       1fr had nothing to be a fraction of. */
+    width: 100%;
+    align-self: stretch;
+    grid-template-columns: 250px minmax(0, 1fr) 290px;
+    gap: 26px;
+    align-content: start;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 24px 30px;
+  }
+  /* The generic ".screen > * gets --measure and auto margins" rule would put
+     each column back in the middle of the page on its own. */
+  #screen-discover > * { max-width: none; margin-left: 0; margin-right: 0; }
+  #screen-discover > .top-bar { grid-column: 1 / -1; padding-left: 0; padding-right: 0; }
+  #screen-discover .dsk-rail { display: block; position: sticky; top: 16px; }
+  .deck-col { min-width: 0; flex: none; align-items: center; }
+  /* The cards are position:absolute, so the stack has no intrinsic height --
+     on a phone it gets one from flex:1 filling the screen. Inside the new
+     column that was gone and the deck collapsed to a 0px line. An explicit
+     height restores it without depending on the viewport being the parent. */
+  /* flex:none, or the base .card-stack{flex:1} resolves against a
+     content-sized column and the deck comes out 325px tall with the card
+     clipped mid-way through its own details. */
+  .deck-col .card-stack { flex: none; width: 100%; margin: 0 0 14px; height: min(70vh, 640px); }
+  .deck-col .action-row { padding-bottom: 0; }
+
+  .dsk-rail { background: #fff; border: 1px solid var(--line); border-radius: 18px;
+              padding: 16px 16px 18px; }
+  .rail-head { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+               color: var(--ink-soft); margin: 0 0 10px; }
+  .rail-top { display: flex; align-items: center; gap: 8px; }
+  .rail-top .rail-head { margin-bottom: 10px; flex: 1; }
+  .rail-count { background: var(--aubergine); color: #fff; border-radius: 999px;
+                font: 700 11.5px/1 'Inter', sans-serif; padding: 5px 9px; margin-bottom: 10px; }
+  .rail-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .rail-chip { font-size: 11.5px; font-weight: 600; color: var(--ink);
+               background: var(--wash, #F3F0F6); border-radius: 999px; padding: 5px 10px; }
+  .rail-empty { font-size: 12px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
+  .rail-note { font-size: 11.5px; line-height: 1.5; color: var(--ink-soft); margin: 12px 0 0; }
+  .rail-btn { width: 100%; background: none; border: 1px solid var(--line); border-radius: 999px;
+              padding: 9px 12px; font: 600 12px/1 'Inter', sans-serif; color: var(--aubergine);
+              cursor: pointer; }
+  .rail-btn:hover { border-color: var(--aubergine); }
+  .rail-cta { width: 100%; background: var(--coral); color: #fff; border: none; border-radius: 999px;
+              padding: 11px 12px; font: 700 13px/1 'Inter', sans-serif; cursor: pointer;
+              margin-bottom: 14px; }
+  .rail-cta:hover { filter: brightness(1.06); }
+  .rail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rail-tile { border: none; background: none; padding: 0; cursor: pointer; text-align: left; }
+  .rail-tile img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; display: block; }
+  .rail-initials { display: flex; align-items: center; justify-content: center;
+                   width: 100%; aspect-ratio: 1/1; border-radius: 12px;
+                   background: var(--wash, #F3F0F6); color: var(--ink-soft); font-weight: 700; }
+  .rail-tile-name { display: block; font-size: 11px; color: var(--ink-soft); margin-top: 4px;
+                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* Wider still: give the reading columns a little more room. Bump the variable

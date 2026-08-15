@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=merge38">
+<link rel="stylesheet" href="style.css?v=merge39">
 </head>
 <body>
 
@@ -109,13 +109,24 @@
       <button class="icon-btn" id="open-search-btn" aria-label="Search therapists">🔍</button>
     </header>
 
-    <div class="card-stack" id="card-stack"></div>
+    <!-- DESKTOP ONLY (>=1080px). A swipe deck alone in a 1500px window is a
+         phone screen with a lot of cream around it. The two rails give the
+         width something to do: what you asked for on the left, what you have
+         kept on the right, the deck in the middle. Both are display:none on a
+         phone, where the deck IS the screen. -->
+    <aside class="dsk-rail dsk-left" id="discover-left"></aside>
 
-    <div class="action-row" id="action-row">
-      <button class="action-btn pass" id="btn-pass" aria-label="Pass">✕</button>
-      <button class="action-btn info" id="btn-info" aria-label="More info">i</button>
-      <button class="action-btn like" id="btn-like" aria-label="Like">♥</button>
+    <div class="deck-col">
+      <div class="card-stack" id="card-stack"></div>
+
+      <div class="action-row" id="action-row">
+        <button class="action-btn pass" id="btn-pass" aria-label="Pass">✕</button>
+        <button class="action-btn info" id="btn-info" aria-label="More info">i</button>
+        <button class="action-btn like" id="btn-like" aria-label="Like">♥</button>
+      </div>
     </div>
+
+    <aside class="dsk-rail dsk-right" id="discover-right"></aside>
   </section>
 
   <!-- ===== ON-DEMAND SCREEN ===== -->
@@ -401,7 +412,7 @@
   </footer>
 </div>
 
-<script src="app.js?v=merge84"></script>
+<script src="app.js?v=merge85"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control

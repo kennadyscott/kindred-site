@@ -3299,6 +3299,10 @@ function startIntake() {
 // DISCOVER / CARD STACK
 // ===================================================================
 function renderStack() {
+  /* The rails follow the deck: this covers arriving on the screen, a refilled
+     deck and an undo. resolveSwipe() calls it again after handleLike(), which
+     is the case this one cannot cover. */
+  renderDiscoverRails();
   cardStack.innerHTML = '';
   // The swipe controls are meaningless with nothing to swipe — hide them for
   // loading and every empty state, show them only when a card is present.
@@ -3794,6 +3798,11 @@ function resolveSwipe(card, dir) {
   setTimeout(() => {
     renderStack();
     if (dir === 'like') handleLike(t);
+    /* AFTER handleLike, not inside renderStack: renderStack runs first, so a
+       rail drawn from there shows the shortlist as it was before the card you
+       just kept -- the saved count lagging the thing you just saved is the
+       most visible bug this panel could have. */
+    renderDiscoverRails();
   }, 220);
 }
 
@@ -4271,6 +4280,63 @@ document.getElementById('match-message-btn').addEventListener('click', () => {
 // ===== MATCHES LIST =====
 const matchesList = document.getElementById('matches-list');
 const shortlistList = document.getElementById('shortlist-list');
+
+/* The two Discover rails. Rendered from the SAME state the deck and the
+   shortlist screen already use -- no second copy of either, so a card kept
+   here cannot disagree with the Short List tab. Cheap enough to redraw on
+   every swipe, and a stale count on the thing you just added to would be the
+   most noticeable bug it could have. */
+function renderDiscoverRails() {
+  const left = document.getElementById('discover-left');
+  const right = document.getElementById('discover-right');
+  if (!left || !right) return;
+  /* offsetParent is null when the rails are display:none -- on a phone, or on
+     any other screen -- so this costs nothing where it does not show. */
+  if (!left.offsetParent && !right.offsetParent) return;
+
+  const esc0 = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  const remaining = Math.max(0, deck.length - deckIndex);
+  const looking = [];
+  if (intake.state) looking.push(intake.state);
+  if (intake.age) looking.push(intake.age + ' years old');
+  (intake.needs || []).slice(0, 4).forEach(n => looking.push(n));
+  (intake.formats || []).forEach(f => looking.push(f === 'video' ? 'Online' : 'In person'));
+
+  left.innerHTML = `
+    <p class="rail-head">What you asked for</p>
+    ${looking.length
+      ? `<div class="rail-chips">${looking.map(x => `<span class="rail-chip">${esc0(x)}</span>`).join('')}</div>`
+      : `<p class="rail-empty">You haven't told us much yet — the more you say, the better these get.</p>`}
+    <button type="button" class="rail-btn" id="rail-refine">Change what I'm looking for</button>
+    <p class="rail-note">${remaining} ${remaining === 1 ? 'person' : 'people'} left in this round. Everyone here already matches what you asked for.</p>`;
+
+  const kept = shortlist.slice().reverse();
+  right.innerHTML = `
+    <div class="rail-top">
+      <p class="rail-head">Saved</p>
+      <span class="rail-count">${kept.length}</span>
+    </div>
+    ${kept.length ? `
+      <button type="button" class="rail-cta" id="rail-toshortlist">Pick your Top 5 &rarr;</button>
+      <div class="rail-grid">
+        ${kept.slice(0, 8).map(t => `
+          <button type="button" class="rail-tile" data-rail-tid="${esc0(t.id)}" title="${esc0(displayName(t))}">
+            ${t.photo ? `<img src="${esc0(t.photo)}" alt="">` : `<span class="rail-initials">${esc0(t.initials || '')}</span>`}
+            <span class="rail-tile-name">${esc0(displayName(t))}</span>
+          </button>`).join('')}
+      </div>
+      ${kept.length > 8 ? `<p class="rail-note">and ${kept.length - 8} more</p>` : ''}`
+    : `<p class="rail-empty">Nobody saved yet. Tap the heart on anyone worth a second look &mdash; saving is private and sends nothing.</p>`}`;
+
+  const refine = document.getElementById('rail-refine');
+  /* The same thing the magnifier in the header does -- reusing the existing
+     screen rather than inventing a second way to narrow the deck. */
+  if (refine) refine.addEventListener('click', () => { renderSearch(); showScreen('search'); });
+  const toList = document.getElementById('rail-toshortlist');
+  if (toList) toList.addEventListener('click', () => showScreen('shortlist'));
+  right.querySelectorAll('[data-rail-tid]').forEach(el =>
+    el.addEventListener('click', () => showScreen('shortlist')));
+}
 
 function renderShortlist() {
   const atCap = activeRequestCount() >= MAX_PENDING_REQUESTS;
