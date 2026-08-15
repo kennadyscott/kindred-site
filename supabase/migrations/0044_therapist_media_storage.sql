@@ -42,35 +42,6 @@ insert into storage.buckets (id, name, public)
 values ('therapist-media', 'therapist-media', true)
 on conflict (id) do update set public = true;
 
--- ========================= PART 2: policies ==================================
--- If this paste errors with "must be owner of table objects", use the
--- Dashboard instead -- expressions are identical to the ones below.
--- storage.objects already has RLS enabled by Supabase; these are additive.
-drop policy if exists "therapist media public read"  on storage.objects;
-create policy "therapist media public read" on storage.objects
-  for select to public
-  using (bucket_id = 'therapist-media');
-
-drop policy if exists "therapist media own insert" on storage.objects;
-create policy "therapist media own insert" on storage.objects
-  for insert to authenticated
-  with check (bucket_id = 'therapist-media'
-              and (storage.foldername(name))[1] = auth.uid()::text);
-
-drop policy if exists "therapist media own update" on storage.objects;
-create policy "therapist media own update" on storage.objects
-  for update to authenticated
-  using     (bucket_id = 'therapist-media'
-             and (storage.foldername(name))[1] = auth.uid()::text)
-  with check (bucket_id = 'therapist-media'
-              and (storage.foldername(name))[1] = auth.uid()::text);
-
-drop policy if exists "therapist media own delete" on storage.objects;
-create policy "therapist media own delete" on storage.objects
-  for delete to authenticated
-  using (bucket_id = 'therapist-media'
-         and (storage.foldername(name))[1] = auth.uid()::text);
-
 -- ---------------------------------------------------------------------------
 -- Deletion keeps its promise. delete_my_therapist_account() removed the row,
 -- and until now the photos went with it because they WERE the row. Once they
@@ -132,6 +103,35 @@ $$;
 
 revoke all     on function delete_my_therapist_account() from public, anon;
 grant  execute on function delete_my_therapist_account() to authenticated;
+
+-- ========================= PART 2: policies ==================================
+-- If this paste errors with "must be owner of table objects", use the
+-- Dashboard instead -- expressions are identical to the ones below.
+-- storage.objects already has RLS enabled by Supabase; these are additive.
+drop policy if exists "therapist media public read"  on storage.objects;
+create policy "therapist media public read" on storage.objects
+  for select to public
+  using (bucket_id = 'therapist-media');
+
+drop policy if exists "therapist media own insert" on storage.objects;
+create policy "therapist media own insert" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'therapist-media'
+              and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "therapist media own update" on storage.objects;
+create policy "therapist media own update" on storage.objects
+  for update to authenticated
+  using     (bucket_id = 'therapist-media'
+             and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'therapist-media'
+              and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "therapist media own delete" on storage.objects;
+create policy "therapist media own delete" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'therapist-media'
+         and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- Proof (SQL editor):
 --   select id, public from storage.buckets where id = 'therapist-media';   -- 1 row, public=t
