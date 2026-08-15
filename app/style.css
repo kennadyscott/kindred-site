@@ -2426,6 +2426,10 @@ select.t-rate-input,
    is the whole screen and a rail would be a wall before the first card. */
 .dsk-rail { display: none; }
 
+.inq-msg { font-size: 13.5px; line-height: 1.55; color: var(--ink); background: var(--wash, #F3F0F6);
+           border-radius: 12px; padding: 10px 12px; margin: 8px 0 10px; white-space: pre-wrap; }
+.inq-msg.soft-note { color: var(--ink-soft); font-style: italic; background: none; padding: 4px 0; }
+
 .preview-rail-cap { display: none; }
 
 /* ----- View Profile: phone or desktop ------------------------------------

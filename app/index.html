@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=merge39">
+<link rel="stylesheet" href="style.css?v=merge40">
 </head>
 <body>
 
@@ -195,6 +195,10 @@
       <div class="logo" id="t-requests-title">Requests</div>
       <button class="signout-btn" id="therapist-logout-1">Sign Out</button>
     </header>
+    <!-- Messages sent from the therapist's public website. Filled by
+         renderRequests() after the fetch resolves; empty when there are none,
+         so it costs nothing on the screen. -->
+    <div id="website-inquiries"></div>
     <div class="requests-list" id="requests-list"></div>
   </section>
 
@@ -412,7 +416,7 @@
   </footer>
 </div>
 
-<script src="app.js?v=merge86"></script>
+<script src="app.js?v=merge87"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control

@@ -7425,6 +7425,30 @@ function renderRequests() {
   const t = THERAPISTS.find(t => t.id === currentTherapistId);
   document.getElementById('t-requests-title').textContent = 'Inquiries';
   const list = document.getElementById('requests-list');
+  /* Fetch, then repaint. The first pass renders without them rather than
+     making the whole screen wait on a network call. */
+  loadWebsiteInquiries().then(() => {
+    const host = document.getElementById('website-inquiries');
+    if (!host) return;
+    const live = websiteInquiries.filter(q => !q.archived_at);
+    const gone = websiteInquiries.filter(q => q.archived_at);
+    if (!websiteInquiries.length) { host.innerHTML = ''; return; }
+    host.innerHTML = `
+      <div class="edit-section-title" style="margin:4px 0 10px">From your website</div>
+      ${live.map(inquiryCardHtml).join('')}
+      ${gone.length ? `<details class="edit-section" style="margin-top:10px">
+        <summary><span class="edit-section-title">Archived</span><span class="edit-section-hint">${gone.length}</span><span class="edit-caret">\u25BE</span></summary>
+        <div class="edit-section-body">${gone.map(inquiryCardHtml).join('')}</div>
+      </details>` : ''}`;
+    host.querySelectorAll('[data-inq-id]').forEach(b => b.addEventListener('click', async () => {
+      b.disabled = true;
+      try { await dbRpcAuth('mark_inquiry', { p_id: b.dataset.inqId, p_state: b.dataset.inqState }); }
+      catch (e) { b.disabled = false; return; }
+      renderRequests();
+    }));
+    markInquiriesRead();
+    updateTNavBadge();
+  });
   const myRequests = matches.filter(m => m.therapist.id === currentTherapistId && m.status !== 'ondemand');
   const myBookings = matches.filter(m => m.therapist.id === currentTherapistId && m.status === 'ondemand');
   const pendingCount = myRequests.filter(m => m.status === 'pending').length;
@@ -7557,6 +7581,66 @@ function renderRequests() {
     renderRequests();
   }));
   updateTNavBadge();
+}
+
+/* ===========================================================================
+   WEBSITE INQUIRIES IN THE PORTAL
+   ---------------------------------------------------------------------------
+   Someone emails a therapist from their public page; it has to arrive
+   somewhere they already look. Email alerts were the plan and there is no
+   mail vendor, so this is the path that needs no account, no secret and no
+   webhook -- and no PHI leaving Supabase, which is the version worth having
+   even once mail works.
+
+   RLS is the whole security model here: "therapist reads own inquiries" (0047)
+   means this query returns their rows and nobody else's, whatever this file
+   asks for. Rendered from the server every time rather than cached, because a
+   stale inbox is worse than a slow one.
+   =========================================================================== */
+let websiteInquiries = [];
+
+async function loadWebsiteInquiries() {
+  if (!authReady() || !loadAuthSession()) { websiteInquiries = []; return; }
+  try {
+    const res = await authRest('/client_inquiries?select=*&order=created_at.desc&limit=100');
+    /* 42P01/401 here means the migration has not run or the session lapsed --
+       neither is worth an error in a therapist's face on a screen that has
+       other things to show. */
+    websiteInquiries = res.ok ? await res.json() : [];
+  } catch (e) {
+    websiteInquiries = [];
+  }
+}
+
+function inquiryCardHtml(q) {
+  const esc0 = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  const when = (() => {
+    const d = new Date(q.created_at);
+    return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  })();
+  const unread = !q.read_at;
+  return `<div class="request-card${unread ? ' ideal-match' : ''}">
+    ${unread ? `<div class="ideal-flag">New</div>` : ''}
+    <div class="request-need">From <strong>${esc0(q.email)}</strong>${when ? ` &middot; ${when}` : ''}</div>
+    ${q.message ? `<p class="inq-msg">${esc0(q.message)}</p>` : `<p class="inq-msg soft-note">No message &mdash; just their email.</p>`}
+    <a class="message-btn-full" href="mailto:${encodeURIComponent(q.email)}?subject=${encodeURIComponent('Re: your message through Kindred')}">Reply by email</a>
+    <button class="text-btn" data-inq-state="${q.archived_at ? 'unarchived' : 'archived'}" data-inq-id="${esc0(q.id)}">${q.archived_at ? '\u21A9 Move back' : '\u{1F5C4} Archive'}</button>
+  </div>`;
+}
+
+/* Marking read is fire-and-forget: it is bookkeeping, and a therapist should
+   never be blocked from reading their mail because a status write failed. */
+function markInquiriesRead() {
+  websiteInquiries.filter(q => !q.read_at).forEach(q => {
+    dbRpcAuth('mark_inquiry', { p_id: q.id, p_state: 'read' }).catch(() => {});
+    q.read_at = new Date().toISOString();
+  });
+}
+
+async function dbRpcAuth(name, params) {
+  const res = await authRest(`/rpc/${name}`, { method: 'POST', body: JSON.stringify(params || {}) });
+  if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
+  return res.json();
 }
 
 let inquiriesOpen = { active: true, waitlist: true, archived: false }; // Inquiries collapsible sections
