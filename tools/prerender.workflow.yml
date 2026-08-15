@@ -1,0 +1,77 @@
+# =============================================================================
+# NOT INSTALLED YET -- copy this file to .github/workflows/prerender.yml.
+#
+# It could not be pushed from here: the local token has no `workflow` scope,
+# and GitHub refuses any OAuth push that creates a file under
+# .github/workflows/. Adding it through github.com works and needs no new
+# token -- Add file > Create new file > name it .github/workflows/prerender.yml
+# > paste this > Commit.
+#
+# UNTIL IT IS INSTALLED the pages do not refresh themselves. When the roster
+# changes, run:  node tools/prerender.mjs   and commit the result.
+# =============================================================================
+# =============================================================================
+# Keep every therapist's page a REAL page.
+#
+# tools/prerender.mjs writes <slug>/index.html for each published therapist so
+# kindredtherapymatch.com/desirae-tarris returns 200 with her name, description
+# and photo in the HTML -- rather than the HTTP 404 that Pages serves for a
+# JS-routed path, which is what stops link previews and Google today.
+#
+# The roster changes without anyone touching the repo: a therapist gets
+# verified, unpublishes, or is reported and hidden. So this runs on a schedule
+# as well as on push, and commits only when the output actually differs.
+#
+# No secrets. The generator uses the anon key already embedded in profile.js
+# and reads therapists_public, so it can only ever see what a visitor sees.
+# =============================================================================
+name: Prerender therapist pages
+
+on:
+  push:
+    branches: [main]
+    # A push that only touches generated output must not start another run.
+    # (Pushes made with GITHUB_TOKEN do not trigger workflows either -- this is
+    # belt and braces so a hand-edited page cannot loop.)
+    paths-ignore:
+      - '.prerender-manifest.json'
+      - '*/index.html'
+  schedule:
+    # Hourly. A therapist who verifies at 10:05 has a real, previewable link by
+    # 11:00 without anyone doing anything. Until then 404.html still serves
+    # them, so the page works the whole time -- only the preview card waits.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+# The job commits back to the branch Pages builds from.
+permissions:
+  contents: write
+
+concurrency:
+  group: prerender
+  cancel-in-progress: false
+
+jobs:
+  prerender:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate
+        run: node tools/prerender.mjs
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name  'kindred-prerender[bot]'
+          git config user.email 'prerender@users.noreply.github.com'
+          if git diff --quiet; then
+            echo 'No change -- roster is already current.'
+            exit 0
+          fi
+          git add -A
+          git commit -m 'Prerender therapist pages [skip ci]'
+          git push

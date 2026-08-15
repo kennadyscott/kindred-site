@@ -21,11 +21,14 @@
    ?from=browse (and any other query) is carried through, so the Kindred
    return ribbon survives the pretty URL.
 
-   HONEST LIMIT: Pages serves this with HTTP 404, so crawlers and link
-   previews treat pretty URLs as not-found until prerendering (step 5) writes
-   a real file per therapist. Humans get the site either way; step 5 makes
-   the same URLs first-class and this file becomes the fallback for
-   therapists newer than the last build.
+   THIS IS NOW THE FALLBACK, not the main route. tools/prerender.mjs writes a
+   real <slug>/index.html for every published therapist, so their URL returns
+   200 with its own title, description and photo -- which is what makes link
+   previews and search work. This file covers the gap: someone verified
+   between hourly builds has a working link immediately, and their preview
+   card arrives at the next run. Pages serves this route with HTTP 404, so a
+   crawler landing here during that window still treats the URL as missing; a
+   human never notices.
    =========================================================================== */
 (function () {
   var seg = location.pathname.replace(/^\/+|\/+$/g, '');

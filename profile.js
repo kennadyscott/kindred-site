@@ -211,10 +211,21 @@ function showMissing() {
   $('kp-missing').hidden = false;
 }
 
-async function fetchProfile() {
+/* Which therapist this page is for. Three doors, and the PATH is now the
+   main one: a prerendered page lives at /<slug>/ with no query string at all,
+   so reading only ?t= made every generated page render blank. The router and
+   the app still arrive with ?t= or ?id=, so both keep working. */
+function profileRef() {
   const params = new URLSearchParams(location.search);
   const slug = params.get('t');
   const id = params.get('id');
+  if (slug || id) return { slug, id };
+  const seg = location.pathname.replace(/^\/+|\/+$/g, '');
+  return /^[a-z0-9][a-z0-9-]{1,80}$/.test(seg) ? { slug: seg, id: null } : { slug: null, id: null };
+}
+
+async function fetchProfile() {
+  const { slug, id } = profileRef();
   if (!slug && !id) return null;
   const filter = slug ? `slug=eq.${encodeURIComponent(slug)}` : `user_id=eq.${encodeURIComponent(id)}`;
   const url = `${SUPABASE_URL}/rest/v1/therapists_public?${filter}&select=*&limit=1`;
@@ -546,10 +557,17 @@ function render(t) {
   if (!t) { showMissing(); return; }
   render(t);
   /* Show the pretty URL whichever door they came in through. replaceState
-     only -- no reload, no history spam; reloading the pretty path lands on
-     404.html, which routes straight back here. */
+     only -- no reload, no history spam.
+
+     Skipped when we are already there, which is now the common case: the
+     prerendered page IS /<slug>/, and rewriting it to /<slug> would drop the
+     trailing slash Pages actually serves, so a reload would take a needless
+     301 and any relative asset would resolve one directory too high. */
   if (t.slug && /^[a-z0-9][a-z0-9-]{1,80}$/.test(t.slug) && !document.documentElement.hasAttribute('data-preview')) {
-    const keep = new URLSearchParams(location.search).get('from') === 'browse' ? '?from=browse' : '';
-    try { history.replaceState(null, '', '/' + t.slug + keep); } catch (e) { /* file:// etc. */ }
+    const here = location.pathname.replace(/\/+$/, '');
+    if (here !== '/' + t.slug) {
+      const keep = new URLSearchParams(location.search).get('from') === 'browse' ? '?from=browse' : '';
+      try { history.replaceState(null, '', '/' + t.slug + keep); } catch (e) { /* file:// etc. */ }
+    }
   }
 })();

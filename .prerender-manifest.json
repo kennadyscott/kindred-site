@@ -1,0 +1,6 @@
+{
+  "note": "Directories written by tools/prerender.mjs. Edit nothing here by hand -- it is how the next run knows what to clean up.",
+  "slugs": [
+    "desirae-tarris"
+  ]
+}
