@@ -1055,6 +1055,8 @@ function normalizeTherapist(t) {
   if (t.onDemandRate == null) t.onDemandRate = t.rateMin;
   if (t.listed === undefined) t.listed = true;
   if (!Array.isArray(t.paymentOptions)) t.paymentOptions = [];
+  if (t.websiteLive === undefined) t.websiteLive = true;          // 0043
+  if (!t.site || typeof t.site !== 'object') t.site = {};          // 0045
   /* One-way migration of the two legacy spellings into the field that lasts.
      Runs on every load, so a seeded row or a row written before this is
      corrected in place the first time it is touched. */
@@ -2011,6 +2013,11 @@ function therapistToDbRow(t, userId) {
        license_number is superseded by the per-state therapist_licenses table.
        Sending either is ignored at best and misleading at worst. */
     payment_options: t.paymentOptions || [],
+    /* 0043/0045: the website's own switches. website_live is separate from
+       accepting -- a full practice keeps its site. `site` is PUBLIC (goes out
+       through therapists_public); never put anything private in it. */
+    website_live: t.websiteLive !== false,
+    site: (t.site && typeof t.site === 'object') ? t.site : {},
     website: t.website || '', photo: t.photo || null,
     specialties: t.tags || [], modalities: t.modalities || [], style: t.style || null, practice_type: t.practiceType || 'specialist',
     best_for: t.bestFor || '', persona: t.persona || {}, media: t.media || {}, optional_prompts: t.optionalPrompts || [],
@@ -2072,7 +2079,7 @@ function paintSaveState() {
    therapist's entire profile would stop saving because of a checkbox. On that
    error the column is dropped and the save retried, and it stays dropped for
    the rest of the session rather than failing once per keystroke. */
-const PENDING_COLUMNS = ['marketing_opt_in', 'blocks'];
+const PENDING_COLUMNS = ['marketing_opt_in', 'blocks', 'website_live', 'site'];
 let unavailableColumns = new Set();
 
 // Upsert the signed-in therapist's profile (insert on first save, update after).
@@ -2304,6 +2311,8 @@ function dbRowToTherapist(row) {
     formats, rateMin: row.rate_min || 0, insuranceList: row.insurance || [],
     licensedStates: (row.license_states && row.license_states.length) ? row.license_states : undefined,
     paymentOptions: row.payment_options || [],
+    websiteLive: row.website_live !== false,
+    site: (row.site && typeof row.site === 'object') ? row.site : {},
     listed: !!row.published,
     /* Stripe's own word for it: 'trialing' | 'active' | 'past_due' | ... The
        column has existed since 0008 and `select=*` has always returned it; it
@@ -5603,6 +5612,84 @@ function restoreProfileScroll(saved) {
   });
 }
 
+/* ===========================================================================
+   THE WEBSITE TAB (step 3)
+   ---------------------------------------------------------------------------
+   A second VIEW over the same therapist row, not a second builder: the shared
+   content cards are read-only here and link back to Edit Profile, so no piece
+   of content ever has two homes -- the rule that kept sliding scale, the CBT
+   vocabulary and listingState honest.
+
+   Template choice lives in t.site.template (0045; PUBLIC by design) and the
+   live switch in t.websiteLive (0043). Both save through the same debounced
+   persistProfileSoon as every other edit.
+   =========================================================================== */
+const SITE_TEMPLATES = [
+  { id: 'warm',      name: 'Warm',      who: 'Cream and soft edges, your card beside the page. The friendly default.', sw: ['#FAF4EC', '#A85B44', '#3A2C40'] },
+  { id: 'quiet',     name: 'Quiet',     who: 'All serif and unhurried. Your words lead.',                              sw: ['#FBFAF6', '#5F7355', '#2E2B26'] },
+  { id: 'practice',  name: 'Practice',  who: 'Structured and credential-forward, fees early.',                        sw: ['#FFFFFF', '#2E5E6B', '#1E2A32'] },
+  { id: 'editorial', name: 'Editorial', who: 'Big type over a full-bleed photo. Wants strong photography.',           sw: ['#FFFFFF', '#8A4B2D', '#141414'] },
+  { id: 'evening',   name: 'Evening',   who: 'Low light and calm. Trauma and somatic work often want this register.', sw: ['#1A1622', '#C9A46A', '#ECE7F0'] },
+  { id: 'sunrise',   name: 'Sunrise',   who: 'Cream and coral, big confident serif, your photo sweeping the edge.',   sw: ['#FBECDC', '#D8412A', '#3B2620'] }
+];
+
+function websitePaneHtml(t) {
+  const esc0 = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  const url = therapistProfileUrl(t);
+  const chosen = (t.site && t.site.template) || 'warm';
+  const next = nextStepToLive(t);
+  const live = !next;
+
+  return `<div class="pm-website">
+
+    <div class="site-url-card">
+      <div class="site-url-label">Your website</div>
+      <div class="site-url">${esc0(url)}</div>
+      <div class="site-url-row">
+        <button type="button" class="site-mini" id="site-copy-btn">Copy link</button>
+        <a class="site-mini" href="${esc0(url)}" target="_blank" rel="noopener">Open</a>
+        <button type="button" class="site-mini" id="site-share-btn">Share</button>
+      </div>
+    </div>
+
+    ${live ? '' : `<div class="empty-coach is-blocked" style="margin-top:12px">
+      <p class="empty-coach-title">Your website isn't public yet</p>
+      <p class="empty-coach-body">The link works the moment ${esc0(next.why)} is resolved${next.when ? ' \u2014 ' + esc0(next.when) : ''}.</p>
+      ${next.label ? `<button class="empty-coach-btn" id="${next.id}">${esc0(next.label)}</button>` : ''}
+    </div>`}
+
+    <div class="must-have-toggle" style="margin-top:14px">
+      <div class="toggle-label"><strong>My website is live</strong><span>Separate from taking new clients \u2014 being full keeps your page up</span></div>
+      <div class="switch ${t.websiteLive !== false ? 'on' : ''}" id="site-live-switch"></div>
+    </div>
+    ${t.websiteLive === false ? `<p class="portal-note" style="margin-top:8px">Off: your page shows nothing at all. Clients in matching are unaffected \u2014 this switch is only about the website.</p>` : ''}
+
+    <div class="t-form-label" style="margin-top:20px">Your look <span class="ideal-hint">same words and photos in every one \u2014 switching never loses anything</span></div>
+    <div class="site-tpl-grid">
+      ${SITE_TEMPLATES.map(x => `
+        <button type="button" class="site-tpl ${x.id === chosen ? 'selected' : ''}" data-site-tpl="${x.id}">
+          <span class="site-sw">${x.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>
+          <span class="site-tpl-name">${x.name}${x.id === chosen ? ' \u2713' : ''}</span>
+          <span class="site-tpl-who">${x.who}</span>
+        </button>`).join('')}
+    </div>
+
+    <div class="t-form-label" style="margin-top:20px">What's on it</div>
+    <div class="site-shared">
+      <div class="site-shared-row">
+        <div><strong>Your photo, name &amp; story</strong><span>Everything from your profile, in the order you arranged it</span></div>
+        <button type="button" class="site-jump" data-site-jump="edit">Edit &rsaquo;</button>
+      </div>
+      <div class="site-shared-row">
+        <div><strong>Specialties &amp; practical details</strong><span>Insurance, rate, languages, your links</span></div>
+        <button type="button" class="site-jump" data-site-jump="edit">Edit &rsaquo;</button>
+      </div>
+    </div>
+    <p class="portal-note" style="margin-top:10px">Coming next: services &amp; fees, common questions, office &amp; hours, and a booking link \u2014 website-only sections that matching never reads.</p>
+
+  </div>`;
+}
+
 function renderTherapistProfile(opts) {
   const focus = captureDropdownState();
   const scroll = captureProfileScroll();
@@ -7252,10 +7339,13 @@ function renderTherapistProfileBody() {
     <div class="profile-modes" role="tablist">
       <button class="pmode ${profileMode === 'ideal' ? 'active' : ''}" data-pmode="ideal" role="tab">✦ Ideal Client</button>
       <button class="pmode ${profileMode === 'edit' ? 'active' : ''}" data-pmode="edit" role="tab">✎ Edit Profile</button>
+      <button class="pmode ${profileMode === 'website' ? 'active' : ''}" data-pmode="website" role="tab">🌐 Website</button>
       <button class="pmode ${profileMode === 'view' ? 'active' : ''}" data-pmode="view" role="tab">👀 View Profile</button>
     </div>
 
     <div class="pm-view">${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}</div>
+
+    ${websitePaneHtml(t)}
 
     <div class="pm-ideal"><div class="ideal-section">
       <div class="ideal-section-head">
@@ -7560,6 +7650,31 @@ function renderTherapistProfileBody() {
     profileMode = b.dataset.pmode;
     renderTherapistProfile();
     document.getElementById('t-profile-content').scrollTop = 0;
+  }));
+
+  /* ----- Website tab (step 3) ----- */
+  const siteCopy = document.getElementById('site-copy-btn');
+  if (siteCopy) siteCopy.addEventListener('click', async () => {
+    const url = therapistProfileUrl(t);
+    try { await navigator.clipboard.writeText(url); showToast('Link copied.'); }
+    catch (e) { window.prompt('Copy your link:', url); }
+  });
+  const siteShare = document.getElementById('site-share-btn');
+  if (siteShare) siteShare.addEventListener('click', openShareMyProfile);
+  const siteLive = document.getElementById('site-live-switch');
+  if (siteLive) siteLive.addEventListener('click', () => {
+    t.websiteLive = t.websiteLive === false ? true : false;
+    persistProfileSoon(t);
+    renderTherapistProfile();
+  });
+  document.querySelectorAll('[data-site-tpl]').forEach(el => el.addEventListener('click', () => {
+    t.site = Object.assign({}, t.site, { template: el.dataset.siteTpl });
+    persistProfileSoon(t);
+    renderTherapistProfile();
+  }));
+  document.querySelectorAll('[data-site-jump]').forEach(el => el.addEventListener('click', () => {
+    profileMode = 'edit';
+    renderTherapistProfile();
   }));
   attachTherapistProfileHandlers(t);
 }

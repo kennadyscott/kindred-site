@@ -19,37 +19,20 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z' fill='%23422448'/><path d='M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z' fill='%23B8A3C4'/><path d='M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z' fill='%23BE765F'/></svg>">
 <style>
 /* ===========================================================================
-   The therapist's WEBSITE (step 2 of the website build) — Warm template.
-
-   Deliberately no Kindred site-header: the therapist's own nav is the only
-   permanent chrome. Kindred appears exactly four ways — the contextual
-   return ribbon (?from=browse only), the verified badge, the contact CTA
-   routing into matching, and the footer mark. Decided 2026-08-10.
-
-   Tokens are the Warm template's. When the template picker ships (step 3)
-   these become CSS custom properties chosen per therapist; the structure
-   below already reads only from the tokens.
+   Structural shell only. The template's entire look — tokens, nav, layout,
+   sections — is injected by profile.js as #site-css, per the therapist's
+   chosen template (t.site.template, 0045). Anything visual left here would
+   fight all six templates at once, so only three things live in this file:
+   the reset, the Kindred ribbon (platform chrome, deliberately untemplated),
+   and the loading/missing states that render before a template is known.
    =========================================================================== */
-:root{
-  --ground:#FAF4EC; --panel:#FFFFFF; --ink:#3A2C40; --soft:#77687D;
-  --accent:#A85B44; --line:#ECDFD2; --r:18px;
-  --display:'Literata', Georgia, serif;
-  --body:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);
+body{margin:0;background:#FAF4EC;color:#3A2C40;
+     font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
      font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
-a{color:var(--accent)}
-h1,h2{font-family:var(--display);font-weight:500;line-height:1.15;margin:0;letter-spacing:-.01em}
-h2{font-size:clamp(1.4rem,2.5vw,1.8rem);margin-bottom:1rem}
-p{margin:0 0 1em}
-.soft{color:var(--soft)}
 
-/* ---- Kindred return ribbon: platform chrome, deliberately NOT themed.
-       Shown only with ?from=browse, and it scrolls away — the therapist's
-       nav is what sticks. ---- */
 .kribbon{display:flex;align-items:center;gap:1em;background:#422448;color:#EFE7F2;
          padding:.55rem 22px;font-size:.78rem}
 .kribbon a{color:#EFE7F2;text-decoration:none;font-weight:700}
@@ -57,81 +40,12 @@ p{margin:0 0 1em}
                 font-weight:700;letter-spacing:.05em}
 .kribbon svg{width:12px;height:12px}
 
-/* ---- their nav ---- */
-.topnav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:1.3rem;
-        padding:.85rem 22px;background:var(--ground);border-bottom:1px solid var(--line)}
-.navbrand{font-family:var(--display);font-size:1.08rem;color:inherit;text-decoration:none;
-          margin-right:auto;white-space:nowrap}
-.navlinks{display:flex;gap:1.15rem;align-items:center;overflow-x:auto;scrollbar-width:none;min-width:0}
-.navlinks::-webkit-scrollbar{display:none}
-.navlink{font-size:.76rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
-         color:var(--soft);text-decoration:none;white-space:nowrap}
-.navlink:hover{color:var(--accent)}
-.navcta{flex:none;font-size:.78rem;font-weight:700;text-decoration:none;color:#FFF8F2;
-        background:var(--accent);padding:.55em 1.2em;border-radius:999px;white-space:nowrap}
-
-/* ---- sidebar layout ---- */
-.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:3rem;align-items:start;
-        max-width:1040px;margin:2.4rem auto 0;padding:0 22px}
-.aside-card{position:sticky;top:74px;background:var(--panel);border-radius:var(--r);
-            padding:1.5rem;text-align:center;box-shadow:0 6px 22px rgba(58,44,64,.06)}
-.aside-card img{width:100%;aspect-ratio:6/7;object-fit:cover;border-radius:var(--r);margin-bottom:1.1rem}
-.aside-fallback{width:100%;aspect-ratio:6/7;border-radius:var(--r);margin-bottom:1.1rem;
-                display:flex;align-items:center;justify-content:center;background:#EFE2D3;
-                font-family:var(--display);font-size:3rem;color:#8a6f56}
-.aside-card h1{font-size:1.65rem}
-.facts{display:flex;flex-direction:column;gap:.45em;align-items:center;margin:1rem 0;
-       font-size:.92rem;color:var(--soft)}
-.badge{display:inline-flex;align-items:center;gap:.4em;font-size:.78rem;font-weight:600;
-       padding:.34em .85em;border-radius:999px;background:rgba(95,115,85,.12);color:#4d5f45;
-       border:1px solid rgba(95,115,85,.25)}
-.chip{display:inline-block;font-size:.78rem;font-weight:600;padding:.32em .8em;
-      border-radius:999px;background:#F3E7DC;margin:0 5px 6px 0}
-.btn{display:inline-block;background:var(--accent);color:#FFF8F2;text-decoration:none;
-     font-weight:700;font-size:.95rem;padding:.85em 1.7em;border-radius:999px;border:none;cursor:pointer}
-.paused{background:#F6EBDD;border:1px solid #E9D7BF;border-radius:12px;padding:.7rem .9rem;
-        font-size:.85rem;color:#7a5c34;margin:0 0 1rem}
-
-/* ---- main sections ---- */
-main section{margin:0 0 3.4rem;scroll-margin-top:74px}
-.statement{font-family:var(--display);font-style:italic;font-size:1.3rem;line-height:1.5}
-.section-title{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-               color:var(--soft);margin:0 0 1.2rem}
-.w-prompt{background:var(--panel);border-radius:var(--r);padding:1.3rem 1.4rem;margin-bottom:1.5rem;
-          box-shadow:0 6px 22px rgba(58,44,64,.05)}
-.w-prompt .q{font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-             color:var(--soft);margin:0 0 .45rem}
-.w-prompt p:last-child{margin-bottom:0}
-.w-photo{margin:1.8rem 0}
-.w-photo img{width:100%;height:auto;max-height:600px;object-fit:cover;border-radius:var(--r)}
-.w-video video{width:100%;border-radius:var(--r)}
-.kv{display:flex;flex-direction:column;gap:.55em;font-size:.95rem}
-.kv span{color:var(--soft)}
-.kv b{font-weight:600;color:var(--ink)}
-.contact-in{text-align:center;background:var(--panel);border-radius:var(--r);
-            padding:clamp(2rem,5vw,3rem) 1.6rem;box-shadow:0 6px 22px rgba(58,44,64,.05)}
-.contact-in h2{margin-bottom:.5rem}
-.contact-in .soft{max-width:46ch;margin:0 auto 1.5rem}
-.fine{font-size:.8rem;color:var(--soft);margin-top:.9rem}
-
-footer{border-top:1px solid var(--line);margin-top:3.4rem;padding:1.6rem 0 2.2rem}
-.foot{display:flex;align-items:center;gap:1.2em;flex-wrap:wrap;font-size:.8rem;color:var(--soft);
-      max-width:1040px;margin:0 auto;padding:0 22px}
-.foot a{color:var(--soft);text-decoration:none;font-weight:600}
-.foot a:hover{color:var(--accent)}
-.made{margin-left:auto;display:inline-flex;align-items:center;gap:.45em}
-.made svg{width:13px;height:13px}
-
-/* ---- loading / missing ---- */
 .state{max-width:560px;margin:14vh auto 0;padding:0 22px;text-align:center}
-.state h1{font-size:clamp(1.7rem,4vw,2.3rem);margin-bottom:.6rem}
-.state p{color:var(--soft);margin-bottom:1.4rem}
-
-@media (max-width:760px){
-  .layout{grid-template-columns:1fr;gap:1.6rem;margin-top:1.4rem}
-  .aside-card{position:static}
-  .aside-card img,.aside-fallback{max-width:280px;margin-left:auto;margin-right:auto}
-}
+.state h1{font-family:'Literata',Georgia,serif;font-weight:500;
+          font-size:clamp(1.7rem,4vw,2.3rem);margin:0 0 .6rem;line-height:1.2}
+.state p{color:#77687D;margin:0 0 1.4rem}
+.state .btn{display:inline-block;background:#A85B44;color:#FFF8F2;text-decoration:none;
+            font-weight:700;font-size:.95rem;padding:.85em 1.7em;border-radius:999px}
 </style>
 </head>
 <body>
@@ -151,6 +65,6 @@ footer{border-top:1px solid var(--line);margin-top:3.4rem;padding:1.6rem 0 2.2re
 
 <div id="site" hidden></div>
 
-<script src="profile.js?v=2"></script>
+<script src="profile.js?v=3"></script>
 </body>
 </html>
