@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Browse therapists &mdash; Kindred</title>
 <meta name="description" content="Every therapist on Kindred, with what they work with, where they are licensed and what a session costs. Browse without signing up.">
+<!-- UNLISTED WHILE THE ROSTER IS TINY. The page works and the URL is live,
+     but it is not in the nav and not indexed: a browse page showing one
+     person reads as "nobody is here", which is worse than not offering one.
+     To bring it back: add <a href="browse.html">Browse Therapists</a> to the
+     nav on the marketing pages and delete the robots line below. -->
+<meta name="robots" content="noindex">
 <link rel="canonical" href="https://kindredtherapymatch.com/browse">
 <meta property="og:title" content="Browse therapists — Kindred">
 <meta property="og:description" content="Every therapist on Kindred, with what they work with, where they are licensed and what a session costs.">
@@ -72,7 +78,6 @@
     <a href="feel-better.html">Feel Better</a>
     <a href="life-relationships.html">Life &amp; Relationships</a>
     <a href="therapy.html">Therapy</a>
-    <a href="browse.html" aria-current="page">Browse Therapists</a>
     <a class="nav-cta nav-cta-dark" data-app-link="match" href="/app/#match" target="_blank" rel="noopener">Find a Therapist</a>
   </nav>
 
