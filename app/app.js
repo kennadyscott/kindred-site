@@ -5738,6 +5738,11 @@ function restoreProfileScroll(saved) {
    =========================================================================== */
 /* Which half of the Website tab is showing, and at what width. Module state
    rather than a URL param: it is a viewing preference, not a place. */
+/* View Profile shows one of two true answers, because there are two. On a
+   phone in matching a client meets the CARD; on a laptop they land on the
+   website. Same person, two surfaces, and a therapist should be able to see
+   both without guessing which one someone will get. */
+let viewProfileDevice = 'phone';
 let websiteView = 'setup';
 let websitePreviewDevice = 'desktop';
 
@@ -7606,7 +7611,20 @@ function renderTherapistProfileBody() {
 
     <div class="pm-view">
       <div class="preview-rail-cap">What clients see</div>
-      ${contentWarningHtml(t)}${profileCardHtml(t, { preview: true, inline: true })}
+      ${profileMode === 'view' ? `
+      <div class="view-dev-bar">
+        <span class="site-dev-toggle">
+          <button type="button" class="site-dev ${viewProfileDevice === 'phone' ? 'active' : ''}" data-viewdev="phone">Phone</button>
+          <button type="button" class="site-dev ${viewProfileDevice === 'desktop' ? 'active' : ''}" data-viewdev="desktop">Desktop</button>
+        </span>
+        <span class="view-dev-note">${viewProfileDevice === 'phone'
+          ? 'The card clients meet you on when they\u2019re matching.'
+          : 'On a laptop they land on your website \u2014 this is that page.'}</span>
+      </div>` : ''}
+      ${(profileMode === 'view' && viewProfileDevice === 'desktop')
+        ? `<div class="view-desktop-stage"><iframe id="view-preview-frame" class="site-preview-frame" title="Preview of your website"
+                    src="../profile.html?preview=1"></iframe></div>`
+        : contentWarningHtml(t) + profileCardHtml(t, { preview: true, inline: true })}
     </div>
 
 
@@ -7912,6 +7930,7 @@ function renderTherapistProfileBody() {
     </div>
   `;
   container.dataset.mode = profileMode;
+  container.dataset.viewdev = viewProfileDevice;
   container.querySelectorAll('[data-pmode]').forEach(b => b.addEventListener('click', () => {
     profileMode = b.dataset.pmode;
     renderTherapistProfile();
@@ -7937,6 +7956,15 @@ function renderTherapistProfileBody() {
       el.classList.remove('is-ok', 'is-bad');
     }, result === 'saved' ? 1800 : 3200);
   }));
+  /* button[...] on purpose: #t-profile-content carries data-viewdev too, so a
+     bare attribute selector bound the handler to the whole profile -- every
+     click anywhere in the editor would have re-rendered the screen. */
+  document.querySelectorAll('button[data-viewdev]').forEach(el => el.addEventListener('click', () => {
+    viewProfileDevice = el.dataset.viewdev;
+    renderTherapistProfile();
+  }));
+  const viewFrame = document.getElementById('view-preview-frame');
+  if (viewFrame) viewFrame.addEventListener('load', () => pushWebsitePreview(t, 'view-preview-frame'));
   /* Buttons rendered by nextStepToLive() live in this pane too -- they were
      drawn and never wired, which is why "Finish my profile" did nothing. */
   wireEmptyStateActions(t);
@@ -7945,8 +7973,11 @@ function renderTherapistProfileBody() {
 
 /* Hand the current row to the preview frame. Same-origin only, and the frame
    is ours, so targetOrigin is pinned to our own origin rather than '*'. */
-function pushWebsitePreview(t) {
-  const frame = document.getElementById('site-preview-frame');
+/* frameId, because there are now two preview frames -- the Website screen's
+   and the one inside View Profile. Both would answer to getElementById on a
+   shared id, and whichever rendered first would receive every push. */
+function pushWebsitePreview(t, frameId) {
+  const frame = document.getElementById(frameId || 'site-preview-frame');
   if (!frame || !frame.contentWindow) return;
   try {
     frame.contentWindow.postMessage(
