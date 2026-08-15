@@ -2404,6 +2404,15 @@ select.t-rate-input,
 #t-profile-content[data-mode="view"]  .pm-edit,
 #t-profile-content[data-mode="view"]  .pm-ideal { display: none; }
 
+/* Shown in the must-have list, not selectable: these two already exclude
+   outright, so a chip that looked pickable would imply it could be switched
+   off. Reads as a status row, not a control. */
+.chip-option.chip-locked {
+  background: transparent; border: 1px dashed var(--line);
+  color: var(--ink-soft); cursor: default; font-weight: 500;
+}
+.chip-option.chip-locked:hover { background: transparent; }
+
 .preview-rail-cap { display: none; }
 
 /* ----- View Profile: phone or desktop ------------------------------------

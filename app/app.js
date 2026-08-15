@@ -1292,7 +1292,10 @@ const CARE_FOR_OPTIONS = [
 ];
 // When the client can usually meet — captured in intake, shown on the
 // shared profile so a matched therapist can see if their open slots line up.
-const AVAILABILITY_OPTIONS = ['Anytime', 'Early mornings', 'Lunch', 'Evenings', 'Weekends', 'Other'];
+/* No "Other". It was unanswerable on both sides: a therapist picking it said
+   nothing a client could ever match against, and matchIdealFit() has no rule
+   for it -- so it read as a real preference and scored as nothing. */
+const AVAILABILITY_OPTIONS = ['Anytime', 'Early mornings', 'Lunch', 'Evenings', 'Weekends'];
 
 // ===== IDEAL-CLIENT VOCABULARY =====
 // A therapist's "ideal client" is matched against what the client tells us about
@@ -1382,12 +1385,31 @@ let FIELD_MORE = ['Tech', 'Finance & Legal', 'Legal', 'Service industry', 'Retai
 const PAYMENT_TYPE_OPTIONS = ['Insurance', 'Cash pay', 'Either'];
 // The ideal-fit dimensions a therapist can mark as a "must have" (max 3).
 // Must-haves are WEIGHTED HEAVIER — they are never a filter.
+/* The SCORED dimensions. Payment and availability are deliberately not here:
+   idealMatchResult() applies them earlier as hard filters, and this list is
+   iterated with (ic[d.key] || []).length -- payment is a string, so it would
+   read as always-set, and clientValue has no entry for either, so both would
+   score zero against themselves and drag every match below the threshold. */
 const IDEAL_DIMENSIONS = [
   { key: 'ageBands', label: 'Age' },
   { key: 'genders', label: 'Gender' },
   { key: 'fields', label: 'Field of work' },
   { key: 'needs', label: 'What they want to work on' },
   { key: 'modalities', label: 'Modality' }
+];
+
+/* What the must-have picker SHOWS. The two locked rows were missing from the
+   screen entirely, which read as an oversight -- a therapist can state a
+   payment preference and the hours they work, then finds neither in the list
+   of things that can matter most.
+
+   They are locked rather than pickable because they are already stronger than
+   a must-have: a must-have counts double, while these two exclude outright.
+   Offering them as a choice would let a therapist "turn off" something that
+   is not optional, and quietly weaken their own filter. */
+const IDEAL_MUST_HAVE_LOCKED = [
+  { key: 'payment', label: 'Payment' },
+  { key: 'availability', label: "When you'd see them" }
 ];
 const MAX_MUST_HAVES = 3;
 // A client is an "ideal match" when they clear the therapist's practical
@@ -7684,7 +7706,11 @@ function renderTherapistProfileBody() {
         const on = ic.mustHaves.includes(d.key);
         const full = ic.mustHaves.length >= MAX_MUST_HAVES && !on;
         return `<div class="chip-option ${on ? 'selected' : ''}${full ? ' chip-disabled' : ''}" data-ideal-must="${d.key}">${d.label}</div>`;
+      }).join('')}${IDEAL_MUST_HAVE_LOCKED.map(d => {
+        const set = d.key === 'payment' ? (ic.payment && ic.payment !== 'Either') : (ic[d.key] || []).length > 0;
+        return `<div class="chip-option chip-locked" title="Set above — already required">${d.label} ${set ? '\u2713 always' : '\u2014 not set'}</div>`;
       }).join('')}</div>
+      <p class="portal-note" style="margin-top:8px">Payment and <em>when you'd see them</em> are stronger than a must-have &mdash; whatever you set above is required outright, so they aren't pick-able here and don't use one of your three.</p>
     </div></div>
 
     <div class="pm-edit">
@@ -7699,6 +7725,15 @@ function renderTherapistProfileBody() {
       <p class="wider-section-lead">Tell us everything you can help with</p>
       <p class="wider-section-sub">This is where you can showcase the full range of your experience, skills, specialties, and the types of clients you’re comfortable working with. These selections help your profile reach a wider range of clients who may be looking for support.</p>
       <p class="wider-section-pair">Your <strong>Ideal Client</strong> helps Kindred find your best matches. Your <strong>Wider Net</strong> helps clients find you for everything else you offer.</p>
+    </div>
+
+    <!-- Was buried at the top of Additional Details, three collapsed sections
+         down. It is the switch a therapist reaches for most often and the one
+         with the most immediate consequence -- whether clients can book them
+         at all -- so it sits above the sections rather than inside one. -->
+    <div class="must-have-toggle accepting-toggle">
+      <div class="toggle-label"><strong>Accepting ongoing clients</strong><span>${t.acceptingOngoing ? 'New clients can find and book you' : 'Off keeps you in Discover with a \u201Csave for later\u201D banner'}</span></div>
+      <div class="switch ${t.acceptingOngoing ? 'on' : ''}" id="t-ongoing-switch"></div>
     </div>
 
     ${contentWarningHtml(t)}
@@ -7892,10 +7927,6 @@ function renderTherapistProfileBody() {
              meets you on; a carrier list is reference material. -->
         <div class="t-form-label">Insurance accepted</div>
         ${checkboxDropdownHtml(t.insuranceList, insuranceAll(), 'insurance', 'Choose every carrier you accept…')}
-        <div class="must-have-toggle" style="margin-top:2px;">
-          <div class="toggle-label"><strong>Accepting ongoing clients</strong><span>Off keeps you in Discover with a "save for later" banner</span></div>
-          <div class="switch ${t.acceptingOngoing ? 'on' : ''}" id="t-ongoing-switch"></div>
-        </div>
 
           <div class="t-form-label" id="t-lic-anchor">Your licenses <span class="ideal-hint">one per state &mdash; each is checked separately</span></div>
           ${(t.licenses && t.licenses.length)
