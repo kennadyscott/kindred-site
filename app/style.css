@@ -2946,21 +2946,28 @@ select.t-rate-input,
      One rule, here. I briefly had a second in the 900px block, which lost to
      this one and made the change look like it had done nothing. */
 
-  /* THE WHOLE CARD SCROLLS, NOT JUST ITS TEXT.
-     .card-photo is 44% of the card and flex-shrink:0, with .card-body
-     scrolling beneath it -- so the lead photo stayed pinned while the feed
-     moved under it. On a phone that reads as a header. On the taller desktop
-     card the feed's own photos slide under the hero photo, and two
-     overlapping photographs read as a rendering fault, which is what it
-     looked like.
+  /* A DESKTOP CARD, NOT A PHONE CARD STRETCHED.
+     Everything before this was the same stacked layout at a different size,
+     and it kept failing in the same way: a photo forced into a wide, short
+     box gets cropped through the middle of the person in it. The phone
+     version looks better because a tall narrow frame suits a photograph of
+     someone standing up.
 
-     Desktop only: the card becomes the scroller, the photo takes a fixed
-     aspect instead of a percentage of a scrolling box (a percentage height
-     inside an auto-height scroller resolves against nothing), and the body
-     stops being a second scroll area inside the first. */
-  .deck-col .card { overflow-y: auto; overflow-x: hidden; }
-  .deck-col .card-photo { height: auto; aspect-ratio: 4 / 3; }
-  .deck-col .card-body { overflow: visible; flex: 0 0 auto; }
+     So the card turns on its side. Photo down the left at its own full
+     height -- no crop decision to get wrong -- and everything else in a
+     column beside it. The right column scrolls; there is no overlap to look
+     like a fault, because the photo is not above the thing that moves.
+
+     Reverts to the stacked phone card below 1080px, where a two-column card
+     would give each column about 160px. */
+  .deck-col .card-stack { max-width: 680px; }
+  .deck-col .card { flex-direction: row; overflow: hidden; }
+  .deck-col .card-photo {
+    height: auto; width: 44%; flex: 0 0 44%;
+    margin: 12px 0 12px 12px; align-self: stretch;
+  }
+  .deck-col .card-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .deck-col .card-body { flex: 1 1 auto; min-width: 0; overflow-y: auto; }
   .deck-col .card-stack { flex: none; width: 100%; margin: 0 0 12px;
                           height: calc(100vh - 195px); min-height: 260px; }
   .deck-col .action-row { flex: 0 0 auto; }
