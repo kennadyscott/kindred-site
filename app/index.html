@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400..600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=merge43">
+<link rel="stylesheet" href="style.css?v=merge48">
 </head>
 <body>
 
@@ -398,7 +398,17 @@
         <path d="M6.3 19.1c1.1-3 3.2-4.5 5.7-4.5s4.6 1.5 5.7 4.5" stroke="#D9705A" stroke-width="1.8" stroke-linecap="round"/>
       </svg></span><span>You</span>
     </button>
-  </nav>
+      <!-- DESKTOP ONLY (>=900px). The client screens had a centred "Kindred"
+         header of their own, which on Discover was 130px of wordmark above the
+         card and nothing else. Moved into the nav as a right-hand mark, and
+         the header hidden, so the deck starts near the top of the window. -->
+    <div class="nav-brand-right">
+      <button class="icon-btn" id="nav-search-btn" aria-label="Search therapists">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+      <span class="nav-wordmark">Kindred</span>
+    </div>
+</nav>
 
   <!-- DESKTOP ONLY. A phone app ends at the last card; a website ends at a
        footer. Without one the therapist portal trails off into empty cream
@@ -416,7 +426,7 @@
   </footer>
 </div>
 
-<script src="app.js?v=merge95"></script>
+<script src="app.js?v=merge96"></script>
 <script>
   if ('serviceWorker' in navigator) {
     /* A new worker calls skipWaiting() + clients.claim(), so it takes control

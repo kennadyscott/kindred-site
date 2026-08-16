@@ -2659,7 +2659,7 @@ select.t-rate-input,
 
 /* The web-only chrome. Hidden by default so a phone never pays for it -- the
    tab bar has exactly five thumb targets and no room for a wordmark. */
-.nav-brand, .nav-account, .app-footer { display: none; }
+.nav-brand, .nav-account, .app-footer, .nav-brand-right { display: none; }
 
 /* ============================================================================
    DESKTOP / TRUE WEB LAYOUT
@@ -2703,10 +2703,26 @@ select.t-rate-input,
     justify-content: center;
     gap: 4px;
   }
-  /* Header layout is scoped to the therapist portal for now. The client nav
-     has no wordmark yet, and left-aligning tabs with nothing to their left
-     would just be an off-centre tab bar -- worse than the centred one. It
-     adopts this by adding the same two elements to its markup. */
+  /* The client nav now has its own mark, on the RIGHT: tabs stay where they
+     were and the wordmark takes the empty end of the bar, so nothing has to
+     shift and the header it replaces can go entirely. */
+  #bottom-nav {
+    padding: 0 max(24px, calc((100% - 1240px) / 2));
+    justify-content: flex-start;
+    background: var(--paper, #fff);
+  }
+  #bottom-nav .nav-brand-right {
+    display: flex; align-items: center; gap: 4px; margin-left: auto; padding-left: 20px;
+  }
+  .nav-wordmark {
+    font-family: 'Literata', Georgia, serif; font-size: 17px; font-weight: 600;
+    color: var(--aubergine); letter-spacing: .01em; white-space: nowrap;
+  }
+  /* The header this replaces. Only on the screens whose header was JUST the
+     wordmark -- Short List, Top 5 and You have real page titles and keep
+     theirs. */
+  #screen-discover > .top-bar { display: none; }
+
   #therapist-nav {
     padding: 0 max(24px, calc((100% - 1240px) / 2));
     justify-content: flex-start;
@@ -2897,10 +2913,38 @@ select.t-rate-input,
      on a phone it gets one from flex:1 filling the screen. Inside the new
      column that was gone and the deck collapsed to a 0px line. An explicit
      height restores it without depending on the viewport being the parent. */
-  /* flex:none, or the base .card-stack{flex:1} resolves against a
-     content-sized column and the deck comes out 325px tall with the card
-     clipped mid-way through its own details. */
-  .deck-col .card-stack { flex: none; width: 100%; margin: 0 0 14px; height: min(70vh, 640px); }
+  /* THE CONTROLS HAVE TO BE ON SCREEN. A fixed 70vh card pushed Pass, Info and
+     Keep below the fold, so the one interaction the whole screen exists for
+     was invisible until you scrolled -- and nothing about a swipe deck
+     suggests scrolling.
+
+     So the column is sized to what is actually left after the nav, the header
+     and the footer, and the card takes whatever remains once the buttons have
+     been paid for. The card shrinks; the buttons never move.
+
+     min-height stops it collapsing to nothing on a short laptop window: below
+     that the card scrolls internally, which is the right trade -- a cramped
+     card you can act on beats a beautiful one you cannot reach. */
+  /* Sized DIRECTLY, not by flex shrink. Two attempts at letting the card
+     absorb the leftover space failed the same way -- max-height on an
+     auto-height column gives no shrink pressure, and even a definite column
+     height did not propagate through to a stack whose children are
+     position:absolute. Rather than keep tuning a chain that does not
+     transmit, the stack states its own height against the viewport.
+
+     320px is the chrome above and below it: the top nav, the Kindred header,
+     the gap, and the button row. Everything left over is card. */
+  .deck-col { min-width: 0; }
+  /* 195 = the 55px nav, the button row and the gaps around them. It was 320
+     when this screen still had a centred "Kindred" header above the card;
+     with that gone the number had to come down or the space just became dead
+     air -- 185px of it, measured.
+
+     One rule, here. I briefly had a second in the 900px block, which lost to
+     this one and made the change look like it had done nothing. */
+  .deck-col .card-stack { flex: none; width: 100%; margin: 0 0 12px;
+                          height: calc(100vh - 195px); min-height: 260px; }
+  .deck-col .action-row { flex: 0 0 auto; }
   .deck-col .action-row { padding-bottom: 0; }
 
   .dsk-rail { background: #fff; border: 1px solid var(--line); border-radius: 18px;

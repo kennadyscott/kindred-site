@@ -9894,10 +9894,16 @@ function filtersBindings() {
   }));
 }
 
-document.getElementById('open-search-btn').addEventListener('click', () => {
-  showScreen('search');
-  renderSearch();
-  document.getElementById('search-input').focus();
+/* Two buttons, one action: the header magnifier (phone) and the one in the
+   nav (desktop, where the header is hidden). Bound together so they cannot
+   drift into doing different things. */
+['open-search-btn', 'nav-search-btn'].forEach(id => {
+  const b = document.getElementById(id);
+  if (b) b.addEventListener('click', () => {
+    showScreen('search');
+    renderSearch();
+    document.getElementById('search-input').focus();
+  });
 });
 document.getElementById('close-search-btn').addEventListener('click', () => showScreen('discover'));
 document.getElementById('search-input').addEventListener('input', (e) => {
