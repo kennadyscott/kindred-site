@@ -9360,8 +9360,14 @@ function applyLandingParams() {
   // through the questions again -- same rule enterMatchingExperience() uses.
   if (/(^|[#&])match\b/.test(location.hash)) {
     accountType = 'client';
-    if (intake.completed) { finishIntake(); checkForNewMatches(); }
-    else startIntake();
+    /* Was its own copy of "completed ? finishIntake : startIntake", which is
+       exactly the branch enterMatchingExperience() owns -- so when that one
+       stopped opening the questionnaire, this one carried on doing it and
+       "Find a Therapist" on the marketing site still landed on question one.
+
+       Calling the shared function instead of repeating its logic: the whole
+       reason the gate came back is that the decision lived in two places. */
+    enterMatchingExperience();
     return;
   }
 
