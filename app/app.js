@@ -4388,18 +4388,40 @@ function renderDiscoverRails() {
   (intake.needs || []).slice(0, 4).forEach(n => looking.push(n));
   (intake.formats || []).forEach(f => looking.push(f === 'video' ? 'Online' : 'In person'));
 
+  /* WHERE THIS LIVES, SAID OUT LOUD. Preferences are kept in localStorage and
+     belong to the device, not to an account -- which is what makes browsing
+     without one possible. But the panel said "what you asked for" to someone
+     with no account and no memory of asking, and offered no way to clear it,
+     so it read as Kindred knowing something about them that it should not.
+     A sentence and a button fix that. */
+  const anon = !clientHasAccount();
   left.innerHTML = `
     <p class="rail-head">What you asked for</p>
     ${looking.length
-      ? `<div class="rail-chips">${looking.map(x => `<span class="rail-chip">${esc0(x)}</span>`).join('')}</div>`
+      ? `<div class="rail-chips">${looking.map(x => `<span class="rail-chip">${esc0(x)}</span>`).join('')}</div>
+         ${anon ? `<p class="rail-note" style="margin:0 0 10px">Kept on this device only — there's no account behind it and nothing has been sent anywhere.</p>` : ''}`
       : `<p class="rail-empty">You haven't told us much yet — the more you say, the better these get.</p>`}
     <button type="button" class="rail-btn" id="rail-refine">Change what I'm looking for</button>
+    ${looking.length ? `<button type="button" class="rail-btn" id="rail-forget" style="margin-top:8px">Forget what I told you</button>` : ''}
     <p class="rail-note">${remaining} ${remaining === 1 ? 'person' : 'people'} left in this round. Everyone here already matches what you asked for.</p>`;
 
   const refine = document.getElementById('rail-refine');
   /* The same thing the magnifier in the header does -- reusing the existing
      screen rather than inventing a second way to narrow the deck. */
   if (refine) refine.addEventListener('click', () => { renderSearch(); showScreen('search'); });
+
+  const forget = document.getElementById('rail-forget');
+  if (forget) forget.addEventListener('click', () => {
+    /* The same wipe "delete my account" performs, for the same reason: memory
+       before disk, or the autosave on the way out puts it straight back. */
+    Object.assign(intake, JSON.parse(INTAKE_BLANK));
+    shortlist.length = 0;
+    clearClientState();
+    browseAll = true;
+    computeDeck();
+    renderStack();
+    showToast('Forgotten. You\u2019re browsing everyone now.');
+  });
 
   renderDiscoverSaved(right, esc0);
 }
