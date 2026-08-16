@@ -1,1 +1,30 @@
 .DS_Store
+
+# ---------------------------------------------------------------------------
+# NEVER COMMIT A DATABASE DUMP.
+#
+# This repository is PUBLIC. Today the database holds one therapist; after the
+# first real client it holds an email address beside a reason for seeking
+# therapy, which is PHI. GitHub does not sign a BAA on Free, Pro or Team --
+# only through GitHub Enterprise Cloud on a Microsoft Enterprise Agreement --
+# so PHI landing in here is not "untidy", it is a disclosure to a vendor with
+# no agreement covering it, and git history makes it permanent.
+#
+# This matters right now: the ca-central-1 to us-east-1 migration dumps the
+# database, and HQ's deploy.sh runs `git add -A`. A dump left in this
+# directory would be committed and published without anyone deciding to.
+#
+# The leading slash confines these to the repo root, so the real migrations
+# under supabase/migrations/ are still tracked.
+# ---------------------------------------------------------------------------
+/*.sql
+/*.dump
+/*.backup
+/*.csv
+dumps/
+backups/
+
+# Secrets live in Edge Function environment, never in the tree.
+.env
+.env.*
+!.env.example
