@@ -2845,7 +2845,12 @@ select.t-rate-input,
 }
 
 @media (min-width: 1080px) {
-  #screen-discover {
+  /* :not(.hidden) is not decoration. `.screen.hidden{display:none}` is two
+     classes; `#screen-discover` is an id and outranks it, so the moment this
+     rule existed Discover stopped being hideable and its two rails sat on top
+     of every other screen. Exactly the [hidden]-loses-to-display trap from the
+     therapist ribbon, arrived at from the other direction. */
+  #screen-discover:not(.hidden) {
     display: grid;
     /* width:100% because .phone is a flex COLUMN: without an explicit width a
        flex item that is not stretching sizes to its content, so the middle
@@ -2863,6 +2868,7 @@ select.t-rate-input,
   /* The generic ".screen > * gets --measure and auto margins" rule would put
      each column back in the middle of the page on its own. */
   #screen-discover > * { max-width: none; margin-left: 0; margin-right: 0; }
+  #screen-discover.hidden > * { display: none; }   /* belt and braces */
   #screen-discover > .top-bar { grid-column: 1 / -1; padding-left: 0; padding-right: 0; }
   #screen-discover .dsk-rail { display: block; position: sticky; top: 16px; }
   .deck-col { min-width: 0; flex: none; align-items: center; }

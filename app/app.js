@@ -1521,6 +1521,9 @@ const CONDITION_PLAIN = {
   'Postpartum': "the identity and mood shifts that can follow a baby"
 };
 
+/* Snapshotted immediately below, so "delete my account" can restore the
+   genuinely blank shape rather than a hand-written approximation that drifts
+   every time a field is added here. */
 let intake = {
   knowsNeeds: null, // 'no' = new to therapy (symptom-led) | 'yes' = experienced (knows what they want)
   prevExperience: [],    // veteran path: what they'd change about previous therapy
@@ -1557,6 +1560,10 @@ let intake = {
   budgetRange: 'Any budget', // label into BUDGET_RANGES — a range, not a max
   completed: false
 };
+
+/* Deep copy: the literal above contains arrays, and a shallow one would hand
+   the "blank" state the same array objects the live intake is mutating. */
+const INTAKE_BLANK = JSON.stringify(intake);
 
 let deck = [];
 let deckIndex = 0;
@@ -4942,8 +4949,27 @@ function confirmDeleteAccount() {
   document.getElementById('delete-cancel-btn').addEventListener('click', close);
   document.getElementById('delete-final-btn').addEventListener('click', () => {
     close();
+    /* WHY THIS IS MORE THAN IT LOOKS. logout() already calls
+       clearClientState(), which removes the localStorage key -- and the
+       account still came back. Because `intake` and `shortlist` were left
+       populated in memory, and saveClientState() is wired to pagehide,
+       beforeunload and visibilitychange. Deletion wiped the disk and then the
+       surviving memory wrote itself straight back on the way out.
+
+       So the memory has to go first. saveClientState() bails when the intake
+       is untouched, which a genuinely blank one is -- there is then nothing
+       left to re-save. */
+    Object.assign(intake, JSON.parse(INTAKE_BLANK));
+    shortlist.length = 0;
     matches.length = 0;
     savedResources.length = 0;
+    deck.length = 0;
+    deckIndex = 0;
+    browseAll = false;
+    /* Nothing server-side to remove while clientDataPersistence is false. When
+       it flips, this needs an RPC that deletes their client_inquiries too --
+       the copy above promises everything is gone, and it has to stay true. */
+    clearClientState();
     showToast('Your account has been deleted.');
     logout();
   });
