@@ -82,6 +82,9 @@ function baseCSS(t) {
   #site{--accent:${t.accent};--line:${t.line};--soft:${t.soft};--panel:${t.panel};--r:${t.r};
         --display:${t.display};--body:${t.body}}
   #site img{max-width:100%;display:block}
+  /* Embedded: the app supplies the chrome, so the page supplies none. */
+  [data-embed="1"] .topnav{display:none}
+  [data-embed="1"] #site footer{margin-top:2rem}
   #site a:not([class]){color:var(--accent)}
   #site h1,#site h2{font-family:var(--display);font-weight:500;line-height:1.15;margin:0;letter-spacing:-.01em}
   #site h2{font-size:clamp(1.4rem,2.5vw,1.8rem);margin-bottom:1rem}
@@ -678,6 +681,14 @@ const PAYMENT_LABELS = {
 
 const leafSvg = `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M30 8 C44 8 46 20 46 34 L46 66 C46 82 42 92 30 92 C24 92 22 84 22 66 L22 34 C22 16 24 8 30 8 Z" fill="#8a6f96"/><path d="M52 34 C52 20 62 10 78 8 C80 22 72 36 56 38 C53.5 38.3 52 37 52 34 Z" fill="#B8A3C4"/><path d="M52 46 C68 46 78 56 80 72 C66 74 52 66 52 50 Z" fill="#BE765F"/></svg>`;
 
+/* ?embed=1 -- the page is inside the Kindred app's own modal.
+   Two things must change or the embed misbehaves: its nav would be a second
+   navigation inside an app that already has one, and any link that navigates
+   the frame would nest the application inside itself. So the nav goes and
+   every link opens in a new tab. Nothing about the CONTENT changes; this is
+   the same page, in a smaller window. */
+const EMBEDDED = new URLSearchParams(location.search).get('embed') === '1';
+
 function render(t) {
   const name = t.name || 'Kindred Therapist';
   const first = name.replace(/^Dr\.?\s*/i, '').split(' ')[0] || name;
@@ -969,7 +980,17 @@ function render(t) {
   }
 
   $('site').dataset.tpl = tplId;
+  if (EMBEDDED) document.documentElement.setAttribute('data-embed', '1');
   $('site').innerHTML = body;
+  if (EMBEDDED) {
+    /* Every link, including the ones the templates generate. target alone is
+       not enough for a same-origin href in an iframe on some browsers, so the
+       rel goes on too. */
+    $('site').querySelectorAll('a[href]').forEach(a => {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    });
+  }
   wireNav();
   wireRail();
   wireInquiry(t);

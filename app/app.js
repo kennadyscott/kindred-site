@@ -2468,6 +2468,11 @@ function dbRowToTherapist(row) {
     modalities: row.modalities || [], style: row.style || 'balanced',
     identity: { gender: row.gender || '', lgbtqAffirming: !!row.lgbtq_affirming },
     languages: row.languages && row.languages.length ? row.languages : ['English'],
+    /* The slug IS the "do they have a Kindred website" signal -- it only
+       exists on a row the server published, so it cannot be guessed wrong.
+       slugifyName(name) would usually match and would silently 404 the day
+       two therapists share a name. */
+    slug: row.slug || '',
     website: row.website || '', instagram: row.instagram || '', linkedin: row.linkedin || '',
     marketingOptIn: !!row.marketing_opt_in,
     /* Empty means a profile from before this was stored -- leave it undefined
@@ -9147,8 +9152,42 @@ document.getElementById('btn-pass').addEventListener('click', () => {
 });
 document.getElementById('btn-info').addEventListener('click', () => {
   const t = deck[deckIndex];
-  if (t) openDetail(t);
+  if (!t) return;
+  /* Their own site if they have one -- it is the fuller, better version of
+     this person, written and arranged by them. The in-app profile is the
+     fallback for anyone who has not been published yet. */
+  if (t.slug && t.websiteLive !== false) openTherapistSite(t);
+  else openDetail(t);
 });
+
+/* Their Kindred website, inside the app rather than in a new tab: a new tab on
+   a phone is a context switch people do not come back from, and the deck they
+   were working through is the thing they would lose.
+
+   ?embed=1 tells profile.js to drop its own nav and open every link in a new
+   tab. Without it the page's "Send me a message" would navigate the IFRAME to
+   /app/, quietly nesting the whole application inside itself. */
+function openTherapistSite(t) {
+  const modal = document.getElementById('confirm-modal');
+  const sheet = document.getElementById('confirm-sheet');
+  sheet.innerHTML = `
+    <div class="sheet-close"></div>
+    <div class="site-embed-head">
+      <span>${displayName(t)}&rsquo;s website</span>
+      <a href="/${encodeURIComponent(t.slug)}" target="_blank" rel="noopener" class="site-embed-open">Open in a new tab &#8599;</a>
+    </div>
+    <div class="site-embed"><iframe src="/${encodeURIComponent(t.slug)}?embed=1"
+         title="${displayName(t)}&rsquo;s website" loading="eager"></iframe></div>
+    <button class="edit-prefs-btn" id="site-embed-close">Back to browsing</button>`;
+  modal.classList.remove('hidden');
+  /* Empty the sheet, do not just hide it. Hiding the modal leaves the iframe
+     in the document -- a whole second page still loaded, still running its
+     scripts, and still there for the next thing that queries the DOM. */
+  const close = () => { modal.classList.add('hidden'); sheet.innerHTML = ''; };
+  const sc = sheet.querySelector('.sheet-close');
+  if (sc) sc.addEventListener('click', close);
+  document.getElementById('site-embed-close').addEventListener('click', close);
+}
 
 // ===== PROFILE =====
 function careForSummary() {
