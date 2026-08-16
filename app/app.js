@@ -5549,8 +5549,17 @@ document.getElementById('login-back').addEventListener('click', () => {
 // and always landed on the existing-profile picker instead.
 document.getElementById('login-submit-btn').addEventListener('click', async () => {
   if (accountType === 'client') {
-    // Clients stay demo-side (no server-persisted PHI until the BAA) — dive
-    // straight into matching. Explore Kindred stays in the bottom nav.
+    const email = (document.getElementById('login-email').value || '').trim();
+    const password = document.getElementById('login-password').value || '';
+    /* No credentials, or no auth configured: browse, exactly as before. */
+    if (!authReady() || (!email && !password)) { enterMatchingExperience(); return; }
+    try {
+      await authSignIn(email, password);
+      showToast('Welcome back.');
+    } catch (e) {
+      showToast(/invalid|credential|grant/i.test(e.message) ? 'Wrong email or password.' : e.message);
+      return;
+    }
     enterMatchingExperience();
     return;
   }
@@ -5613,7 +5622,10 @@ document.getElementById('login-submit-btn').addEventListener('click', async () =
 });
 
 document.getElementById('login-create-btn').addEventListener('click', async () => {
-  if (accountType === 'client') { startIntake(); return; }
+  /* Was startIntake() -- pressing "Create Account" as a client ran the
+     questionnaire and created no account at all, so every prompt added today
+     would have led to the exact gate we just removed. */
+  if (accountType === 'client') { await createClientAccount(); return; }
   const email = (document.getElementById('login-email').value || '').trim();
   const password = document.getElementById('login-password').value || '';
   /* Demo fallback (no auth configured). Lands the same way, so what gets
@@ -5687,12 +5699,16 @@ function enterMatchingExperience() {
    how one of them ends up asking it wrong, and the one that gets it wrong is
    the one that stores a stranger's data.
 
-   THE FLAG. A client account means an email address next to "is looking for a
-   therapist", which is the same PHI as an inquiry. So account creation is
-   gated on clientDataPersistence exactly like everything else: while it is
-   off the prompt says so plainly rather than opening a form that cannot
-   honestly store anything. Flip the flag after the BAA and the same prompt
-   starts creating real accounts, with no other change. */
+   WHAT AN ACCOUNT IS, AND IS NOT. Creating one is an email and a password --
+   a Supabase auth user, nothing else. It is deliberately NOT the same switch
+   as clientDataPersistence, which still governs whether their intake answers,
+   matches and messages are written to our tables. So today someone can have
+   an account and be reachable, while the clinical content of what they said
+   stays on their own device until the BAA is signed.
+
+   That split is the point: the email is what makes a person contactable, and
+   it is a far smaller disclosure than the answers to eleven questions about
+   why they are seeking therapy. */
 function clientHasAccount() {
   return !!(authReady() && loadAuthSession() && accountType === 'client');
 }
@@ -5717,17 +5733,14 @@ const ACCOUNT_REASONS = {
 function requireAccount(kind) {
   if (clientHasAccount()) return true;
   const r = ACCOUNT_REASONS[kind] || ACCOUNT_REASONS.you;
-  const open = clientDataPersistenceEnabled();
   const sheet = document.getElementById('confirm-sheet');
   sheet.innerHTML = `
     <div class="sheet-close"></div>
     <h2>${r.title}</h2>
     <div class="intake-sub">${r.why}</div>
-    ${open
-      ? `<button class="primary-btn" id="acct-create-btn">Create an account</button>
-         <p class="modality-info-text" style="text-align:center">An email address is all it takes. You can fill in the rest whenever you like &mdash; or never.</p>`
-      : `<p class="modality-info-text">Client accounts aren't open yet &mdash; we're finishing the paperwork that lets us hold anyone's information properly. Browsing stays open, and nothing you do here is stored.</p>`}
-    <button class="edit-prefs-btn" id="acct-browse-btn">Keep looking</button>
+    <button class="primary-btn" id="acct-create-btn">Create an account</button>
+    <p class="modality-info-text" style="text-align:center">An email address is all it takes. You can fill in the rest whenever you like &mdash; or never.</p>
+    <button class="edit-prefs-btn" id="acct-browse-btn">Not right now</button>
   `;
   document.getElementById('confirm-modal').classList.remove('hidden');
   const close = () => document.getElementById('confirm-modal').classList.add('hidden');
@@ -5741,6 +5754,41 @@ function requireAccount(kind) {
     openLogin();
   });
   return false;
+}
+
+/* An account for a client is an email and a password. Nothing about why they
+   are here is sent anywhere -- their intake answers, shortlist and matches
+   still live on the device until clientDataPersistence says otherwise. */
+async function createClientAccount() {
+  const email = (document.getElementById('login-email').value || '').trim();
+  const password = document.getElementById('login-password').value || '';
+  if (!authReady() || (!email && !password)) { enterMatchingExperience(); return; }  // demo
+  if (!email || password.length < 6) {
+    showToast('Enter an email and a password of at least 6 characters.');
+    return;
+  }
+  const btn = document.getElementById('login-create-btn');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  try {
+    const { needsConfirmation } = await authSignUp(email, password);
+    kTrack('client_account_created', true);
+    if (needsConfirmation) {
+      showToast('Account created — check your email to confirm, then sign in.');
+      btn.disabled = false; btn.textContent = label;
+      return;
+    }
+    /* Straight back to what they were doing. Someone who hit this prompt was
+       mid-action -- they wanted to save a therapist, not to arrive at a
+       settings screen. */
+    showToast('You\u2019re all set.');
+    enterMatchingExperience();
+  } catch (e) {
+    showToast(/registered|already/i.test(e.message)
+      ? 'That email already has an account — try signing in.'
+      : e.message);
+    btn.disabled = false; btn.textContent = label;
+  }
 }
 
 function browseBeforeIntake() {
