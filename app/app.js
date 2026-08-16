@@ -3828,7 +3828,18 @@ function makeDraggable(card) {
     if (!dragging) return;
     dragging = false;
     card.classList.remove('dragging');
-    if (curX > 110) { resolveSwipe(card, 'like'); }
+    /* The drag is a second way to like, and it must ask the same question the
+       button does -- gating only the button would have left the gesture as an
+       unguarded back door to the exact same write. */
+    if (curX > 110) {
+      if (!requireAccount('save')) {
+        card.style.transform = '';
+        likeStamp.style.opacity = 0;
+        passStamp.style.opacity = 0;
+        return;
+      }
+      resolveSwipe(card, 'like');
+    }
     else if (curX < -110) { resolveSwipe(card, 'pass'); }
     else {
       card.style.transform = '';
@@ -3887,6 +3898,9 @@ function handleLike(t) {
 }
 
 function sendMatchRequest(therapistId) {
+  /* Contact. A request tells a therapist a real person is interested, so
+     there has to be a real person to answer. */
+  if (!requireAccount('contact')) return;
   if (activeRequestCount() >= MAX_PENDING_REQUESTS) return;
   openRequestIntake(therapistId);
 }
@@ -5464,8 +5478,19 @@ function showScreen(name) {
   if (navBtn) navBtn.classList.add('active');
 }
 
+/* On-Demand is deliberately NOT gated here: it shows what is available, which
+   is information, and the booking buttons inside it ask separately. Somebody
+   should be able to see that same-week sessions exist before deciding whether
+   an account is worth it. */
+const ACCOUNT_ONLY_SCREENS = { shortlist: 'shortlist', matches: 'matches', profile: 'you' };
+
 document.querySelectorAll('#bottom-nav .nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+  btn.addEventListener('click', () => {
+    const screen = btn.dataset.screen;
+    const reason = ACCOUNT_ONLY_SCREENS[screen];
+    if (reason && !requireAccount(reason)) return;
+    showScreen(screen);
+  });
 });
 
 // ===== ACCOUNT TYPE / LOGIN / LOGOUT =====
@@ -5648,6 +5673,74 @@ function enterMatchingExperience() {
   } else {
     browseBeforeIntake();
   }
+}
+
+/* ===========================================================================
+   BROWSING IS FREE. EVERYTHING THAT LEAVES A TRACE NEEDS AN ACCOUNT.
+   ---------------------------------------------------------------------------
+   Looking costs nothing and identifies nobody, so Discover is open to anyone.
+   The moment an action would keep something -- a saved therapist, a request, a
+   booking -- there has to be somewhere to keep it, and someone to keep it for.
+
+   ONE function decides. Six call sites (heart, contact, Short List, Top 5,
+   On-Demand, You) asking the same question in six slightly different ways is
+   how one of them ends up asking it wrong, and the one that gets it wrong is
+   the one that stores a stranger's data.
+
+   THE FLAG. A client account means an email address next to "is looking for a
+   therapist", which is the same PHI as an inquiry. So account creation is
+   gated on clientDataPersistence exactly like everything else: while it is
+   off the prompt says so plainly rather than opening a form that cannot
+   honestly store anything. Flip the flag after the BAA and the same prompt
+   starts creating real accounts, with no other change. */
+function clientHasAccount() {
+  return !!(authReady() && loadAuthSession() && accountType === 'client');
+}
+
+const ACCOUNT_REASONS = {
+  save:     { title: 'Save this therapist?',
+              why: 'An account keeps the people you like, so you can come back to them instead of scrolling to find them again.' },
+  contact:  { title: 'Ready to reach out?',
+              why: 'Your therapist needs somewhere to reply. An account gives them that, and gives you the conversation in one place.' },
+  shortlist:{ title: 'Your Short List lives in an account',
+              why: 'Save the therapists worth a second look and pick your Top 5 when you are ready.' },
+  matches:  { title: 'Your Top 5 lives in an account',
+              why: 'Requesting a match tells a therapist you are interested, so they need a way to answer you.' },
+  ondemand: { title: 'Booking needs an account',
+              why: 'A one-time session is a real appointment with a real person, so it needs a real account behind it.' },
+  you:      { title: 'This is your account',
+              why: 'Preferences, saved therapists and conversations all live here once you have one.' }
+};
+
+/* Returns true when the action may proceed. Callers read as:
+     if (!requireAccount('save')) return;   */
+function requireAccount(kind) {
+  if (clientHasAccount()) return true;
+  const r = ACCOUNT_REASONS[kind] || ACCOUNT_REASONS.you;
+  const open = clientDataPersistenceEnabled();
+  const sheet = document.getElementById('confirm-sheet');
+  sheet.innerHTML = `
+    <div class="sheet-close"></div>
+    <h2>${r.title}</h2>
+    <div class="intake-sub">${r.why}</div>
+    ${open
+      ? `<button class="primary-btn" id="acct-create-btn">Create an account</button>
+         <p class="modality-info-text" style="text-align:center">An email address is all it takes. You can fill in the rest whenever you like &mdash; or never.</p>`
+      : `<p class="modality-info-text">Client accounts aren't open yet &mdash; we're finishing the paperwork that lets us hold anyone's information properly. Browsing stays open, and nothing you do here is stored.</p>`}
+    <button class="edit-prefs-btn" id="acct-browse-btn">Keep looking</button>
+  `;
+  document.getElementById('confirm-modal').classList.remove('hidden');
+  const close = () => document.getElementById('confirm-modal').classList.add('hidden');
+  const sc = sheet.querySelector('.sheet-close');
+  if (sc) sc.addEventListener('click', close);
+  document.getElementById('acct-browse-btn').addEventListener('click', () => { close(); showScreen('discover'); });
+  const create = document.getElementById('acct-create-btn');
+  if (create) create.addEventListener('click', () => {
+    close();
+    accountType = 'client';
+    openLogin();
+  });
+  return false;
 }
 
 function browseBeforeIntake() {
@@ -8851,6 +8944,9 @@ function openOnDemandInfo() {
 }
 
 document.getElementById('btn-like').addEventListener('click', () => {
+  /* Checked before the animation, not after: a card that flies off and then
+     bounces back because of a prompt reads as a bug. */
+  if (!requireAccount('save')) return;
   const top = cardStack.lastElementChild;
   if (top && top._forceSwipe) top._forceSwipe('like');
 });
