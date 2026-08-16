@@ -1065,10 +1065,12 @@ h1, h2, .logo, .chat-name, .nav-btn span:last-child {
 .nav-btn span:last-child { font-size: 10.5px; white-space: nowrap; letter-spacing: -.1px; }
 /* The therapist bar carries six now (Website joined). Same squeeze the
    five-tab bar already used -- it is the tightest thing on a 375px screen. */
-.five-tabs .nav-btn, #therapist-nav .nav-btn { padding: 0 2px; }
-.five-tabs .nav-icon svg, #therapist-nav .nav-icon svg { width: 21px; height: 21px; }
+.five-tabs .nav-btn, #therapist-nav .nav-btn, #bottom-nav .nav-btn { padding: 0 2px; }
+.five-tabs .nav-icon svg, #therapist-nav .nav-icon svg,
+#bottom-nav .nav-icon svg { width: 21px; height: 21px; }
 .five-tabs .nav-btn span:last-child,
-#therapist-nav .nav-btn span:last-child { font-size: 9px; letter-spacing: -0.2px; }
+#therapist-nav .nav-btn span:last-child,
+#bottom-nav .nav-btn span:last-child { font-size: 9px; letter-spacing: -0.2px; }
 .nav-badge {
   position: absolute;
   top: -2px;
@@ -2765,10 +2767,11 @@ select.t-rate-input,
   .bottom-nav .nav-btn.active {
     border-bottom-color: var(--coral);
   }
-  .five-tabs .nav-btn, #therapist-nav .nav-btn { padding: 14px 16px; }
+  .five-tabs .nav-btn, #therapist-nav .nav-btn, #bottom-nav .nav-btn { padding: 14px 16px; }
   .five-tabs .nav-btn span:last-child,
-  #therapist-nav .nav-btn span:last-child { font-size: 13px; letter-spacing: 0; }
-  .five-tabs .nav-icon, #therapist-nav .nav-icon { font-size: 16px; }
+  #therapist-nav .nav-btn span:last-child,
+  #bottom-nav .nav-btn span:last-child { font-size: 13px; letter-spacing: 0; }
+  .five-tabs .nav-icon, #therapist-nav .nav-icon, #bottom-nav .nav-icon { font-size: 16px; }
   .nav-badge { position: static; margin-left: 2px; }
 
   /* ---- screens scroll as a page, content held to a readable measure ---- */

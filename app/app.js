@@ -4518,6 +4518,62 @@ function renderShortlist() {
   });
 }
 
+/* Every conversation in one place, newest first. Reads the SAME matches and
+   chatLog the Top 5 screen and the chat window use -- there is no separate
+   list of threads to fall out of step with what a thread actually contains. */
+function renderMessagesScreen() {
+  const list = document.getElementById('messages-list');
+  if (!list) return;
+  /* Local, following the convention in this file -- esc is never global here,
+     and calling it as though it were is a ReferenceError that node --check
+     cannot see. A message preview is client-authored text going into innerHTML,
+     so this is the one call that must not be missing. */
+  const esc = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
+  /* pending counts. Messaging opens when the request is sent, not when the
+     therapist accepts, so a thread a client is waiting on is exactly the one
+     they will come here looking for. */
+  const threads = matches
+    .filter(m => m.status === 'pending' || m.status === 'matched')
+    .map(m => {
+      const log = chatLog[m.therapist.id] || [];
+      return { m, log, last: log[log.length - 1] || null };
+    });
+
+  if (!threads.length) {
+    list.innerHTML = `<div class="empty-coach">
+      <p class="empty-coach-title">No conversations yet</p>
+      <p class="empty-coach-body">When you request a match, the conversation starts here &mdash; you can write before they accept.</p>
+      <button class="empty-coach-btn" id="msg-to-shortlist">Go to my Short List</button>
+    </div>`;
+    const go = document.getElementById('msg-to-shortlist');
+    if (go) go.addEventListener('click', () => showScreen('shortlist'));
+    return;
+  }
+
+  list.innerHTML = threads.map(({ m, last }) => `
+    <div class="match-row" data-msg-tid="${m.therapist.id}" role="button" tabindex="0">
+      ${avatarHtml(m.therapist, 'avatar-md')}
+      <div>
+        <div class="chat-name">${displayName(m.therapist)}</div>
+        <div class="last-msg">${last
+          ? (last.from === 'me' ? 'You: ' : '') + esc(String(last.text).slice(0, 60))
+          : m.status === 'pending' ? 'Request sent — waiting to hear back' : 'Say hello'}</div>
+      </div>
+      ${m.status === 'pending' ? '<span class="resolved-tag">Pending</span>' : ''}
+    </div>`).join('');
+
+  list.querySelectorAll('[data-msg-tid]').forEach(row => {
+    const open = () => {
+      const m = matches.find(x => x.therapist.id === row.dataset.msgTid);
+      if (m) openChat(m.therapist, 'client');
+    };
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    });
+  });
+}
+
 function renderMatches() {
   if (matches.length === 0) {
     matchesList.innerHTML = `<p class="empty-state">No requests sent yet — head to your Short List to pick your Top 5.</p>`;
@@ -5540,6 +5596,7 @@ function showScreen(name) {
   if (name === 'explore') renderExploreResources();
   if (name === 'ondemand') renderOndemand();
   if (name === 'shortlist') renderShortlist();
+  if (name === 'messages') renderMessagesScreen();
   if (name === 'matches') renderMatches();
   const target = document.getElementById(`screen-${name}`);
   if (target) target.classList.remove('hidden');
@@ -5554,7 +5611,10 @@ function showScreen(name) {
 /* Short List is open: it holds work the visitor did and they must be able to
    see it. Top 5 and You stay gated -- requesting a match sends a real message
    to a real therapist, and an account screen without an account is nothing. */
-const ACCOUNT_ONLY_SCREENS = { matches: 'matches', profile: 'you' };
+/* Messages is account-only for the same reason Top 5 is: a conversation is
+   with a real person who needs somewhere to reply. Someone without an account
+   has none, so the prompt is more use to them than an empty room. */
+const ACCOUNT_ONLY_SCREENS = { matches: 'matches', messages: 'contact', profile: 'you' };
 
 document.querySelectorAll('#bottom-nav .nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
