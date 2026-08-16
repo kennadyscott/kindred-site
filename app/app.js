@@ -5738,7 +5738,7 @@ document.getElementById('login-submit-btn').addEventListener('click', async () =
       showToast(/invalid|credential|grant/i.test(e.message) ? 'Wrong email or password.' : e.message);
       return;
     }
-    enterMatchingExperience();
+    resumeAfterAccount();
     return;
   }
   const email = (document.getElementById('login-email').value || '').trim();
@@ -5902,14 +5902,24 @@ const ACCOUNT_REASONS = {
               why: 'Requesting a match tells a therapist you are interested, so they need a way to answer you.' },
   ondemand: { title: 'Booking needs an account',
               why: 'A one-time session is a real appointment with a real person, so it needs a real account behind it.' },
+  sharpen:  { title: 'Let\u2019s make these yours',
+              why: 'The questions only pay off if we can remember the answers. An account keeps them, so your matches stay sharpened instead of resetting when you close the tab.' },
   you:      { title: 'This is your account',
               why: 'Preferences, saved therapists and conversations all live here once you have one.' }
 };
 
+/* What the person was trying to do when they were interrupted, so making an
+   account finishes the job instead of returning them to the deck to find the
+   button again. Cleared on use -- a stale intent firing after some unrelated
+   later sign-in would be worse than none. */
+let pendingAfterAccount = null;
+
 /* Returns true when the action may proceed. Callers read as:
-     if (!requireAccount('save')) return;   */
-function requireAccount(kind) {
+     if (!requireAccount('save')) return;
+   with an optional second argument to resume afterwards. */
+function requireAccount(kind, onSuccess) {
   if (clientHasAccount()) return true;
+  pendingAfterAccount = onSuccess || null;
   const r = ACCOUNT_REASONS[kind] || ACCOUNT_REASONS.you;
   const sheet = document.getElementById('confirm-sheet');
   sheet.innerHTML = `
@@ -5960,7 +5970,7 @@ async function createClientAccount() {
        mid-action -- they wanted to save a therapist, not to arrive at a
        settings screen. */
     showToast('You\u2019re all set.');
-    enterMatchingExperience();
+    resumeAfterAccount();
   } catch (e) {
     showToast(/registered|already/i.test(e.message)
       ? 'That email already has an account — try signing in.'
@@ -5980,8 +5990,18 @@ function browseBeforeIntake() {
   showScreen('discover');
 }
 
-/* Taken from the browse rail, not forced at the door. */
+function resumeAfterAccount() {
+  const next = pendingAfterAccount;
+  pendingAfterAccount = null;
+  if (typeof next === 'function') { next(); return; }
+  enterMatchingExperience();
+}
+
+/* Taken from the browse rail, not forced at the door -- but it does need an
+   account, because answers nobody can store are answers nobody can use: the
+   questionnaire would sharpen the deck for one session and forget it. */
 function sharpenMatches() {
+  if (!requireAccount('sharpen', () => { browseAll = false; startIntake(); })) return;
   browseAll = false;
   startIntake();
 }
