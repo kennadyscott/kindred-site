@@ -3871,12 +3871,6 @@ function makeDraggable(card) {
        button does -- gating only the button would have left the gesture as an
        unguarded back door to the exact same write. */
     if (curX > 110) {
-      if (!requireAccount('save')) {
-        card.style.transform = '';
-        likeStamp.style.opacity = 0;
-        passStamp.style.opacity = 0;
-        return;
-      }
       resolveSwipe(card, 'like');
     }
     else if (curX < -110) { resolveSwipe(card, 'pass'); }
@@ -3964,38 +3958,14 @@ function openRequestIntake(therapistId) {
     <div class="intake-sub">This becomes your opening message — keep it short and honest.</div>
     <div class="t-form-label">What brings you to therapy?</div>
     <textarea class="intake-textarea" id="intro-message" rows="3" placeholder="A sentence or two is plenty..."></textarea>
-    <div class="t-form-label">How often are you hoping to meet?</div>
-    <div class="freq-row">
-      <div class="freq-chip-grid" id="freq-count-grid">
-        <div class="chip-option selected" data-freq-count="1">1x</div>
-        <div class="chip-option" data-freq-count="2">2x</div>
-      </div>
-      <span class="freq-per">per</span>
-      <div class="freq-chip-grid" id="freq-period-grid">
-        <div class="chip-option selected" data-freq-period="week">Week</div>
-        <div class="chip-option" data-freq-period="month">Month</div>
-      </div>
-    </div>
+    <!-- "How often are you hoping to meet?" removed. It is a question for the
+         first session, not for a stranger's opening message -- nobody knows
+         their cadence before they have met, and answering it wrong felt like
+         a commitment. It also defaulted to 1x/week, so every request carried a
+         number the client had never actually chosen. -->
     <button class="primary-btn" style="margin-top:16px;background:var(--coral);color:white;" id="submit-request-btn" disabled>Send Match Request</button>
   `;
   requestIntakeModal.classList.remove('hidden');
-
-  let freqCount = 1;
-  let freqPeriod = 'week';
-  document.querySelectorAll('#freq-count-grid .chip-option').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('#freq-count-grid .chip-option').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      freqCount = Number(el.dataset.freqCount);
-    });
-  });
-  document.querySelectorAll('#freq-period-grid .chip-option').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('#freq-period-grid .chip-option').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      freqPeriod = el.dataset.freqPeriod;
-    });
-  });
 
   const introInput = document.getElementById('intro-message');
   const submitBtn = document.getElementById('submit-request-btn');
@@ -4004,7 +3974,10 @@ function openRequestIntake(therapistId) {
     const msg = introInput.value.trim();
     if (!msg) return;
     requestIntakeModal.classList.add('hidden');
-    confirmMatchRequest(therapistId, msg, `${freqCount}x per ${freqPeriod}`);
+    /* No cadence. It used to send "1x per week" whether or not the client had
+       touched the control, so every therapist read a preference nobody
+       stated. Absent is more honest than invented. */
+    confirmMatchRequest(therapistId, msg, '');
   });
 }
 requestIntakeModal.addEventListener('click', (e) => { if (e.target === requestIntakeModal) requestIntakeModal.classList.add('hidden'); });
@@ -4469,11 +4442,18 @@ function renderDiscoverRails() {
    copy is how the two would drift. */
 function renderDiscoverSaved(right, esc0) {
   const kept = shortlist.slice().reverse();
+  /* Said where the list is, not in a toast that disappears. Someone who spends
+     ten minutes building a shortlist and loses it because they closed a tab
+     will not come back, and "we told you once" is not a defence. */
+  const unsaved = kept.length && !clientHasAccount()
+    ? `<p class="rail-warn">These aren't saved. Close this tab and they're gone &mdash; an account keeps them.
+       <button type="button" class="rail-warn-btn" id="rail-keep">Keep my list</button></p>` : '';
   right.innerHTML = `
     <div class="rail-top">
       <p class="rail-head">Saved</p>
       <span class="rail-count">${kept.length}</span>
     </div>
+    ${unsaved}
     ${kept.length ? `
       <button type="button" class="rail-cta" id="rail-toshortlist">Pick your Top 5 &rarr;</button>
       <div class="rail-grid">
@@ -4486,6 +4466,8 @@ function renderDiscoverSaved(right, esc0) {
       ${kept.length > 8 ? `<p class="rail-note">and ${kept.length - 8} more</p>` : ''}`
     : `<p class="rail-empty">Nobody saved yet. Tap the heart on anyone worth a second look &mdash; saving is private and sends nothing.</p>`}`;
 
+  const keepBtn = document.getElementById('rail-keep');
+  if (keepBtn) keepBtn.addEventListener('click', () => requireAccount('save'));
   const toList = document.getElementById('rail-toshortlist');
   if (toList) toList.addEventListener('click', () => showScreen('shortlist'));
   right.querySelectorAll('[data-rail-tid]').forEach(el =>
@@ -4498,15 +4480,41 @@ function renderShortlist() {
     shortlistList.innerHTML = `<p class="empty-state">Nothing saved yet — swipe right on someone in Discover to add them here.</p>`;
     return;
   }
-  shortlistList.innerHTML = shortlist.slice().reverse().map(t => `
-    <div class="match-row shortlist-row">
+  /* The banner belongs here too, not only on the rail: this is the screen
+     someone stares at while deciding, and it is the whole list they would
+     lose. */
+  const unsaved = !clientHasAccount()
+    ? `<p class="rail-warn" style="margin:0 0 14px">These aren't saved. Close this tab and they're gone &mdash; an account keeps them.
+       <button type="button" class="rail-warn-btn" id="sl-keep">Keep my list</button></p>` : '';
+
+  shortlistList.innerHTML = unsaved + shortlist.slice().reverse().map(t => `
+    <div class="match-row shortlist-row" data-open-tid="${t.id}" role="button" tabindex="0">
       ${avatarHtml(t, 'avatar-md')}
       <div><div class="chat-name">${displayName(t)}</div><div class="last-msg">Saved — not yet requested</div></div>
+      ${socialLinksHtml(t)}
       <button class="shortlist-request-btn" data-tid="${t.id}" ${atCap ? 'disabled' : ''}>${atCap ? 'Limit reached' : 'Request Match'}</button>
     </div>
   `).join('');
+  const keep = document.getElementById('sl-keep');
+  if (keep) keep.addEventListener('click', () => requireAccount('save'));
+
+  /* The row opens the full profile -- the same detail view Discover uses, so
+     there is one profile screen rather than a second, thinner one that would
+     drift. stopPropagation on the controls inside, or requesting a match and
+     following a link would both also open the profile behind the sheet. */
+  shortlistList.querySelectorAll('[data-open-tid]').forEach(row => {
+    row.addEventListener('click', () => {
+      const t = shortlist.find(x => x.id === row.dataset.openTid);
+      if (t) openDetail(t);
+    });
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); row.click(); }
+    });
+  });
+  shortlistList.querySelectorAll('.social-link').forEach(a =>
+    a.addEventListener('click', (e) => e.stopPropagation()));
   shortlistList.querySelectorAll('.shortlist-request-btn').forEach(btn => {
-    btn.addEventListener('click', () => sendMatchRequest(btn.dataset.tid));
+    btn.addEventListener('click', (e) => { e.stopPropagation(); sendMatchRequest(btn.dataset.tid); });
   });
 }
 
@@ -5543,7 +5551,10 @@ function showScreen(name) {
    is information, and the booking buttons inside it ask separately. Somebody
    should be able to see that same-week sessions exist before deciding whether
    an account is worth it. */
-const ACCOUNT_ONLY_SCREENS = { shortlist: 'shortlist', matches: 'matches', profile: 'you' };
+/* Short List is open: it holds work the visitor did and they must be able to
+   see it. Top 5 and You stay gated -- requesting a match sends a real message
+   to a real therapist, and an account screen without an account is nothing. */
+const ACCOUNT_ONLY_SCREENS = { matches: 'matches', profile: 'you' };
 
 document.querySelectorAll('#bottom-nav .nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -9062,9 +9073,11 @@ function openOnDemandInfo() {
 }
 
 document.getElementById('btn-like').addEventListener('click', () => {
-  /* Checked before the animation, not after: a card that flies off and then
-     bounces back because of a prompt reads as a bug. */
-  if (!requireAccount('save')) return;
+  /* Saving is NOT gated any more. Blocking the heart meant someone had to
+     decide about an account before they had anything to lose, which is the
+     worst moment to ask -- they have seen one person and owe you nothing.
+     Let them build a list, then be honest that it is not being kept. The
+     list is the reason to make an account; it should exist first. */
   const top = cardStack.lastElementChild;
   if (top && top._forceSwipe) top._forceSwipe('like');
 });
