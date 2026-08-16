@@ -5646,8 +5646,42 @@ let accountType = null; // 'client' | 'therapist'
 
 document.getElementById('choose-client-btn').addEventListener('click', () => {
   accountType = 'client';
-  openLogin();
+  /* Straight to the therapists, THEN the choice. A login screen as the first
+     thing after "I'm looking for therapy" asks someone to join before they
+     have seen a single person -- and the deck rendering behind this sheet is
+     the argument for joining. */
+  browseBeforeIntake();
+  openClientWelcome();
 });
+
+/* Log in, create an account, or neither. "Just browse" is a real option, not
+   a dismissal dressed as one, so it reads as the third choice rather than a
+   way out of the other two. */
+function openClientWelcome() {
+  const modal = document.getElementById('confirm-modal');
+  const sheet = document.getElementById('confirm-sheet');
+  sheet.innerHTML = `
+    <div class="sheet-close"></div>
+    <h2>Welcome to Kindred</h2>
+    <div class="intake-sub">Have a look around. You only need an account to save someone or reach out.</div>
+    <button class="primary-btn" id="welcome-browse-btn">Just browse</button>
+    <button class="edit-prefs-btn" id="welcome-create-btn">Create an account</button>
+    <button class="edit-prefs-btn" id="welcome-login-btn">I already have one — log in</button>
+  `;
+  modal.classList.remove('hidden');
+  const close = () => { modal.classList.add('hidden'); sheet.innerHTML = ''; };
+  const sc = sheet.querySelector('.sheet-close');
+  if (sc) sc.addEventListener('click', close);
+  document.getElementById('welcome-browse-btn').addEventListener('click', close);
+  /* Both open the same form, so they set the CONTEXT line rather than being
+     two buttons that visibly do the same thing. */
+  document.getElementById('welcome-create-btn').addEventListener('click', () => {
+    close(); openLogin();
+    const ctx = document.getElementById('login-context');
+    if (ctx) { ctx.hidden = false; ctx.textContent = 'Pick an email and a password and you\u2019re done — nothing else to fill in.'; }
+  });
+  document.getElementById('welcome-login-btn').addEventListener('click', () => { close(); openLogin(); });
+}
 document.getElementById('choose-therapist-btn').addEventListener('click', () => {
   accountType = 'therapist';
   openLogin();
