@@ -2430,6 +2430,16 @@ select.t-rate-input,
            border-radius: 12px; padding: 10px 12px; margin: 8px 0 10px; white-space: pre-wrap; }
 .inq-msg.soft-note { color: var(--ink-soft); font-style: italic; background: none; padding: 4px 0; }
 
+/* Social links: a row of glyphs, not a line of URL. Sized for a thumb -- 36px
+   is the smallest target that does not need aiming. */
+.social-row { display: flex; gap: 8px; margin-top: 10px; }
+.social-link { display: inline-flex; align-items: center; justify-content: center;
+               width: 36px; height: 36px; border-radius: 50%;
+               border: 1px solid var(--line); color: var(--ink-soft);
+               background: #fff; transition: color .15s ease, border-color .15s ease; }
+.social-link svg { width: 18px; height: 18px; }
+.social-link:hover { color: var(--aubergine); border-color: var(--aubergine); }
+
 .preview-rail-cap { display: none; }
 
 /* ----- View Profile: phone or desktop ------------------------------------

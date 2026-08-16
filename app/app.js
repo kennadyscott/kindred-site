@@ -2082,6 +2082,41 @@ async function deleteMyStorageObjects() {
 }
 
 // in-memory therapist -> DB columns (mirror of dbRowToTherapist)
+/* Social links as icons. A raw URL on a card is noise -- Desirae's Instagram
+   rendered longer than her rate, location and format combined and was less
+   recognisable than the glyph everyone already knows.
+
+   Normalised on the way out, not on the way in: therapists paste whatever
+   their browser gave them (an @handle, instagram.com/x, https://..., with or
+   without a trailing slash) and correcting their input as they type is a
+   fight. Stored as given, rendered as a link that works. */
+const SOCIAL_ICONS = {
+  website: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>',
+  linkedin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7.5 10.5V17M7.5 7.6v.01M11.5 17v-3.6a2.1 2.1 0 0 1 4.2 0V17"/></svg>'
+};
+
+function socialUrl(kind, raw) {
+  const v = String(raw || '').trim().replace(/^@/, '');
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (kind === 'instagram') return v.includes('instagram.com') ? 'https://' + v : 'https://instagram.com/' + v;
+  if (kind === 'linkedin')  return v.includes('linkedin.com')  ? 'https://' + v : 'https://linkedin.com/in/' + v;
+  return 'https://' + v;
+}
+
+const SOCIAL_LABEL = { website: 'Website', instagram: 'Instagram', linkedin: 'LinkedIn' };
+
+function socialLinksHtml(t) {
+  const items = [['website', t.website], ['instagram', t.instagram], ['linkedin', t.linkedin]]
+    .map(([k, v]) => [k, socialUrl(k, v)])
+    .filter(([, url]) => url);
+  if (!items.length) return '';
+  return `<div class="social-row">${items.map(([k, url]) =>
+    `<a class="social-link" href="${url}" target="_blank" rel="noopener"
+        aria-label="${SOCIAL_LABEL[k]}" title="${SOCIAL_LABEL[k]}">${SOCIAL_ICONS[k]}</a>`).join('')}</div>`;
+}
+
 function therapistToDbRow(t, userId) {
   return {
     user_id: userId,
@@ -2097,7 +2132,8 @@ function therapistToDbRow(t, userId) {
        through therapists_public); never put anything private in it. */
     website_live: t.websiteLive !== false,
     site: (t.site && typeof t.site === 'object') ? t.site : {},
-    website: t.website || '', photo: t.photo || null,
+    website: t.website || '', instagram: t.instagram || '', linkedin: t.linkedin || '',
+    photo: t.photo || null,
     specialties: t.tags || [], modalities: t.modalities || [], style: t.style || null, practice_type: t.practiceType || 'specialist',
     best_for: t.bestFor || '', persona: t.persona || {}, media: t.media || {}, optional_prompts: t.optionalPrompts || [],
     /* The ordered feed. Was built in memory and never sent, so every photo a
@@ -2432,6 +2468,7 @@ function dbRowToTherapist(row) {
     modalities: row.modalities || [], style: row.style || 'balanced',
     identity: { gender: row.gender || '', lgbtqAffirming: !!row.lgbtq_affirming },
     languages: row.languages && row.languages.length ? row.languages : ['English'],
+    website: row.website || '', instagram: row.instagram || '', linkedin: row.linkedin || '',
     marketingOptIn: !!row.marketing_opt_in,
     /* Empty means a profile from before this was stored -- leave it undefined
        so getToKnowBlocks() rebuilds the default arrangement instead of
@@ -3667,8 +3704,10 @@ function detailFactsHtml(t, opts = {}) {
     insFact
   ];
   if (hasSlidingScale(t)) facts.push(['🤝', 'Sliding scale available']);
-  if (t.website) facts.push(['🌐', `<a class="website-link" href="https://${t.website}" target="_blank" rel="noopener">${t.website}</a>`]);
-  return `<div class="detail-facts">${facts.filter(f => f[1]).map(([ic, txt]) => `<span class="fact"><span class="fact-ic">${ic}</span>${txt}</span>`).join('')}</div>`;
+  /* Deliberately NOT a fact row. The other facts are things a client weighs --
+     where, how, how much. A link is somewhere to go, so it gets its own row of
+     icons under them rather than a fourth line of small print. */
+  return `<div class="detail-facts">${facts.filter(f => f[1]).map(([ic, txt]) => `<span class="fact"><span class="fact-ic">${ic}</span>${txt}</span>`).join('')}</div>${socialLinksHtml(t)}`;
 }
 
 // Only surfaced when it's actually the reason this therapist is showing up —
@@ -8264,8 +8303,10 @@ function renderTherapistProfileBody() {
              therapist ends up believing they disagree. -->
         <div class="chip-grid">${PAYMENT_OPTIONS.filter(p => p.key !== 'sliding_scale').map(p => `<div class="chip-option ${(t.paymentOptions || []).includes(p.key) ? 'selected' : ''}" data-toggle-payment="${p.key}">${p.label}</div>`).join('')}</div>
 
-        <div class="t-form-label">Website</div>
-        <input type="text" class="t-rate-input" id="t-website-input" placeholder="e.g. yourpractice.com" value="${t.website || ''}">
+        <div class="t-form-label">Links <span class="ideal-hint">shown as icons on your card, never as a long URL</span></div>
+        <input type="text" class="t-rate-input" id="t-website-input" placeholder="Website — e.g. yourpractice.com" value="${t.website || ''}">
+        <input type="text" class="t-rate-input" id="t-instagram-input" placeholder="Instagram — @you, or the full link" value="${t.instagram || ''}">
+        <input type="text" class="t-rate-input" id="t-linkedin-input" placeholder="LinkedIn — your profile link" value="${t.linkedin || ''}">
 
         <div class="t-form-label">Pronouns (optional)</div>
         <input type="text" class="t-rate-input" id="t-pronouns-input" placeholder="e.g. she/her" value="${t.pronouns || ''}">
@@ -8555,6 +8596,13 @@ function attachTherapistProfileHandlers(t) {
   });
   const tWebsiteInput = document.getElementById('t-website-input');
   if (tWebsiteInput) tWebsiteInput.addEventListener('input', () => { t.website = tWebsiteInput.value.trim().replace(/^https?:\/\//, ''); });
+  /* Stored exactly as typed. socialUrl() works out what to do with an @handle,
+     a bare domain or a full link at render time -- rewriting someone's input
+     while their cursor is in it is a fight nobody wins. */
+  const tInstagramInput = document.getElementById('t-instagram-input');
+  if (tInstagramInput) tInstagramInput.addEventListener('input', () => { t.instagram = tInstagramInput.value.trim(); });
+  const tLinkedinInput = document.getElementById('t-linkedin-input');
+  if (tLinkedinInput) tLinkedinInput.addEventListener('input', () => { t.linkedin = tLinkedinInput.value.trim(); });
   const tSlidingSwitch = document.getElementById('t-sliding-switch');
   if (tSlidingSwitch) tSlidingSwitch.addEventListener('click', () => {
     /* Writes payment_options, the same array the Payment Options chips use.
