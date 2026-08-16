@@ -2673,7 +2673,14 @@ const MATCH_ROW_EXPECTED = [
   'gender', 'lgbtq_affirming', 'ethnicity', 'affinities', 'faith', 'prompt_fit',
   'optional_prompts', 'best_for', 'persona', 'media', 'formats', 'insurance',
   'languages', 'rate_min', 'location', 'blocks', 'license_verified',
-  'payment_options', 'match_score', 'is_ideal'
+  'payment_options',
+  /* The guard is only worth having if it covers what the client actually
+     renders. slug decides whether the "i" button opens their website
+     (0052); instagram and linkedin are the icon row (0051). Without these
+     three listed, a future migration could drop them and the only symptom
+     would be links quietly disappearing. */
+  'slug', 'instagram', 'linkedin',
+  'match_score', 'is_ideal'
 ];
 let matchContractChecked = false;
 function assertMatchRowContract(row) {
