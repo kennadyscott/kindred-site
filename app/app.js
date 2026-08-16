@@ -3249,6 +3249,9 @@ function attachIntakeHandlers() {
 
 function finishIntake() {
   intake.completed = true;
+  /* Out of browse-everyone mode, or the questions they just answered would
+     visibly do nothing to the deck. */
+  browseAll = false;
   saveClientState();                 // keep it on this device so a refresh doesn't wipe it
   clientStore.persistIntake(intake); // no-op until clientDataPersistence flips on (post-BAA)
   computeDeck();
@@ -4351,10 +4354,10 @@ function renderDiscoverRails() {
     left.innerHTML = `
       <p class="rail-head">Browsing everyone</p>
       <p class="rail-empty">You're seeing every therapist on Kindred, not just the ones who match what you asked for.</p>
-      <button type="button" class="rail-btn" id="rail-rematch" style="margin-top:12px">Back to my matches</button>
+      <button type="button" class="rail-btn" id="rail-rematch" style="margin-top:12px">${intake.completed ? 'Back to my matches' : 'Sharpen my matches'}</button>
       <p class="rail-note">${remaining} ${remaining === 1 ? 'person' : 'people'} left to look through.</p>`;
     const back = document.getElementById('rail-rematch');
-    if (back) back.addEventListener('click', () => resumeMatching());
+    if (back) back.addEventListener('click', () => intake.completed ? resumeMatching() : sharpenMatches());
     renderDiscoverSaved(right, esc0);
     return;
   }
@@ -5529,13 +5532,26 @@ document.getElementById('login-submit-btn').addEventListener('click', async () =
         let stash = null;
         try { stash = JSON.parse(localStorage.getItem('kindred-profile-unsaved') || 'null'); } catch (e) {}
         if (stash && stash.name && String(stash.name).trim()) {
-          Object.assign(newTherapistDraft, stash);
-          showToast('Picking up the profile you already wrote.');
           startTherapistSignup();
-          signupStep = TOTAL_SIGNUP_STEPS - 1;   // straight to the finish, not the first question
-          renderSignupStep();
+          Object.assign(newTherapistDraft, stash);   // after init, or init would wipe it
+          showToast('Picking up the profile you already wrote.');
+          finishTherapistSignup();
         } else {
-          startTherapistSignup(); // genuinely new, or a paid stub with nothing in it
+          /* Was the six-step wizard: photo, specialties, self-description,
+             logistics, three written prompts, availability -- all before they
+             had seen a single screen of the product they had just joined.
+
+             The checklist on the home screen already asks for every one of
+             those, names what is missing, and links straight to the editor
+             that collects it. So the account lands there instead. Same work,
+             offered rather than demanded, and visibly finite: a therapist can
+             see the whole list and choose where to start.
+
+             startTherapistSignup() still runs -- it is what initialises the
+             draft -- and finishTherapistSignup() creates the shell row and
+             calls showTherapistView(), which is the checklist. */
+          startTherapistSignup();
+          finishTherapistSignup();
         }
       }
   } catch (e) {
@@ -5549,7 +5565,9 @@ document.getElementById('login-create-btn').addEventListener('click', async () =
   if (accountType === 'client') { startIntake(); return; }
   const email = (document.getElementById('login-email').value || '').trim();
   const password = document.getElementById('login-password').value || '';
-  if (!authReady() || (!email && !password)) { startTherapistSignup(); return; } // demo fallback
+  /* Demo fallback (no auth configured). Lands the same way, so what gets
+     demonstrated is the product people will actually get. */
+  if (!authReady() || (!email && !password)) { startTherapistSignup(); finishTherapistSignup(); return; }
   if (!email || password.length < 6) { showToast('Enter an email and a password of at least 6 characters.'); return; }
   const btn = document.getElementById('login-create-btn'); const label = btn.textContent;
   btn.disabled = true; btn.textContent = 'Creating account…';
@@ -5565,7 +5583,11 @@ document.getElementById('login-create-btn').addEventListener('click', async () =
       btn.disabled = false; btn.textContent = label;
       return;
     }
-    startTherapistSignup(); // confirmed session → build their profile now
+    /* Confirmed session. Straight to the checklist, the same as every other
+       route in -- a therapist who happens not to need email confirmation must
+       not get a different product than one who does. */
+    startTherapistSignup();
+    finishTherapistSignup();
   } catch (e) {
     showToast(/registered|already/i.test(e.message) ? 'That email already has an account — try logging in.' : e.message);
     btn.disabled = false; btn.textContent = label;
@@ -5579,14 +5601,44 @@ function openExperienceModal() {
   experienceModal.classList.remove('hidden');
 }
 
+/* THE INTAKE IS NO LONGER A TOLL BOOTH.
+   Eleven questions -- careFor, knows, needs, experience, aboutYou, logistics,
+   therapistIntro, who, approach, guidance, anythingElse -- stood between a
+   visitor and the first human being on the site, with the whole bottom nav
+   hidden until they were answered. Someone arriving today answered all eleven
+   and was told "no therapists match everything you asked for", which is the
+   worst first impression the product can make.
+
+   Asking before showing also gets the order backwards: nobody knows what they
+   want from a therapist before they have seen what a therapist looks like
+   here. So the door opens onto people, and the questions become an offer --
+   "sharpen my matches" -- taken when someone wants better results rather than
+   as the price of entry. */
 function enterMatchingExperience() {
   experienceModal.classList.add('hidden');
   if (intake.completed) {
     finishIntake();
     checkForNewMatches();
   } else {
-    startIntake();
+    browseBeforeIntake();
   }
+}
+
+function browseBeforeIntake() {
+  /* Nothing is stored and nobody is identified -- browsing needs no account
+     and no BAA, which is also why this half can ship before the other. */
+  browseAll = true;
+  document.getElementById('bottom-nav').classList.remove('hidden');
+  document.getElementById('therapist-nav').classList.add('hidden');
+  computeDeck();
+  renderStack();
+  showScreen('discover');
+}
+
+/* Taken from the browse rail, not forced at the door. */
+function sharpenMatches() {
+  browseAll = false;
+  startIntake();
 }
 
 function showExploreScreen() {
@@ -5595,7 +5647,9 @@ function showExploreScreen() {
   // The Kindred tab in the bottom nav only makes sense once the client has
   // a working matching experience to tab back to — before intake, Explore
   // is a full-screen page whose only exit is "Match with a Therapist".
-  document.getElementById('bottom-nav').classList.toggle('hidden', !intake.completed);
+  /* Was toggled off until intake.completed. The nav is how someone gets back
+     to the therapists, so hiding it made Explore a room with one door. */
+  document.getElementById('bottom-nav').classList.remove('hidden');
   showScreen('explore');
 }
 
