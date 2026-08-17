@@ -4182,7 +4182,7 @@ const detailSheet = document.getElementById('detail-sheet');
 // renders exactly what a client sees — one source of truth, no drift.
 // opts.inline omits the close/like/share buttons (the tab has its own chrome).
 // Everything below the photo. Shared by the detail view, the therapist's
-// "View Profile", AND the Discover swipe card, so all three read identically.
+// "View Profile", AND the Discover lead card, so all three read identically.
 function profileCardBodyHtml(t, opts = {}) {
   const preview = opts.preview === true;
   return `
@@ -6167,7 +6167,7 @@ const MAX_PHOTOS = 4;       // up to 4 photos (+ 1 video) alternate with blurbs
    result is written to therapists.photo and re-sent on EVERY autosave -- so a
    therapist tweaking one line of their bio pushes several megabytes each time.
    Downscaling to a long edge of 1200 and re-encoding as JPEG turns that into
-   roughly 150-300KB, which is more than a swipe card or profile header needs.
+   roughly 150-300KB, which is more than a lead card or profile header needs.
 
    Falls back to the original file if anything goes wrong: a photo that is too
    big is a far better outcome than no photo at all. */
@@ -6604,7 +6604,7 @@ function renderSignupStepBody() {
       <!-- Signup had no photo upload anywhere across its six steps. The lead
            photo only existed in the profile editor, under Media, which a
            therapist had to go looking for AFTER finishing setup and seeing an
-           empty preview. It belongs here: it is the swipe-card image, so it
+           empty preview. It belongs here: it is the lead-card image, so it
            sits with the name it appears beside. -->
       <div class="t-form-label">Your photo${d.photo ? '' : ' <span class="req-pill">required</span>'}</div>
       <label class="media-row ts-photo-row${d.photo ? '' : ' is-required'}">
@@ -6624,7 +6624,7 @@ function renderSignupStepBody() {
       <div class="t-form-label">Pronouns (optional)</div>
       <input type="text" class="t-rate-input" id="ts-pronouns" placeholder="e.g. she/her" value="${d.pronouns}">
       <div class="must-have-toggle">
-        <div class="toggle-label"><strong>Show pronouns on my swipe card</strong><span>Always visible on your full profile either way</span></div>
+        <div class="toggle-label"><strong>Show pronouns on my lead card</strong><span>Always visible on your full profile either way</span></div>
         <div class="switch ${d.showPronouns ? 'on' : ''}" id="ts-show-pronouns-switch"></div>
       </div>
       <div class="must-have-toggle">
@@ -8416,7 +8416,6 @@ function renderTherapistProfileBody() {
           <option value="">Select a state</option>
           ${US_STATES.map(s => `<option value="${s}" ${t.location.state === s ? 'selected' : ''}>${s}</option>`).join('')}
         </select>
-        <div class="intake-sub" style="margin-top:6px;">Clients looking for in-person sessions only see therapists located in their city/state.</div>
 
         <div class="t-form-label">Session format</div>
         <div class="chip-grid">
@@ -8448,7 +8447,7 @@ function renderTherapistProfileBody() {
         <div class="t-form-label">Pronouns (optional)</div>
         <input type="text" class="t-rate-input" id="t-pronouns-input" placeholder="e.g. she/her" value="${t.pronouns || ''}">
         <div class="must-have-toggle">
-          <div class="toggle-label"><strong>Show pronouns on my swipe card</strong><span>Always visible on your full profile either way</span></div>
+          <div class="toggle-label"><strong>Show pronouns on my lead card</strong><span>Always visible on your full profile either way</span></div>
           <div class="switch ${t.showPronouns ? 'on' : ''}" id="t-show-pronouns-switch"></div>
         </div>
 
@@ -8457,6 +8456,13 @@ function renderTherapistProfileBody() {
 
         <div class="t-form-label">I have experience working with&hellip; <span class="ideal-hint">star up to 3 — those lead your profile</span></div>
         ${specialtyPickerHtml(t)}
+
+        <!-- Sits with "experience working with" because a client reads the two
+             as one answer: what you treat, and how you treat it. Split across
+             two collapsed sections they were a question and its answer with a
+             scroll in between. -->
+        <div class="t-form-label">Types of Therapy</div>
+        ${checkboxDropdownHtml(t.modalities, modalityAll(), 'modality', 'Choose the therapy types you offer…')}
         ${saveRowHtml('first')}
       </div>
     </details>
@@ -8485,7 +8491,7 @@ function renderTherapistProfileBody() {
               </div>
             </details>`;
 
-          // lead photo stays fixed (it's the swipe-card image, not feed content)
+          // lead photo stays fixed (it's the lead-card image, not feed content)
           /* Marked required when absent. It reads as one optional media slot
              among several otherwise, which is how a profile reached "live" with
              a coloured rectangle where the face goes. */
@@ -8493,7 +8499,7 @@ function renderTherapistProfileBody() {
             <div class="media-row${t.photo ? '' : ' is-required'}">
               <div class="media-thumb">${t.photo ? `<img src="${t.photo}">` : '<span>—</span>'}</div>
               <div class="media-row-text"><strong>Lead photo${t.photo ? '' : ' <span class="req-pill">required</span>'}</strong><span>${t.photo
-                ? 'Your swipe-card image — the first thing clients see'
+                ? 'Your lead-card image — the first thing clients see'
                 : "Your profile can't go live without one — it's the first thing a client looks at"}</span></div>
               <label class="media-upload-btn">${t.photo ? 'Change' : 'Add'}<input type="file" accept="image/*" data-media-upload="photo" hidden></label>
             </div>`;
@@ -8559,7 +8565,7 @@ function renderTherapistProfileBody() {
 
     <!-- ===== SECTION 3 · GET TO KNOW YOU ===== -->
     <details class="edit-section" data-edit-section="additional" ${editSectionsOpen.additional ? 'open' : ''}>
-      <summary><span class="edit-section-title">Additional Details</span><span class="edit-section-hint">licensure, identity, therapy types</span><span class="edit-caret">▾</span></summary>
+      <summary><span class="edit-section-title">Additional Details</span><span class="edit-section-hint">licensure, identity, languages</span><span class="edit-caret">▾</span></summary>
       <div class="edit-section-body">
         <!-- Moved out of First Glance. A real therapist listed 30+ carriers,
              which took more vertical space on the card than her photo, rate,
@@ -8601,8 +8607,6 @@ function renderTherapistProfileBody() {
         <div class="t-form-label">Languages you speak</div>
         ${languageChipsHtml(t.languages, profileShowOtherLanguage, 'tp')}
 
-        <div class="t-form-label" style="margin-top:16px;">Types of Therapy</div>
-        ${checkboxDropdownHtml(t.modalities, modalityAll(), 'modality', 'Choose the therapy types you offer…')}
         ${saveRowHtml('additional')}
       </div>
     </details>
