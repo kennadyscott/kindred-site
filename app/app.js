@@ -1009,7 +1009,7 @@ function listingLead(t, opts) {
   const freeNote = s.endingSoon
     ? ` Kindred is free for you until ${fmtFreeUntil(t)} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left, then ${AFTER_FREE_RATE}.`
     : s.inFree && s.daysLeft !== Infinity
-      ? ` Kindred is free for you until ${fmtFreeUntil(t)}, then ${AFTER_FREE_RATE}.`
+      ? ` Kindred is free for you until ${fmtFreeUntil(t)} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left, then ${AFTER_FREE_RATE}.`
       : '';
   const trialNote = s.trialing
     ? ` Nothing has been charged yet &mdash; your free ${TRIAL_DAYS} days are still running.`
@@ -4938,6 +4938,28 @@ function wireGettingStarted() {
 // Kept as the name the render sites already call.
 function verificationBannerHtml(t) { return gettingStartedHtml(t); }
 
+/* THE FREE PERIOD, SOMEWHERE THEY WILL ACTUALLY SEE IT.
+   It was mentioned inside the getting-started card, which disappears the
+   moment a therapist finishes setup and dismisses it -- so the people furthest
+   through onboarding were the ones told least. After that only Settings knew,
+   and nothing sends the reminder the website promises, so a therapist who did
+   not go looking got no warning before their profile stopped being shown.
+
+   Deliberately quiet until it isn't: a plain line for most of the six months,
+   and only the last thirty days earn the warning styling. A countdown that
+   shouts from day one reads as a sales tactic. */
+function freePeriodNoteHtml(t) {
+  const s = listingState(t);
+  if (!s.inFree || s.daysLeft === Infinity) return '';
+  const soon = s.endingSoon;
+  const days = `${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'}`;
+  return `<p class="portal-note free-note${soon ? ' is-soon' : ''}">
+    ${soon ? `<strong>${days} of free Kindred left.</strong>` : `<strong>Free for another ${days}</strong> \u2014 until ${fmtFreeUntil(t)}.`}
+    ${soon ? `Keep your profile active for ${AFTER_FREE_RATE} and nothing changes for your clients.`
+           : `No card on file, nothing to cancel. After that it is ${AFTER_FREE_RATE} if you want to stay listed.`}
+  </p>`;
+}
+
 // The license number sits inside a collapsed "Additional Details" section of
 // Edit Profile -- findable, but not discoverable. Jump straight to it.
 function openLicenseNumberField() {
@@ -7605,6 +7627,7 @@ function renderTherapistInsights() {
       if (s.endingSoon) return `<div class="activate-banner"><div><strong>${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} of free Kindred left</strong><span>Keep your profile active and nothing changes for your clients.</span></div><button class="activate-banner-btn" id="t-activate-btn">Keep it active</button></div>`;
       return ''; })()}
     ${verificationBannerHtml(t)}
+    ${freePeriodNoteHtml(t)}
     ${(() => {
       /* Six tiles reading 0, under a note about seeded demo data, was the
          first thing a brand-new therapist saw. It is deflating, and it is
