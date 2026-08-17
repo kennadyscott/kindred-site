@@ -40,41 +40,83 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* ---------------- templates: tokens + hero + layout ----------------
-   Kept in step with SITE_TEMPLATES in app/app.js — the picker's ids must
-   resolve here. An unknown id falls back to warm rather than to a blank
-   page, so a stale row can never 404 someone's website. */
-const TEMPLATES = {
-  warm: { hero: 'aside', layout: 'sidebar',
-    t: { ground:'#FAF4EC', panel:'#FFFFFF', ink:'#3A2C40', soft:'#77687D', accent:'#A85B44',
-         line:'#ECDFD2', r:'18px', btnInk:'#FFF8F2', navCase:'uppercase',
-         display:"'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif" },
-    extra: '.aside-card,.w-prompt,.contact-in{box-shadow:0 6px 22px rgba(58,44,64,.06)}' },
-  quiet: { hero: 'statement', layout: 'column',
-    t: { ground:'#FBFAF6', panel:'#F3F1E8', ink:'#2E2B26', soft:'#6E675C', accent:'#5F7355',
-         line:'#E5E0D4', r:'3px', btnInk:'#FBFAF6', navCase:'none',
-         display:"Georgia, 'Iowan Old Style', serif", body:"Georgia, 'Iowan Old Style', serif" },
-    extra: '.hero-statement .big{font-style:italic}.section-title{font-style:italic;letter-spacing:0;text-transform:none;font-size:1.3rem;font-weight:600;color:var(--accent);margin-bottom:1.4rem}.navlink{text-transform:none;letter-spacing:0;font-size:.9rem}' },
-  practice: { hero: 'compact', layout: 'rail',
-    t: { ground:'#FFFFFF', panel:'#F7F9FA', ink:'#1E2A32', soft:'#5C6B75', accent:'#2E5E6B',
-         line:'#DCE4E8', r:'8px', btnInk:'#F4FAFC', navCase:'uppercase',
-         display:"'Inter', -apple-system, sans-serif", body:"'Inter', -apple-system, sans-serif" },
-    extra: 'h1,h2{letter-spacing:-.02em;font-weight:700}.section-title{color:var(--accent)}' },
-  editorial: { hero: 'cover', layout: 'splits',
-    t: { ground:'#FFFFFF', panel:'#F6F4F1', ink:'#141414', soft:'#5F5F5F', accent:'#8A4B2D',
-         line:'#E6E2DD', r:'0px', btnInk:'#FFF9F4', navCase:'uppercase',
-         display:"'Iowan Old Style', 'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif" },
-    extra: 'h2{letter-spacing:-.02em}.section-title{letter-spacing:.16em}' },
-  evening: { hero: 'dusk', layout: 'panels',
-    t: { ground:'#1A1622', panel:'#241E2F', ink:'#ECE7F0', soft:'#A99FB6', accent:'#C9A46A',
-         line:'#373044', r:'12px', btnInk:'#1A1622', navCase:'uppercase',
-         display:"'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif" },
-    extra: '.section-title{color:var(--accent);letter-spacing:.2em}.badge{background:rgba(201,164,106,.12);color:var(--accent);border-color:rgba(201,164,106,.3)}img{filter:saturate(.85) brightness(.94)}' },
-  sunrise: { hero: 'arch', layout: 'banded',
-    t: { ground:'#FBECDC', panel:'#F6E0CB', ink:'#3B2620', soft:'#6B4F46', accent:'#D8412A',
-         line:'#EBD5BE', r:'24px', btnInk:'#FFF6EE', navCase:'uppercase',
-         display:"'Didot', 'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif" },
-    extra: '.btn,.navcta{border-radius:999px}.chip{background:#FFF6EC;border:1px solid #EFD9C2}h1,h2{letter-spacing:.005em}.section-title{color:var(--accent);letter-spacing:.22em}.topnav{border-bottom:none}.badge{background:#FFF6EC;color:#8a3a20;border-color:#EFD9C2}' }
+   Kept in step with SITE_TEMPLATES and SITE_PALETTES in app/app.js — the
+   pickers' ids must resolve here. An unknown id falls back rather than to a
+   blank page, so a stale row can never 404 someone's website. */
+/* ---------------------------------------------------------------------------
+   FORMAT AND COLOUR ARE SEPARATE THINGS.
+   They used to be one object per template, which meant liking Sunrise's shape
+   but not its coral left you nowhere to go. A layout now owns structure and
+   type; a palette owns the seven colours; a therapist picks one of each.
+
+   Every palette is contrast-checked once, here, rather than trusting a
+   therapist to know that pale grey on cream is unreadable. That is the whole
+   reason this is a fixed set and not a colour picker.
+
+   Back-compatible: site.template still names the layout, and a row with no
+   site.palette resolves to that layout's native palette -- which is exactly
+   what it rendered before.
+   --------------------------------------------------------------------------- */
+const PALETTES = {
+  warm:      { name:'Warm',      ground:'#FAF4EC', panel:'#FFFFFF', ink:'#3A2C40', soft:'#77687D', accent:'#A85B44', line:'#ECDFD2', btnInk:'#FFF8F2' },
+  quiet:     { name:'Sage',      ground:'#FBFAF6', panel:'#F3F1E8', ink:'#2E2B26', soft:'#6E675C', accent:'#5F7355', line:'#E5E0D4', btnInk:'#FBFAF6' },
+  practice:  { name:'Clinic',    ground:'#FFFFFF', panel:'#F7F9FA', ink:'#1E2A32', soft:'#5C6B75', accent:'#2E5E6B', line:'#DCE4E8', btnInk:'#F4FAFC' },
+  editorial: { name:'Paper',     ground:'#FFFFFF', panel:'#F6F4F1', ink:'#141414', soft:'#5F5F5F', accent:'#8A4B2D', line:'#E6E2DD', btnInk:'#FFF9F4' },
+  evening:   { name:'Evening',   ground:'#1A1622', panel:'#241E2F', ink:'#ECE7F0', soft:'#A99FB6', accent:'#C9A46A', line:'#373044', btnInk:'#1A1622',
+               /* Dark ground: full-strength photos glare against it. */
+               extra:'img{filter:saturate(.85) brightness(.94)}' },
+  sunrise:   { name:'Sunrise',   ground:'#FBECDC', panel:'#F6E0CB', ink:'#3B2620', soft:'#6B4F46', accent:'#C63A22', line:'#EBD5BE', btnInk:'#FFF6EE' }
+  /* Sunrise's accent was #D8412A, which put its button label at 4.18 against
+     the coral and the accent itself at 3.85 on the ground -- both under AA.
+     #C63A22 is the smallest darkening that clears 4.5 on each and keeps the
+     coral. Pre-existing; found when these palettes were first contrast-checked. */
 };
+
+const LAYOUTS = {
+  warm: { hero:'aside', layout:'sidebar', palette:'warm',
+    r:'18px', navCase:'uppercase',
+    display:"'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif",
+    extra: '.aside-card,.w-prompt,.contact-in{box-shadow:0 6px 22px rgba(58,44,64,.06)}' },
+  quiet: { hero:'statement', layout:'column', palette:'quiet',
+    r:'3px', navCase:'none',
+    display:"Georgia, 'Iowan Old Style', serif", body:"Georgia, 'Iowan Old Style', serif",
+    extra: '.hero-statement .big{font-style:italic}.section-title{font-style:italic;letter-spacing:0;text-transform:none;font-size:1.3rem;font-weight:600;color:var(--accent);margin-bottom:1.4rem}.navlink{text-transform:none;letter-spacing:0;font-size:.9rem}' },
+  practice: { hero:'compact', layout:'rail', palette:'practice',
+    r:'8px', navCase:'uppercase',
+    display:"'Inter', -apple-system, sans-serif", body:"'Inter', -apple-system, sans-serif",
+    extra: 'h1,h2{letter-spacing:-.02em;font-weight:700}.section-title{color:var(--accent)}' },
+  editorial: { hero:'cover', layout:'splits', palette:'editorial',
+    r:'0px', navCase:'uppercase',
+    display:"'Iowan Old Style', 'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif",
+    extra: 'h2{letter-spacing:-.02em}.section-title{letter-spacing:.16em}' },
+  evening: { hero:'dusk', layout:'panels', palette:'evening',
+    r:'12px', navCase:'uppercase',
+    display:"'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif",
+    /* Was rgba(201,164,106,...) -- the accent written out longhand, which stayed
+       gold when the palette changed. color-mix keeps it tied to the token. */
+    extra: '.section-title{color:var(--accent);letter-spacing:.2em}.badge{background:color-mix(in srgb, var(--accent) 12%, transparent);color:var(--accent);border-color:color-mix(in srgb, var(--accent) 30%, transparent)}' },
+  sunrise: { hero:'arch', layout:'banded', palette:'sunrise',
+    r:'24px', navCase:'uppercase',
+    display:"'Didot', 'Literata', Georgia, serif", body:"'Inter', -apple-system, sans-serif",
+    /* Same story: #FFF6EC / #EFD9C2 / #8a3a20 were Sunrise's own colours baked
+       into the layout, so any other palette rendered mismatched chips. */
+    extra: '.btn,.navcta{border-radius:999px}.chip{background:var(--panel);border:1px solid var(--line)}h1,h2{letter-spacing:.005em}.section-title{color:var(--accent);letter-spacing:.22em}.topnav{border-bottom:none}.badge{background:var(--panel);color:var(--accent);border-color:var(--line)}' }
+};
+
+/* One resolved object with the shape render() already expects, so nothing
+   downstream of here had to change. */
+function resolveTheme(site) {
+  const s   = (site && typeof site === 'object') ? site : {};
+  const lay = LAYOUTS[s.template] || LAYOUTS.warm;
+  const pal = PALETTES[s.palette] || PALETTES[lay.palette];
+  return {
+    hero: lay.hero, layout: lay.layout,
+    t: { ground:pal.ground, panel:pal.panel, ink:pal.ink, soft:pal.soft,
+         accent:pal.accent, line:pal.line, btnInk:pal.btnInk,
+         r:lay.r, navCase:lay.navCase, display:lay.display, body:lay.body },
+    extra: (lay.extra || '') + (pal.extra || '')
+  };
+}
 
 function baseCSS(t) {
   return `
@@ -856,8 +898,10 @@ function render(t) {
   const creds = (t.credentials && t.credentials.length) ? t.credentials.join(' • ') : 'Licensed Therapist';
   setSocialMeta(t, name, creds);
 
-  const tplId = (t.site && TEMPLATES[t.site.template]) ? t.site.template : 'warm';
-  const tpl = TEMPLATES[tplId];
+  const tpl   = resolveTheme(t.site);
+  /* Two places still key off the layout id itself rather than the resolved
+     theme: Quiet's flow rhythm, and the data-tpl hook on #site. */
+  const tplId = (t.site && LAYOUTS[t.site.template]) ? t.site.template : 'warm';
 
   /* the template's whole look, injected once per render */
   let styleEl = document.getElementById('site-css');

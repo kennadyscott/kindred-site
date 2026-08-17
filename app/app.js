@@ -6337,6 +6337,25 @@ let viewProfileDevice = 'phone';
 let websiteView = 'setup';
 let websitePreviewDevice = 'desktop';
 
+/* Colour is now separate from format -- see PALETTES in profile.js, which these
+   ids must match. Each one is contrast-checked there; that is why this is a
+   fixed set and not a colour picker on a therapist's public health page. */
+const SITE_PALETTES = [
+  { id:'warm',      name:'Warm',    sw:['#FAF4EC','#A85B44','#3A2C40'] },
+  { id:'quiet',     name:'Sage',    sw:['#FBFAF6','#5F7355','#2E2B26'] },
+  { id:'practice',  name:'Clinic',  sw:['#FFFFFF','#2E5E6B','#1E2A32'] },
+  { id:'editorial', name:'Paper',   sw:['#FFFFFF','#8A4B2D','#141414'] },
+  { id:'evening',   name:'Evening', sw:['#1A1622','#C9A46A','#ECE7F0'] },
+  { id:'sunrise',   name:'Sunrise', sw:['#FBECDC','#C63A22','#3B2620'] }
+];
+
+/* The layout each template natively shipped with, so "no palette chosen" shows
+   the right swatch as selected instead of defaulting everyone to Warm. */
+const LAYOUT_NATIVE_PALETTE = {
+  warm:'warm', quiet:'quiet', practice:'practice',
+  editorial:'editorial', evening:'evening', sunrise:'sunrise'
+};
+
 const SITE_TEMPLATES = [
   { id: 'warm',      name: 'Warm',      who: 'Cream and soft edges, your card beside the page. The friendly default.', sw: ['#FAF4EC', '#A85B44', '#3A2C40'] },
   { id: 'quiet',     name: 'Quiet',     who: 'All serif and unhurried. Your words lead.',                              sw: ['#FBFAF6', '#5F7355', '#2E2B26'] },
@@ -6382,6 +6401,10 @@ function websitePaneHtml(t) {
   const esc0 = v => String(v == null ? '' : v).replace(/[<>&"]/g, '');
   const url = therapistProfileUrl(t);
   const chosen = (t.site && t.site.template) || 'warm';
+  /* No explicit palette means the format's own -- which is what the page has
+     been rendering all along, so an untouched profile shows its real colours
+     as selected rather than falsely showing Warm. */
+  const chosenPal = (t.site && t.site.palette) || LAYOUT_NATIVE_PALETTE[chosen] || 'warm';
   const next = nextStepToLive(t);
   const live = !next;
   const previewing = websiteView === 'preview';
@@ -6437,6 +6460,15 @@ function websitePaneHtml(t) {
           <span class="site-sw">${x.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>
           <span class="site-tpl-name">${x.name}${x.id === chosen ? ' \u2713' : ''}</span>
           <span class="site-tpl-who">${x.who}</span>
+        </button>`).join('')}
+    </div>
+
+    <div class="t-form-label" style="margin-top:20px">Your colours <span class="ideal-hint">any colour scheme works with any format &mdash; mix them however you like</span></div>
+    <div class="site-pal-grid">
+      ${SITE_PALETTES.map(p => `
+        <button type="button" class="site-pal ${p.id === chosenPal ? 'selected' : ''}" data-site-pal="${p.id}" title="${p.name}">
+          <span class="site-sw">${p.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>
+          <span class="site-pal-name">${p.name}${p.id === chosenPal ? ' \u2713' : ''}</span>
         </button>`).join('')}
     </div>
 
@@ -6533,6 +6565,11 @@ function wireWebsitePane(t) {
   const office = document.getElementById('site-office');
   if (office) office.addEventListener('input', () => siteWrite('office', office.value.trim()));
 
+  document.querySelectorAll('[data-site-pal]').forEach(el => el.addEventListener('click', () => {
+    t.site = Object.assign({}, t.site, { palette: el.dataset.sitePal });
+    persistProfileSoon(t);
+    renderTherapistWebsite();
+  }));
   document.querySelectorAll('[data-site-tpl]').forEach(el => el.addEventListener('click', () => {
     t.site = Object.assign({}, t.site, { template: el.dataset.siteTpl });
     persistProfileSoon(t);
