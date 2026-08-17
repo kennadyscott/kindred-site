@@ -224,7 +224,7 @@ const AFTER_FREE_RATE = '$' + STANDARD_RATE.toFixed(2) + '/month';
     headTitle.textContent = 'Join Kindred';
   }
   if (headSub && trial) {
-    headSub.textContent = `A sign-in, then your card — about two minutes, and nothing is charged for ${TRIAL_DAYS} days. Your profile comes next, and you go live once we've checked your licence and identity.`;
+    headSub.textContent = `A sign-in, then your card — about two minutes, and nothing is charged for ${TRIAL_DAYS} days. Your profile comes next, and you go live once we've checked your license and identity.`;
   }
 
   const fine = document.getElementById('kt-checkout-fine');
@@ -483,7 +483,7 @@ async function authPost(path, body) {
       const ht = document.getElementById('kt-head-title');
       const hs = document.getElementById('kt-head-sub');
       if (ht) ht.textContent = 'Your profile is ready';
-      if (hs) hs.textContent = 'We check your licence and identity next. Your first six months are free, then $29.99/month — no card required now.';
+      if (hs) hs.textContent = 'We check your license and identity next. Your first six months are free, then $29.99/month — no card required now.';
 
       const f = document.getElementById('ka-email');
       if (f) f.value = fromApp;

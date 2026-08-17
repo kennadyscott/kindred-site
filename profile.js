@@ -150,6 +150,40 @@ function baseCSS(t) {
   .w-drawer-body img,.w-drawer-body video{width:100%;height:auto;border-radius:var(--r);margin-top:.9rem;display:block}
   .w-stack{display:block !important}
   .w-stack .section-title{margin-bottom:1rem}
+  /* Picker: list of questions beside the chosen answer. Every panel is shown
+     by default and JS hides the inactive ones -- see feedPickerHtml(). */
+  .w-pick{display:grid;grid-template-columns:minmax(150px,208px) 1fr;gap:1.15rem;align-items:start}
+  .w-pick-list{display:flex;flex-direction:column;gap:.5rem}
+  .w-pick-btn{display:flex;align-items:center;gap:.6rem;width:100%;min-height:58px;text-align:left;cursor:pointer;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    padding:.7rem .85rem;font-family:var(--body);color:var(--soft);transition:border-color .15s ease,color .15s ease}
+  .w-pick-btn:hover{border-color:var(--accent);color:var(--ink)}
+  .w-pick-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .w-pick-btn.is-on{border-color:var(--accent);background:var(--ground);color:var(--ink);
+    box-shadow:inset 3px 0 0 var(--accent)}
+  .w-pick-thumb{flex:0 0 auto;width:38px;height:38px;border-radius:calc(var(--r) - 6px);overflow:hidden;background:var(--ground)}
+  .w-pick-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .w-pick-label strong{display:block;font-family:var(--display);font-size:.9rem;font-weight:600;line-height:1.3}
+  .w-pick-panel{display:grid;grid-template-columns:minmax(0,36%) 1fr;gap:0;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .w-pick-panel:not(:last-child){margin-bottom:1rem}          /* no-JS: they stack */
+  .w-pick-media{background:var(--ground)}
+  .w-pick-media img,.w-pick-media video{width:100%;height:100%;min-height:240px;object-fit:cover;display:block}
+  .w-pick-body{padding:1.5rem 1.6rem;align-self:center;min-width:0}
+  .w-pick-panel:not(:has(.w-pick-media)){grid-template-columns:1fr}
+  .w-pick-body .q{font-family:var(--display);font-size:1.12rem;color:var(--ink);margin:0 0 .55rem;line-height:1.35}
+  .w-pick-body p:last-child{margin:0;color:var(--soft);line-height:1.75}
+  /* JS on: only the chosen panel shows, and stacking margin is irrelevant */
+  .w-pick.is-live .w-pick-panel{display:none;margin-bottom:0}
+  .w-pick.is-live .w-pick-panel.is-on{display:grid}
+  @media (max-width:820px){
+    .w-pick{grid-template-columns:1fr}
+    .w-pick-list{flex-direction:row;overflow-x:auto;padding-bottom:.3rem;-webkit-overflow-scrolling:touch}
+    .w-pick-btn{flex:0 0 auto;max-width:70vw}
+    .w-pick-panel{grid-template-columns:1fr}
+    .w-pick-media img,.w-pick-media video{min-height:0;max-height:320px}
+  }
+  @media (prefers-reduced-motion:reduce){ .w-pick-btn{transition:none} }
   .w-chiprow{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.1rem}
   .w-cols{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem}
   .w-cols.one{grid-template-columns:1fr}
@@ -475,6 +509,23 @@ function baseCSS(t) {
 /* Highlight the block the reader is level with. Observer, not a scroll
    handler: it fires only when something crosses the line, rather than on every
    pixel of every scroll. Silently absent on templates with no rail. */
+/* Turns the stacked panels into a picker. Adds .is-live FIRST so that a page
+   whose script fails part-way never ends up with everything hidden. */
+function wirePicker() {
+  document.querySelectorAll('[data-picker]').forEach(pick => {
+    const btns   = [...pick.querySelectorAll('.w-pick-btn')];
+    const panels = [...pick.querySelectorAll('.w-pick-panel')];
+    if (btns.length < 2 || btns.length !== panels.length) return;
+    pick.classList.add('is-live');
+    const show = i => {
+      btns.forEach((b, n) => b.classList.toggle('is-on', n === i));
+      panels.forEach((p, n) => p.classList.toggle('is-on', n === i));
+    };
+    btns.forEach((b, i) => b.addEventListener('click', () => show(i)));
+    show(0);
+  });
+}
+
 function wireRail() {
   const links = [...document.querySelectorAll('.rail-link')];
   const items = [...document.querySelectorAll('.rail-item')];
@@ -741,21 +792,41 @@ function approachSec(t) {
     <div class="w-cols${cols.length > 1 ? '' : ' one'}">${inner}</div></section>`;
 }
 
-/* GET TO KNOW -- as drawers. The rail layout keeps its contents column: it
-   already answers "this is a long scroll" with navigation instead of a gate,
-   and gating there would be solving the same problem twice. Elsewhere the
-   first drawer opens, so the section reads as content rather than as a
-   closed filing cabinet. */
-function feedDrawersHtml(blocks, name) {
+/* GET TO KNOW -- a picker: the questions listed down one side, the chosen
+   answer and its photo beside them. This is the rail layout's argument taken
+   seriously rather than overruled -- the list is always visible, so nothing is
+   hidden behind a click; you are navigating, not unlocking.
+
+   PROGRESSIVE ENHANCEMENT MATTERS HERE. These pages are prerendered static
+   HTML and also render inside the app's ?embed=1 iframe. Every panel is
+   visible in the markup and wirePicker() hides the inactive ones, so if the
+   script never runs the section is simply the stacked list it always was
+   rather than one answer and a row of dead buttons. */
+function feedPickerHtml(blocks, name) {
   const prompts = blocks.filter(b => b.kind === 'prompt');
   const media   = blocks.filter(b => b.kind !== 'prompt');
-  if (!prompts.length) return blocks.map(b => feedItemHtml(b, name)).join('');
-  return prompts.map((p, i) => `
-    <details class="w-drawer"${i === 0 ? ' open' : ''}>
-      <summary><span>${esc(p.q)}</span><span class="w-caret" aria-hidden="true"></span></summary>
-      <div class="w-drawer-body"><p>${esc(p.a)}</p>${media[i] ? mediaHtml(media[i], name) : ''}</div>
-    </details>`).join('')
-    + media.slice(prompts.length).map(m => feedItemHtml(m, name)).join('');
+  if (prompts.length < 2) return blocks.map(b => feedItemHtml(b, name)).join('');
+
+  const list = prompts.map((p, i) => {
+    const m = media[i];
+    const thumb = m && m.kind === 'photo'
+      ? `<span class="w-pick-thumb"><img src="${esc(m.src)}" alt="" loading="lazy"></span>` : '';
+    return `<button type="button" class="w-pick-btn${i === 0 ? ' is-on' : ''}" data-pick="${i}">
+      ${thumb}<span class="w-pick-label"><strong>${esc(p.q)}</strong></span>
+    </button>`;
+  }).join('');
+
+  const panels = prompts.map((p, i) => `
+    <div class="w-pick-panel" data-panel="${i}">
+      ${media[i] ? `<div class="w-pick-media">${mediaHtml(media[i], name)}</div>` : ''}
+      <div class="w-pick-body"><p class="q">${esc(p.q)}</p><p>${esc(p.a)}</p></div>
+    </div>`).join('');
+
+  const spare = media.slice(prompts.length).map(m => feedItemHtml(m, name)).join('');
+  return `<div class="w-pick" data-picker>
+      <div class="w-pick-list">${list}</div>
+      <div class="w-pick-panels">${panels}</div>
+    </div>${spare}`;
 }
 
 function feedItemHtml(b, name) {
@@ -850,17 +921,17 @@ function render(t) {
     <a class="navcta" href="#contact">Contact</a>
   </nav>`;
 
-  /* Drawers everywhere except rail: see feedDrawersHtml() for why practice is
+  /* Picker everywhere except rail: see feedPickerHtml() for why practice is
      left alone. `feed` (the flat stack) is still used by the split and panel
      layouts, which pair each prompt with its own image and would lose that
      pairing inside a drawer. */
   const storyInner = (tpl.layout === 'rail' || tpl.layout === 'panels' || tpl.layout === 'splits')
-    ? feed : feedDrawersHtml(blocks, name);
+    ? feed : feedPickerHtml(blocks, name);
   /* w-stack forces one column. The layouts grid their sections two-up, which
      suits the flat prompt cards but not drawers: opening one would shove its
      neighbour down and leave a hole beside it. */
-  const usesDrawers = storyInner !== feed;
-  const storySec = storyInner ? `<section id="story"${usesDrawers ? ' class="w-stack"' : ''}><p class="section-title">Get to know ${esc(first)}</p>${storyInner}</section>` : '';
+  const usesPicker = storyInner !== feed;
+  const storySec = storyInner ? `<section id="story"${usesPicker ? ' class="w-stack"' : ''}><p class="section-title">Get to know ${esc(first)}</p>${storyInner}</section>` : '';
   const specSec  = specialtiesSec(t);
   const apprSec  = approachSec(t);
   const kvSec = kv.length ? `<section id="practical"><p class="section-title">Good to know</p><div class="kv">${kv.join('')}</div></section>` : '';
@@ -1099,6 +1170,7 @@ function render(t) {
   }
   wireNav();
   wireRail();
+  wirePicker();
   wireInquiry(t);
   $('kp-loading').hidden = true;
   $('kp-missing').hidden = true;
