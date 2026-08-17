@@ -34,7 +34,9 @@
 .kt-steps { margin-top: 1.8rem; }
 
 /* ---------- pricing ---------- */
-.kt-pricing { padding: 0 clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
+/* Top padding was 0 because the section's <h2> carried its own margin.
+   That headline is gone, so the section owns its breathing room now. */
+.kt-pricing { padding: clamp(2rem, 4vw, 3.2rem) clamp(1rem, 4vw, 3rem) clamp(2.5rem, 5vw, 4rem); }
 .kt-pricing-inner { max-width: 640px; margin: 0 auto; text-align: center; }
 .kt-pricing-inner h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
 .kt-billing-toggle {
