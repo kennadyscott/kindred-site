@@ -18,7 +18,7 @@
    THE FOUNDING LADDER IS GONE (2026-08-09). It was $9.99–$19.99/month locked
    for twelve months, on a tier that stepped up by signup date. It could not
    apply to anyone any more — its last tier closed 1 Dec 2026 and the first
-   renewal is March 2027 — and every surface that still described it was
+   renewal is six months after go-live — and every surface that still described it was
    quoting a rate no checkout would honour. One price now: $29.99/month, the
    same $29.99 already behind the Stripe links.
 
@@ -61,8 +61,9 @@ const PAYMENT_LINK = 'https://buy.stripe.com/bJe5kD6Vs8iz2hR5dJfjG00';
 const PAYMENT_LINK_TRIAL = 'https://buy.stripe.com/fZu6oH1B8cyP4pZ6hNfjG01';
 const TRIAL_DAYS = 30;
 /* Free until this date, the same for every therapist. Mirrors
-   FREE_UNTIL_LABEL in app/app.js and the free_until default in 0032. */
-const FREE_UNTIL_LABEL = 'March 2027';
+   FREE_PERIOD_LABEL in app/app.js and the trigger in migration 0053. */
+const FREE_MONTHS = 6;
+const FREE_PERIOD_LABEL = 'six months';
 
 /* THE PRICE AFTER THE FREE PERIOD. One number, one place, and it matches the
    $29.99 already behind both Stripe links — what the product promises and what
@@ -136,10 +137,10 @@ const AFTER_FREE_RATE = '$' + STANDARD_RATE.toFixed(2) + '/month';
     /* Lead with the free period, but never hide what happens after it -- the
        whole point of the offer is that the date is far off and the price
        afterwards is already good. */
-    badge.textContent = `\u2605 Free until ${FREE_UNTIL_LABEL}`;
+    badge.textContent = `\u2605 ${FREE_MONTHS} months free`;
     /* The span is inline with no margin -- a slash needs no space, so it works
        for `$29.99<span>/month`, and here it needs the &nbsp;. */
-    price.innerHTML = `Free<span>&nbsp;until ${FREE_UNTIL_LABEL}</span>`;
+    price.innerHTML = `Free<span>&nbsp;for 6 months</span>`;
     terms.textContent = `then ${AFTER_FREE_RATE} \u00b7 cancel anytime`;
     const was = document.getElementById('kt-offer-was');
     if (was) was.hidden = true;
@@ -209,9 +210,9 @@ const AFTER_FREE_RATE = '$' + STANDARD_RATE.toFixed(2) + '/month';
   const heroRate = document.getElementById('kt-hero-rate');
   const heroOffer = document.getElementById('kt-hero-offer');
   const heroName = document.querySelector('.kt-offer-name');
-  if (heroRate) heroRate.textContent = `Free until ${FREE_UNTIL_LABEL}`;
+  if (heroRate) heroRate.textContent = `Your first ${FREE_PERIOD_LABEL} are free`;
   if (heroOffer) {
-    heroOffer.innerHTML = `<b>Free until ${FREE_UNTIL_LABEL}</b> &mdash; then ${AFTER_FREE_RATE}`;
+    heroOffer.innerHTML = `<b>Your first ${FREE_PERIOD_LABEL} are free</b> &mdash; then ${AFTER_FREE_RATE}`;
     if (heroName) heroName.textContent = 'Kindred for therapists';
   }
 
@@ -354,8 +355,8 @@ async function authPost(path, body) {
          offer page whose only button goes to the app. The Stripe machinery
          below still exists for RENEWALS, which reach this file with
          ?checkout=now and never render this branch. */
-      if (ht) ht.textContent = `Free for therapists until ${FREE_UNTIL_LABEL}`;
-      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Free for every therapist until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}.`;
+      if (ht) ht.textContent = `${FREE_PERIOD_LABEL} free for every therapist`;
+      if (hs) hs.textContent = `Build your profile — about ten minutes, no card, nothing to cancel. Your first ${FREE_PERIOD_LABEL} are free, then ${AFTER_FREE_RATE}.`;
       /* Named for what the click does, not for the work behind it. "Build my
          profile — free" describes a chore; this is the button on an offer
          page, and the offer is the spot. */
@@ -386,10 +387,10 @@ async function authPost(path, body) {
         const terms = document.getElementById('kt-offer-terms');
         const save  = document.getElementById('kt-offer-save');
         const was   = document.getElementById('kt-offer-was');
-        if (badge) badge.textContent = `\u2605 Free until ${FREE_UNTIL_LABEL}`;
-        if (price) price.innerHTML = `Free<span>&nbsp;until ${FREE_UNTIL_LABEL}</span>`;
+        if (badge) badge.textContent = `\u2605 ${FREE_MONTHS} months free`;
+        if (price) price.innerHTML = `Free<span>&nbsp;for 6 months</span>`;
         if (terms) terms.textContent = `then ${AFTER_FREE_RATE} \u00b7 no card up front \u00b7 cancel anytime`;
-        if (save)  save.textContent  = 'No card on file until then, so nothing renews on its own — in March 2027 you decide.';
+        if (save)  save.textContent  = 'No card on file, so nothing renews on its own — when the six months are up you decide.';
         if (was)   was.hidden = true;
         // "Account ready for x@y" — there is no account yet.
         const who = document.getElementById('kt-acct-who');
@@ -417,7 +418,7 @@ async function authPost(path, body) {
         const ht2 = document.getElementById('kt-head-title');
         const hs2 = document.getElementById('kt-head-sub');
         if (ht2) ht2.textContent = 'Build your profile';
-        if (hs2) hs2.textContent = 'Sign in and pick up where you left off — free until 1 March 2027, no card required.';
+        if (hs2) hs2.textContent = 'Sign in and pick up where you left off — six months free, no card required.';
         if (mode === 'signup') toggle.click();          // open on sign-in, not signup
         document.getElementById('ka-email')?.focus();
       });
@@ -482,7 +483,7 @@ async function authPost(path, body) {
       const ht = document.getElementById('kt-head-title');
       const hs = document.getElementById('kt-head-sub');
       if (ht) ht.textContent = 'Your profile is ready';
-      if (hs) hs.textContent = 'We check your licence and identity next. Free until 1 March 2027, then $29.99/month — no card required now.';
+      if (hs) hs.textContent = 'We check your licence and identity next. Your first six months are free, then $29.99/month — no card required now.';
 
       const f = document.getElementById('ka-email');
       if (f) f.value = fromApp;

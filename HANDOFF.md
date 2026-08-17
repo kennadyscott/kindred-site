@@ -55,11 +55,11 @@ The escalating ladder is gone. It was $9.99 / $14.99 / $16.99 / $19.99 a month
 locked for twelve months, stepped by signup date, with a Stripe promotion code
 (`FOUNDINGSEPT` / `OCT` / `NOV` / `DEC`) pre-applied per tier.
 
-**The offer now: free for every therapist until 1 March 2027, then $29.99/month.**
+**The offer now: every therapist's first six months are free, then $29.99/month.** The clock starts at go-live (both verifications passed), not signup — migration 0053, reverting 0032's fixed date.
 One date and one rate, the same whoever you are and whenever you joined.
 
 Why it had to go rather than just being left alone: the last tier closed
-1 Dec 2026 and the first renewal is March 2027, so no tier could ever apply to
+1 Dec 2026 and the first renewal is six months after go-live, so no tier could ever apply to
 anybody again — but `PRICING_TIERS` was still consulted on three screens, and
 `activate.js` was overwriting the correct hero with "then $29.99/month for your
 first 12 months" every time the page loaded. Dead pricing code does not stay

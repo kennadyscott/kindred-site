@@ -557,9 +557,9 @@ const LICENSE_SEED = { t1: ['TX', 'CA'] };
 // listingPricing() while this module is still evaluating, so a `const`
 // declared after that loop would throw on load (temporal dead zone).
 // ===== LISTING SUBSCRIPTION (therapists pay to list) =====
-// Kindred is FREE for every therapist until 1 March 2027 — the same date
-// whoever you are and whenever you joined (FREE_UNTIL_ISO below, and the
-// free_until default in migration 0032). Nobody is charged at signup, so this
+// Kindred is FREE for every therapist for six months from go-live — a length,
+// six months from the day they first go live (FREE_MONTHS below, and the
+// trigger in migration 0053). Nobody is charged at signup, so this
 // block only describes what happens after that date.
 // Paid on the WEBSITE (Stripe web checkout), never in-app — keeps Apple's cut
 // at 0% and avoids any IAP surface in the App Store build.
@@ -569,7 +569,7 @@ const THERAPIST_BILLING_URL = '/activate.html';
    The escalating founding ladder that used to live here is gone (2026-08-09).
    It was $9.99–$19.99/month locked for twelve months, stepped by signup date,
    and it could no longer apply to anybody: nobody pays at signup, and its last
-   tier closed 1 Dec 2026 while the first renewal is March 2027. What it still
+   tier closed 1 Dec 2026 while the first renewal is six months after go-live. What it still
    did was keep `founding` branches alive across three screens, each ready to
    quote a rate no checkout would honour.
 
@@ -880,14 +880,14 @@ function profileGaps(t) {
    and reading it as though it did is the whole bug.
    ========================================================================== */
 /* A FIXED DATE, not a rolling window. Kindred is free for therapists until
-   March 2027 — the same date for everyone, however and whenever they joined.
+   six months from the day they first go live — see migration 0053.
    An earlier version gave each therapist six months from their own go-live;
    that was an inference and it was wrong. A date is one sentence, says the
    same thing on the website and in the app without either computing anything,
    and cannot drift per therapist. Mirrors migration 0032. */
 /* ONE instant, and every string about it is derived from it. Settings said
    "Free until February 28, 2027" while the landing page and Home said
-   "March 2027" -- not two dates, the SAME date formatted two ways. free_until
+   the same instant formatted two ways. free_until
    is 2027-03-01T00:00Z, and toLocaleDateString with no timeZone renders that
    in the reader's local zone: anywhere west of UTC it lands on Feb 28. A
    billing date that changes between screens is the one thing a therapist will
@@ -911,10 +911,13 @@ const REPORT_REASONS = [
   { key: 'not-a-therapist', label: "Doesn't look like a real therapist" },
   { key: 'other',           label: 'Something else' }
 ];
-const FREE_UNTIL_ISO   = '2027-03-01T00:00:00Z';
-const FREE_UNTIL_LABEL = new Date(FREE_UNTIL_ISO)
-  .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-/* Always stated WITH the date. "Free until March 2027" on its own invites a
+/* Six months from going live, not a calendar date. A date counts down: read in
+   January 2027 "free until March" is an eight-week offer, and it shrinks every
+   week a therapist thinks about it. The same promise stated as a length does
+   not decay. Kept in step with migration 0053. */
+const FREE_MONTHS       = 6;
+const FREE_PERIOD_LABEL = 'six months';
+/* Always stated WITH the price. "Six months free" on its own invites a
    therapist to imagine whatever number they fear, which is a worse offer than
    the real one. Derived from STANDARD_RATE so the sentence and the charge
    cannot drift. */
@@ -927,7 +930,7 @@ function fmtFreeUntil(t) {
   if (!t || !t.freeUntil) return '';
   const d = new Date(t.freeUntil);
   if (isNaN(d)) return '';
-  // timeZone: 'UTC' -- see FREE_UNTIL_ISO. Without it this rendered the day
+  // timeZone: 'UTC' -- a free_until stored at midnight UTC renders the day
   // before across the Americas and disagreed with every other screen.
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
@@ -999,10 +1002,14 @@ function listingLead(t, opts) {
     return `<strong>Kindred is no longer free for your account.</strong> Your profile is saved exactly as you left it, and clients stop seeing it until you keep it active.`;
   }
 
+  /* Both branches only fire once the clock is running, so they say the
+     therapist's OWN end date -- fmtFreeUntil(t) -- rather than a shared
+     constant. Under 0032 every therapist shared one date and a global was
+     honest; under rolling six months it would be a different therapist's. */
   const freeNote = s.endingSoon
-    ? ` Kindred is free for you until ${FREE_UNTIL_LABEL} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left, then ${AFTER_FREE_RATE}.`
+    ? ` Kindred is free for you until ${fmtFreeUntil(t)} \u2014 ${s.daysLeft} day${s.daysLeft === 1 ? '' : 's'} left, then ${AFTER_FREE_RATE}.`
     : s.inFree && s.daysLeft !== Infinity
-      ? ` Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}.`
+      ? ` Kindred is free for you until ${fmtFreeUntil(t)}, then ${AFTER_FREE_RATE}.`
       : '';
   const trialNote = s.trialing
     ? ` Nothing has been charged yet &mdash; your free ${TRIAL_DAYS} days are still running.`
@@ -1048,7 +1055,7 @@ function listingLead(t, opts) {
      can't see you until…" — and tuck the good news behind it. The restriction
      is real and stays, but it is a step in progress, not the headline. Lead
      with the offer, then say what is left, in the positive. */
-  return `<strong>Almost there.</strong> Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}. ${becausePositive}`;
+  return `<strong>Almost there.</strong> Your first ${FREE_PERIOD_LABEL} on Kindred are free, then ${AFTER_FREE_RATE}. ${becausePositive}`;
 }
 
 /* Video upload is OFF until there is somewhere to put a video.
@@ -9804,7 +9811,7 @@ function renderTherapistSettings() {
            /* Clock not started: they have never been findable, so the six
               months have not begun. Saying "free until —" with no date would
               read as a bug. */
-           return `<p class="portal-note" style="margin-top:0;">Kindred is free for therapists until ${FREE_UNTIL_LABEL}, then ${AFTER_FREE_RATE}. No card until then, nothing to cancel.</p>`;
+           return `<p class="portal-note" style="margin-top:0;">Your first ${FREE_PERIOD_LABEL} are free &mdash; the clock starts when your profile goes live, not today. Then ${AFTER_FREE_RATE}. No card until then, nothing to cancel.</p>`;
          })()}`
       : `<p class="portal-note" style="margin-top:0;">Your profile isn't live yet.</p>`}
 

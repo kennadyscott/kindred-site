@@ -417,7 +417,7 @@ create policy "insert only" on therapist_leads for insert to anon with check (tr
     const c = counts.counts || {};
     /* Real, from the database: every therapist on the platform, whether or not
        they have finished verification. NOT a count of payers -- nobody is
-       charged until March 2027, so "paying" would read zero and look broken.
+       charged during their first six months, so "paying" would read zero and look broken.
        No cap either, because the offer is a date, not a quantity. */
     const foundingEl = document.getElementById('t-founding');
     if (foundingEl) foundingEl.textContent = (c.live || 0) + (c.paying_but_hidden || 0);
