@@ -129,6 +129,34 @@ function baseCSS(t) {
   .w-prompt p:last-child{margin-bottom:0}
   [data-rhythm="flow"] .w-prompt{background:transparent;border-radius:0;padding:1.3rem 0 0;
                                  border-top:1px solid var(--line)}
+  /* ---- drawers + two-column, added for the website redesign -------------
+     Themed entirely through the template's own custom properties, so all six
+     templates get them without a per-template rule. */
+  .w-drawer{border-bottom:1px solid var(--line)}
+  .w-drawer:first-of-type{border-top:1px solid var(--line)}
+  .w-drawer>summary{list-style:none;cursor:pointer;display:flex;align-items:center;
+    justify-content:space-between;gap:1rem;padding:1.05rem 0;font-family:var(--display);
+    font-size:1.06rem;line-height:1.4;color:var(--ink)}
+  .w-drawer>summary::-webkit-details-marker{display:none}
+  .w-drawer>summary:hover{color:var(--accent)}
+  .w-drawer>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+  .w-caret{flex:0 0 auto;width:10px;height:10px;border-right:2px solid var(--soft);
+    border-bottom:2px solid var(--soft);transform:rotate(45deg);transition:transform .18s ease;
+    margin-bottom:4px}
+  .w-drawer[open]>summary .w-caret{transform:rotate(-135deg);margin-bottom:0;margin-top:4px}
+  .w-drawer-body{padding:0 0 1.25rem;color:var(--soft);line-height:1.75}
+  .w-drawer-body p{margin:0 0 .9rem}
+  .w-drawer-body p:last-child{margin-bottom:0}
+  .w-drawer-body img,.w-drawer-body video{width:100%;height:auto;border-radius:var(--r);margin-top:.9rem;display:block}
+  .w-stack{display:block !important}
+  .w-stack .section-title{margin-bottom:1rem}
+  .w-chiprow{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.1rem}
+  .w-cols{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem}
+  .w-cols.one{grid-template-columns:1fr}
+  .w-col h3{font-family:var(--display);font-size:1.08rem;margin:0 0 .6rem;color:var(--ink)}
+  .w-col p{margin:0;color:var(--soft);line-height:1.75;white-space:pre-line}
+  @media (max-width:720px){ .w-cols{grid-template-columns:1fr;gap:1.6rem} }
+  @media (prefers-reduced-motion:reduce){ .w-caret{transition:none} }
   .w-photo{margin:1.8rem 0}
   .w-photo img,.w-video video{width:100%;height:auto;max-height:600px;object-fit:cover;border-radius:var(--r)}
   .kv{display:flex;flex-direction:column;gap:.55em;font-size:.95rem}
@@ -668,6 +696,68 @@ function mediaHtml(m, name) {
   return `<img src="${esc(m.src)}" alt="A photo shared by ${esc(name)}" loading="lazy">`;
 }
 
+/* ---------------------------------------------------------------------------
+   Website-only sections. Everything here reads from t.site, the PUBLIC jsonb
+   added in 0045/0046 -- never from ideal_client, which is private. A therapist
+   who has filled none of this in gets no extra sections at all rather than
+   empty headings, so the page never looks half-built.
+   --------------------------------------------------------------------------- */
+function siteObj(t) { return (t && t.site && typeof t.site === 'object') ? t.site : {}; }
+
+/* SPECIALTIES -- chips are the summary a client scans; the note is the answer
+   to "what does that actually mean when you treat it". Only specialties with a
+   note become expandable, so the section degrades to plain chips. */
+function specialtiesSec(t) {
+  const list = (t.specialties || []).filter(Boolean);
+  if (!list.length) return '';
+  const notes = siteObj(t).specialtyNotes || {};
+  const withNote = list.filter(x => filled(notes[x]));
+  const plain = list.filter(x => !filled(notes[x]));
+  if (!withNote.length) return '';   // no detail to add -- the hero chips already say this
+  const rows = withNote.map((x, i) => `
+    <details class="w-drawer"${i === 0 ? ' open' : ''}>
+      <summary><span>${esc(x)}</span><span class="w-caret" aria-hidden="true"></span></summary>
+      <div class="w-drawer-body"><p>${esc(notes[x])}</p></div>
+    </details>`).join('');
+  const others = plain.length
+    ? `<div class="w-chiprow">${plain.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>` : '';
+  return `<section id="specialties" class="w-stack"><p class="section-title">What I work with</p>${rows}${others}</section>`;
+}
+
+/* WHAT THERAPY IS LIKE / MY OFFICE -- two columns on a wide screen, stacked on
+   a phone. Deliberately not tabs: these pages are prerendered and also render
+   inside the app's ?embed=1 iframe, and a tab strip hides half the answer
+   behind a click in both. Columns show everything and cost no JavaScript. */
+function approachSec(t) {
+  const site = siteObj(t);
+  const cols = [
+    ['What therapy is like with me', site.therapyLike],
+    ['My office', site.office],
+  ].filter(([, v]) => filled(v));
+  if (!cols.length) return '';
+  const inner = cols.map(([h, v]) =>
+    `<div class="w-col"><h3>${esc(h)}</h3><p>${esc(v)}</p></div>`).join('');
+  return `<section id="approach"><p class="section-title">${cols.length > 1 ? 'What to expect' : esc(cols[0][0])}</p>
+    <div class="w-cols${cols.length > 1 ? '' : ' one'}">${inner}</div></section>`;
+}
+
+/* GET TO KNOW -- as drawers. The rail layout keeps its contents column: it
+   already answers "this is a long scroll" with navigation instead of a gate,
+   and gating there would be solving the same problem twice. Elsewhere the
+   first drawer opens, so the section reads as content rather than as a
+   closed filing cabinet. */
+function feedDrawersHtml(blocks, name) {
+  const prompts = blocks.filter(b => b.kind === 'prompt');
+  const media   = blocks.filter(b => b.kind !== 'prompt');
+  if (!prompts.length) return blocks.map(b => feedItemHtml(b, name)).join('');
+  return prompts.map((p, i) => `
+    <details class="w-drawer"${i === 0 ? ' open' : ''}>
+      <summary><span>${esc(p.q)}</span><span class="w-caret" aria-hidden="true"></span></summary>
+      <div class="w-drawer-body"><p>${esc(p.a)}</p>${media[i] ? mediaHtml(media[i], name) : ''}</div>
+    </details>`).join('')
+    + media.slice(prompts.length).map(m => feedItemHtml(m, name)).join('');
+}
+
 function feedItemHtml(b, name) {
   if (b.kind === 'prompt') return `<div class="w-prompt"><p class="q">${esc(b.q)}</p><p>${esc(b.a)}</p></div>`;
   if (b.kind === 'photo') return `<figure class="w-photo" style="margin-left:0;margin-right:0"><img src="${esc(b.src)}" alt="A photo shared by ${esc(name)}" loading="lazy"></figure>`;
@@ -760,7 +850,19 @@ function render(t) {
     <a class="navcta" href="#contact">Contact</a>
   </nav>`;
 
-  const storySec = feed ? `<section id="story"><p class="section-title">Get to know ${esc(first)}</p>${feed}</section>` : '';
+  /* Drawers everywhere except rail: see feedDrawersHtml() for why practice is
+     left alone. `feed` (the flat stack) is still used by the split and panel
+     layouts, which pair each prompt with its own image and would lose that
+     pairing inside a drawer. */
+  const storyInner = (tpl.layout === 'rail' || tpl.layout === 'panels' || tpl.layout === 'splits')
+    ? feed : feedDrawersHtml(blocks, name);
+  /* w-stack forces one column. The layouts grid their sections two-up, which
+     suits the flat prompt cards but not drawers: opening one would shove its
+     neighbour down and leave a hole beside it. */
+  const usesDrawers = storyInner !== feed;
+  const storySec = storyInner ? `<section id="story"${usesDrawers ? ' class="w-stack"' : ''}><p class="section-title">Get to know ${esc(first)}</p>${storyInner}</section>` : '';
+  const specSec  = specialtiesSec(t);
+  const apprSec  = approachSec(t);
   const kvSec = kv.length ? `<section id="practical"><p class="section-title">Good to know</p><div class="kv">${kv.join('')}</div></section>` : '';
   /* Was "a few questions first... takes about three minutes", which described
      the eight-step intake. That is not what this button does any more: an
@@ -813,7 +915,7 @@ function render(t) {
       </aside>
       <main>
         ${t.best_for ? `<section><p class="statement">${esc(t.best_for)}</p></section>` : ''}
-        ${storySec}${kvSec}${contactSec}
+        ${specSec}${storySec}${apprSec}${kvSec}${contactSec}
       </main>
     </div>
     ${footer}`;
@@ -840,9 +942,11 @@ function render(t) {
     </div>
     ${t.best_for ? `<section class="measure" style="padding-top:2.6rem"><p class="pull">“${esc(String(t.best_for).replace(/\.$/, ''))}.”</p>
       <div style="text-align:center;margin-top:1.3rem">${badge}${paused ? `<div class="measure" style="margin-top:.8rem">${paused}</div>` : ''}</div></section>` : ''}
+    ${specSec ? `<div class="measure edtail">${specSec}</div>` : ''}
     ${rows ? `<section id="story"><p class="section-title wide" style="padding:0 22px">Get to know ${esc(first)}</p>${rows}
       <div class="measure edtail edtail-rest" data-rhythm="flow">${rest}${others}</div></section>`
       : storySec ? `<div class="measure edtail">${storySec}</div>` : ''}
+    ${apprSec ? `<div class="measure edtail">${apprSec}</div>` : ''}
     ${kvSec ? `<div class="measure edtail">${kvSec}</div>` : ''}
     <div class="measure edtail">${contactSec}</div>
     ${footer}`;
@@ -860,7 +964,9 @@ function render(t) {
         <a class="btn" href="${esc(cta)}">Send me a message</a>
       </div>
     </div>
+    ${specSec ? `<div class="band"><div class="measure colwrap">${specSec}</div></div>` : ''}
     ${storySec ? `<div class="band alt"><div class="measure colwrap">${storySec}</div></div>` : ''}
+    ${apprSec ? `<div class="band"><div class="measure colwrap">${apprSec}</div></div>` : ''}
     ${kvSec ? `<div class="band"><div class="measure colwrap">${kvSec}</div></div>` : ''}
     <div class="band loud"><div class="measure">${contactSec}</div></div>
     <div class="band-foot">${footer}</div>`;
@@ -934,7 +1040,7 @@ function render(t) {
 
     body = `${nav}${hero}
     ${storyBlock}
-    <div class="measure colwrap">${kvSec}${contactSec}</div>
+    <div class="measure colwrap">${specSec}${apprSec}${kvSec}${contactSec}</div>
     ${footer}`;
   } else {
     /* column: quiet (statement) */
@@ -974,7 +1080,7 @@ function render(t) {
     const rhythm = tplId === 'quiet' ? ' data-rhythm="flow"' : '';
     body = `${nav}${hero}
     <div class="measure colwrap"${rhythm}>
-      ${storySec}${kvSec}${contactSec}
+      ${specSec}${storySec}${apprSec}${kvSec}${contactSec}
     </div>
     ${footer}`;
   }

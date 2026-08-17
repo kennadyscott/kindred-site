@@ -6451,7 +6451,31 @@ function websitePaneHtml(t) {
         <button type="button" class="site-jump" data-site-jump="edit">Edit &rsaquo;</button>
       </div>
     </div>
-    <p class="portal-note" style="margin-top:10px">Coming next: services &amp; fees, common questions, office &amp; hours, and a booking link \u2014 website-only sections that matching never reads.</p>
+
+    <!-- Website-only copy. Lives in t.site, which is PUBLIC via therapists_public,
+         so nothing private may be collected here. Matching never reads any of it. -->
+    <div class="t-form-label" style="margin-top:24px">Say more about what you work with <span class="ideal-hint">website only \u2014 leave any blank and it simply won't appear</span></div>
+    <p class="portal-note" style="margin:0 0 10px">Your specialties already show as tags. A sentence or two turns a tag into a reason to get in touch.</p>
+    ${(t.tags || []).length
+      ? (t.tags || []).map(tag => `
+        <div class="site-note-row">
+          <label class="site-note-label" for="site-note-${esc0(tag).replace(/[^a-z0-9]/gi,'-')}">${esc0(tag)}</label>
+          <textarea class="t-rate-input site-note-input" rows="2" maxlength="400"
+            id="site-note-${esc0(tag).replace(/[^a-z0-9]/gi,'-')}" data-site-note="${esc0(tag)}"
+            placeholder="What working on ${esc0(tag.toLowerCase())} with you actually looks like\u2026">${esc0((siteVal(t,'specialtyNotes') || {})[tag] || '')}</textarea>
+        </div>`).join('')
+      : `<p class="portal-note">Add specialties under <strong>First Glance</strong> and they'll appear here.</p>`}
+
+    <div class="t-form-label" style="margin-top:22px">What therapy is like with me</div>
+    <textarea class="t-rate-input" rows="4" maxlength="900" id="site-therapy-like"
+      placeholder="Session length, how often you meet to start, what a first month tends to look like\u2026">${esc0(siteVal(t,'therapyLike') || '')}</textarea>
+
+    <div class="t-form-label" style="margin-top:16px">My office</div>
+    <textarea class="t-rate-input" rows="4" maxlength="900" id="site-office"
+      placeholder="Where you are, what the room is like, parking, whether there's a waiting area\u2026">${esc0(siteVal(t,'office') || '')}</textarea>
+    <p class="portal-note" style="margin-top:8px">These two sit side by side on your website, and stack on a phone. Fill in one and it runs full width on its own.</p>
+
+    <p class="portal-note" style="margin-top:14px">Coming next: services &amp; fees, common questions, and a booking link.</p>
 
     ${saveRowHtml('website')}
 
@@ -6479,7 +6503,36 @@ function renderTherapistWebsite() {
   wireWebsitePane(t);
 }
 
+/* t.site is PUBLIC (therapists_public). Read through one helper so a missing
+   or malformed jsonb can never throw mid-template -- a thrown render leaves
+   innerHTML unset and the pane paints blank white. */
+function siteVal(t, key) {
+  const site = (t && t.site && typeof t.site === 'object') ? t.site : {};
+  return site[key];
+}
+
 function wireWebsitePane(t) {
+  /* Website-only copy. Written straight into t.site, which the save payload
+     already carries. An empty box deletes its key rather than storing "" --
+     profile.js decides whether a section exists by whether the value is
+     filled, so a leftover empty string would render an empty heading. */
+  const siteWrite = (key, value) => {
+    const site = Object.assign({}, (t.site && typeof t.site === 'object') ? t.site : {});
+    if (value) site[key] = value; else delete site[key];
+    t.site = site;
+    persistProfileSoon(t);
+  };
+  document.querySelectorAll('[data-site-note]').forEach(el => el.addEventListener('input', () => {
+    const notes = Object.assign({}, (t.site && t.site.specialtyNotes) || {});
+    const v = el.value.trim();
+    if (v) notes[el.dataset.siteNote] = v; else delete notes[el.dataset.siteNote];
+    siteWrite('specialtyNotes', Object.keys(notes).length ? notes : null);
+  }));
+  const therapyLike = document.getElementById('site-therapy-like');
+  if (therapyLike) therapyLike.addEventListener('input', () => siteWrite('therapyLike', therapyLike.value.trim()));
+  const office = document.getElementById('site-office');
+  if (office) office.addEventListener('input', () => siteWrite('office', office.value.trim()));
+
   document.querySelectorAll('[data-site-tpl]').forEach(el => el.addEventListener('click', () => {
     t.site = Object.assign({}, t.site, { template: el.dataset.siteTpl });
     persistProfileSoon(t);

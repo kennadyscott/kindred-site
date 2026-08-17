@@ -3482,3 +3482,11 @@ select.t-rate-input,
                font-variant-numeric: tabular-nums; }
 .od-earn-label { font-size: 14px; color: var(--ink); font-weight: 600; }
 .od-earn-note { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
+
+/* Website-only copy fields in the Website pane (site.specialtyNotes et al).
+   The label is the specialty itself, so it reads as "Anxiety: here is what
+   that looks like with me" rather than as an anonymous row of boxes. */
+.site-note-row{margin:0 0 10px}
+.site-note-label{display:block;font-size:12px;font-weight:600;letter-spacing:.02em;
+  color:var(--ink-2,#5b5560);margin:0 0 4px}
+.site-note-input{resize:vertical;min-height:52px;line-height:1.5}
